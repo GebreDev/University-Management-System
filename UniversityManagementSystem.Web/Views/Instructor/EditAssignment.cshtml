@@ -1,0 +1,67 @@
+@model AssignmentUpdateDto
+@{
+    ViewData["Title"] = "Edit Assignment";
+}
+
+<h2><i class="fas fa-edit me-2"></i> Edit Assignment</h2>
+
+<div class="card shadow">
+    <div class="card-body">
+        <form asp-action="EditAssignment" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label">Title</label>
+                        <input asp-for="Title" class="form-control" required />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label asp-for="CourseId" class="form-label">Course</label>
+                        <select asp-for="CourseId" class="form-select" asp-items="@(new SelectList(ViewBag.Courses ?? new List<object>(), "Id", "Title"))">
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label">Description</label>
+                <textarea asp-for="Description" class="form-control" rows="4" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Attachment" class="form-label">Replace attachment (optional)</label>
+                <input asp-for="Attachment" type="file" class="form-control" accept=".pdf,.docx,.xlsx,.csv,.txt,.jpg,.jpeg,.png,.gif" />
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label asp-for="Deadline" class="form-label">Deadline</label>
+                        <input asp-for="Deadline" class="form-control" type="datetime-local" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label asp-for="TotalMarks" class="form-label">Total Marks</label>
+                        <input asp-for="TotalMarks" class="form-control" type="number" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label asp-for="LateSubmissionPenalty" class="form-label">Late Penalty (%)</label>
+                        <input asp-for="LateSubmissionPenalty" class="form-control" type="number" min="0" max="100" />
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="form-check form-switch">
+                    <input asp-for="AllowLateSubmission" class="form-check-input" role="switch" id="allowLate" />
+                    <label class="form-check-label" for="allowLate">Allow Late Submissions</label>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+            <a asp-action="ManageAssignmentQuestions" asp-route-assignmentId="@Model.Id" class="btn btn-outline-success"><i class="fas fa-list-check me-1"></i> Manage Questions</a>
+            <a asp-action="Assignments" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

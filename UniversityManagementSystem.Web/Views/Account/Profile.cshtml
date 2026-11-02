@@ -1,0 +1,203 @@
+@model UserProfileDto
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-4">
+            <!-- Profile Picture Card -->
+            <div class="card shadow-sm border-0 rounded-3 mb-4">
+                <div class="card-body text-center p-4">
+                    <div class="position-relative d-inline-block">
+                        <div class="avatar-wrapper mx-auto mb-3" style="width: 160px; height: 160px; border-radius: 50%; overflow: hidden; border: 4px solid #e9ecef; background: #f8f9fa; position: relative;">
+                            @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+                            {
+                                <img src="@Model.ProfilePictureUrl" alt="Profile" class="w-100 h-100" style="object-fit: cover;" id="accountProfileImg" />
+                            }
+                            else
+                            {
+                                <div class="d-flex align-items-center justify-content-center h-100 stat-grad-b">
+                                    <i class="fas fa-user-shield fa-4x text-white opacity-75"></i>
+                                </div>
+                            }
+                        </div>
+                        <label for="profileUpload" class="btn btn-sm btn-primary rounded-circle position-absolute" style="bottom: 5px; right: 5px; width: 36px; height: 36px; cursor: pointer;">
+                            <i class="fas fa-camera"></i>
+                        </label>
+                        <form id="uploadForm" asp-action="UploadProfilePicture" asp-controller="Account" method="post" enctype="multipart/form-data" style="display:none;">
+                            @Html.AntiForgeryToken()
+                            <input type="file" id="profileUpload" name="ImageFile" accept="image/*" class="d-none" onchange="this.form.submit()" />
+                        </form>
+                    </div>
+                    <h5 class="fw-bold mt-2 mb-1">@string.Join(" ", new[] { Model.FirstName, Model.MiddleName, Model.LastName }.Where(name => !string.IsNullOrWhiteSpace(name)))</h5>
+                    <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
+                        <i class="fas fa-user-tag me-1"></i> @Model.Role
+                    </span>
+                </div>
+            </div>
+
+            <!-- Quick Stats Card -->
+            <div class="card shadow-sm border-0 rounded-3 mb-4">
+                <div class="card-body">
+                    <h6 class="fw-bold text-uppercase small text-muted mb-3"><i class="fas fa-chart-simple me-2"></i>Account</h6>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-3">
+                            <i class="fas fa-calendar-check text-primary"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Member Since</small>
+                            <strong>@Model.CreatedAt.ToString("MMMM dd, yyyy")</strong>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-success bg-opacity-10 p-2 me-3">
+                            <i class="fas fa-envelope text-success"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Email</small>
+                            <strong>@Model.Email</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <!-- Profile Details Card -->
+            <div class="card shadow-sm border-0 rounded-3 mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-user me-2 text-primary"></i>Profile Details</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <form asp-action="UpdateProfile" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="Id" />
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="UserName" class="form-label text-muted small text-uppercase fw-semibold">User Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-at text-muted"></i></span>
+                                    <input asp-for="UserName" class="form-control" />
+                                </div>
+                                <span asp-validation-for="UserName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="FirstName" class="form-label text-muted small text-uppercase fw-semibold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-user text-muted"></i></span>
+                                    <input asp-for="FirstName" class="form-control" />
+                                </div>
+                                <span asp-validation-for="FirstName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="MiddleName" class="form-label text-muted small text-uppercase fw-semibold">Middle Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-user text-muted"></i></span>
+                                    <textarea asp-for="MiddleName" class="form-control border-start-0" rows="1" style="height: 38px; min-height: 38px; resize: none;"></textarea>
+                                </div>
+                                <span asp-validation-for="MiddleName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="LastName" class="form-label text-muted small text-uppercase fw-semibold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-user text-muted"></i></span>
+                                    <input asp-for="LastName" class="form-control" />
+                                </div>
+                                <span asp-validation-for="LastName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Email" class="form-label text-muted small text-uppercase fw-semibold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-envelope text-muted"></i></span>
+                                    <input asp-for="Email" class="form-control" />
+                                </div>
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="PhoneNumber" class="form-label text-muted small text-uppercase fw-semibold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-phone text-muted"></i></span>
+                                    <input asp-for="PhoneNumber" class="form-control" />
+                                </div>
+                                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Address" class="form-label text-muted small text-uppercase fw-semibold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-location-dot text-muted"></i></span>
+                                    <input asp-for="Address" class="form-control" />
+                                </div>
+                                <span asp-validation-for="Address" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="DateOfBirth" class="form-label text-muted small text-uppercase fw-semibold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-cake-candles text-muted"></i></span>
+                                    <input asp-for="DateOfBirth" type="date" class="form-control" />
+                                </div>
+                                <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="mt-4">                             <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Account Actions -->
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-shield-alt me-2 text-success"></i>Account</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div class="d-flex flex-wrap gap-2">                         <a asp-action="ChangePassword" asp-controller="Account" class="btn btn-outline-primary">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </a>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a asp-controller="Admin" asp-action="Dashboard" class="btn-back-pill">
+                                <i class="fas fa-chevron-left"></i>Back
+                            </a>
+                        }
+                        else if (User.IsInRole("Instructor"))
+                        {
+                            <a asp-controller="Instructor" asp-action="Dashboard" class="btn-back-pill">
+                                <i class="fas fa-chevron-left"></i>Back
+                            </a>
+                        }
+                        else
+                        {
+                            <a asp-controller="Student" asp-action="Dashboard" class="btn-back-pill">
+                                <i class="fas fa-chevron-left"></i>Back
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('profileUpload')?.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    var img = document.getElementById('accountProfileImg');
+                    if (!img) {
+                        var wrapper = document.querySelector('.avatar-wrapper');
+                        wrapper.innerHTML = '<img src="' + ev.target.result + '" alt="Profile" class="w-100 h-100" style="object-fit: cover;" id="accountProfileImg" />';
+                    } else {
+                        img.src = ev.target.result;
+                    }
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+    </script>
+}

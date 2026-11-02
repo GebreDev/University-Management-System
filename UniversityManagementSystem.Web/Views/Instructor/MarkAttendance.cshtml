@@ -1,0 +1,315 @@
+@model UniversityManagementSystem.Web.Models.AttendanceMarkViewModel
+@using UniversityManagementSystem.Domain.Enums
+@{
+    ViewData["Title"] = "Mark Attendance";
+    var courseName = ViewBag.CourseName as string ?? "Course";
+    var courses = ViewBag.Courses as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+}
+
+<style>
+    .attendance-header {
+        background: linear-gradient(135deg, var(--btn-sky) 0%, var(--btn-sky-deep) 100%);
+        border-radius: 16px;
+        padding: 24px 32px;
+        color: white;
+        margin-bottom: 24px;
+    }
+    .attendance-header h2 { margin: 0; font-weight: 700; }
+    .attendance-header .subtitle { opacity: 0.85; font-size: 0.9rem; }
+    .student-row {
+        transition: all 0.2s ease;
+        border-left: 4px solid transparent;
+    }
+    .student-row:hover {
+        background-color: #f8f9fa !important;
+        border-left-color: #4a90e2;
+        transform: translateX(4px);
+    }
+    .status-select {
+        min-width: 140px;
+        transition: all 0.2s ease;
+    }
+    .status-select option[value="Present"] { background-color: #d1e7dd; }
+    .status-select option[value="Absent"] { background-color: #f8d7da; }
+    .status-select option[value="Late"] { background-color: #fff3cd; }
+    .status-select option[value="Excused"] { background-color: #cff4fc; }
+    .status-badge {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 6px;
+    }
+    .status-badge.present { background: #198754; }
+    .status-badge.absent { background: #dc3545; }
+    .status-badge.late { background: #ffc107; }
+    .status-badge.excused { background: #0dcaf0; }
+    .quick-action-btn { transition: all 0.2s ease; }
+    .quick-action-btn:hover { transform: translateY(-2px); }
+    .stats-count {
+        font-size: 0.85rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+        background: #f0f0f0;
+    }
+    .form-section {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+    .student-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--btn-sky), var(--btn-sky-deep));
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+</style>
+
+<div class="attendance-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h2><i class="fas fa-clipboard-check me-2"></i> Mark Attendance</h2>
+            <div class="subtitle">
+                <i class="fas fa-book-open me-1"></i> <strong id="courseNameDisplay">@courseName</strong>
+                <span class="mx-2">|</span>
+                <i class="fas fa-users me-1"></i> <span id="studentCount">@Model.Students.Count</span> student(s)
+            </div>
+        </div>
+        <div>             <a asp-action="AttendanceHistory" asp-route-courseId="@Model.CourseId" class="btn btn-light">
+                <i class="fas fa-history me-1"></i> View History
+            </a>
+        </div>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+        <i class="fas fa-check-circle me-2"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Validation Summary -->
+<div asp-validation-summary="All" class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm" role="alert"></div>
+
+<form asp-action="MarkAttendance" method="post" id="attendanceForm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="CourseId" id="courseIdField" />
+
+    <!-- Controls Section -->
+    <div class="form-section">
+        <div class="row align-items-end g-3">
+            <div class="col-md-4">
+                <label asp-for="Date" class="form-label fw-semibold">
+                    <i class="fas fa-calendar me-1 text-primary"></i> Attendance Date
+                </label>
+                <input asp-for="Date" class="form-control" type="date" required id="attendanceDate" />
+                <span asp-validation-for="Date" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">
+                    <i class="fas fa-book me-1 text-primary"></i> Course
+                </label>
+                <select id="courseSelector" class="form-select">
+                    @foreach (var c in courses)
+                    {
+                        <option value="@c.Id" selected="@(c.Id == Model.CourseId ? true : null)">@c.Title</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">
+                    <i class="fas fa-bolt me-1 text-warning"></i> Quick Actions
+                </label>
+                <div class="d-flex gap-2 flex-wrap">                     <button type="button" id="markAllPresent" class="btn btn-success btn-sm quick-action-btn">
+                        <i class="fas fa-check me-1"></i> All Present
+                    </button>                     <button type="button" id="markAllAbsent" class="btn btn-danger btn-sm quick-action-btn">
+                        <i class="fas fa-times me-1"></i> All Absent
+                    </button>
+                    <button type="button" id="resetStatus" class="btn btn-outline-secondary btn-sm quick-action-btn rounded-pill px-3">
+                        <i class="fas fa-undo me-1"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Stats -->
+    <div class="d-flex gap-3 flex-wrap mb-3" id="liveStats">
+        <span class="stats-count" style="background: #d1e7dd; color: #155724;">
+            <i class="fas fa-check-circle me-1"></i> Present: <strong id="presentCount">@Model.Students.Count</strong>
+        </span>
+        <span class="stats-count" style="background: #f8d7da; color: #721c24;">
+            <i class="fas fa-times-circle me-1"></i> Absent: <strong id="absentCount">0</strong>
+        </span>
+        <span class="stats-count" style="background: #fff3cd; color: #856404;">
+            <i class="fas fa-clock me-1"></i> Late: <strong id="lateCount">0</strong>
+        </span>
+        <span class="stats-count" style="background: #cff4fc; color: #055160;">
+            <i class="fas fa-check-double me-1"></i> Excused: <strong id="excusedCount">0</strong>
+        </span>
+    </div>
+
+    @if (!Model.Students.Any())
+    {
+        <div class="form-section text-center py-5">
+            <i class="fas fa-users fa-4x text-muted mb-3 opacity-50"></i>
+            <h5 class="text-muted">No Students Enrolled</h5>
+            <p class="text-muted mb-0">There are no students enrolled in this course yet.</p>
+            <a asp-action="Students" asp-route-courseId="@Model.CourseId" class="btn btn-primary rounded-pill mt-3">
+                <i class="fas fa-user-plus me-1"></i> View Enrollments
+            </a>
+        </div>
+    }
+    else
+    {
+        <!-- Students Table -->
+        <div class="form-section p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 40px;">#</th>
+                            <th>Student Name</th>
+                            <th style="width: 180px;">Status</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.Students.Count; i++)
+                        {
+                            <tr class="student-row">
+                                <td>
+                                    <div class="student-avatar">@(i + 1)</div>
+                                </td>
+                                <td>
+                                    <strong>@Model.Students[i].StudentName</strong>
+                                    <input type="hidden" name="Students[@i].StudentId" value="@Model.Students[i].StudentId" />
+                                </td>
+                                <td>
+                                    <select asp-for="Students[@i].Status" class="form-select status-select form-select-sm">
+                                        <option value="Present">Present</option>
+                                        <option value="Absent">Absent</option>
+                                        <option value="Late">Late</option>
+                                        <option value="Excused">Excused</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="text" name="Students[@i].Remarks" class="form-control form-control-sm" 
+                                           placeholder="Optional note..." value="@Model.Students[i].Remarks" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="d-flex gap-3 justify-content-between align-items-center flex-wrap">
+            <div class="text-muted small">
+                <i class="fas fa-info-circle me-1"></i>
+                Attendance will be saved for <strong id="finalStudentCount">@Model.Students.Count</strong> student(s) on 
+                <strong id="finalDateDisplay">@Model.Date.ToString("MMM dd, yyyy")</strong>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success btn-lg rounded-pill px-5" id="saveBtn">
+                    <i class="fas fa-save me-2"></i> Save Attendance
+                </button>
+                <a asp-action="AttendanceHistory" asp-route-courseId="@Model.CourseId" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="fas fa-history me-1"></i> View History
+                </a>
+            </div>
+        </div>
+    }
+</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // ===== Course selector =====
+            $('#courseSelector').on('change', function() {
+                var courseId = $(this).val();
+                var date = $('#attendanceDate').val();
+                var hasChanges = false;
+                $('select[name$=".Status"]').each(function() {
+                    if ($(this).val() !== 'Present') hasChanges = true;
+                });
+                if (hasChanges && !confirm('You have unsaved attendance changes. Switch courses anyway?')) {
+                    // Revert the dropdown selection
+                    $(this).val('@Model.CourseId');
+                    return;
+                }
+                window.location.href = '@Url.Action("MarkAttendance", "Instructor")?courseId=' + courseId + '&date=' + date;
+            });
+
+            // ===== Update stats on status change =====
+            function updateStats() {
+                var present = 0, absent = 0, late = 0, excused = 0;
+                $('select[name$=".Status"]').each(function() {
+                    switch($(this).val()) {
+                        case 'Present': present++; break;
+                        case 'Absent': absent++; break;
+                        case 'Late': late++; break;
+                        case 'Excused': excused++; break;
+                    }
+                });
+                $('#presentCount').text(present);
+                $('#absentCount').text(absent);
+                $('#lateCount').text(late);
+                $('#excusedCount').text(excused);
+            }
+
+            $(document).on('change', 'select[name$=".Status"]', updateStats);
+
+            // ===== Quick Actions =====
+            $('#markAllPresent').on('click', function() {
+                $('select[name$=".Status"]').val('Present');
+                updateStats();
+            });
+
+            $('#markAllAbsent').on('click', function() {
+                $('select[name$=".Status"]').val('Absent');
+                updateStats();
+            });
+
+            $('#resetStatus').on('click', function() {
+                $('select[name$=".Status"]').val('Present');
+                updateStats();
+            });
+
+            // ===== Update date display =====
+            $('#attendanceDate').on('change', function() {
+                var d = new Date($(this).val());
+                var options = { month: 'short', day: '2-digit', year: 'numeric' };
+                $('#finalDateDisplay').text(d.toLocaleDateString('en-US', options));
+            });
+
+            // ===== Live count of students =====
+            // Initial stats update
+            updateStats();
+
+            // ===== Form submission feedback =====
+            $('#attendanceForm').on('submit', function() {
+                $('#saveBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> Saving...');
+            });
+        });
+    </script>
+}

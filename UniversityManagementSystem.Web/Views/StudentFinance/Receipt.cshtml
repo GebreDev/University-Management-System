@@ -1,0 +1,176 @@
+@model UniversityManagementSystem.Application.DTOs.Finance.InvoiceDto
+@using UniversityManagementSystem.Domain.Enums
+@{
+    ViewData["Title"] = "Payment Receipt";
+    var paid = Model.Payments.Where(p => p.Status == PaymentStatus.Verified).Sum(p => p.Amount);
+    var waived = Model.Waivers.Sum(w => w.Amount);
+    var balance = Model.Status == InvoiceStatus.Cancelled ? 0 : Model.TotalAmount - paid - waived;
+}
+
+<style>
+    /* Self-contained print rules: keep the screen look clean and make
+       Ctrl+P / mobile sharing produce a proper official receipt. */
+    @@media print {
+        .sidebar, .app-navbar, .navbar, .btn-back-pill, .no-print, .alert {
+            display: none !important;
+        }
+        .receipt-card {
+            box-shadow: none !important;
+            border: 1px solid #dee2e6 !important;
+        }
+        .wrapper, .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        body {
+            background: #fff !important;
+        }
+    }
+</style>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom no-print">
+    <div>
+        <h1 class="h2 fw-bold mb-1"><i class="fas fa-receipt me-2 text-warning"></i> Payment Receipt</h1>
+        <small class="text-muted">Official record for invoice @Model.InvoiceNumber</small>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-secondary" onclick="window.print()"><i class="fas fa-print me-1"></i> Print</button>
+        <a asp-controller="StudentFinance" asp-action="MyFinance" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-9 col-xl-8">
+        <div class="card shadow-sm border-0 rounded-4 receipt-card">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="mb-2"><i class="fas fa-graduation-cap fa-2x text-primary"></i></div>
+                    <h4 class="fw-bold mb-1">University Management System</h4>
+                    <small class="text-muted">Official Financial Receipt</small>
+                </div>
+
+                <hr />
+
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <h6 class="text-muted text-uppercase small fw-bold">Billed To</h6>
+                        <p class="mb-1 fw-semibold">@Model.StudentName</p>
+                        <p class="mb-0 text-muted small">Student ID: @Model.StudentNumber</p>
+                        <p class="mb-0 text-muted small">Category: @(Model.PaymentCategory == PaymentCategory.GovernmentSponsored ? "Government Sponsored" : "Self Sponsored")</p>
+                    </div>
+                    <div class="col-6 text-md-end">
+                        <h6 class="text-muted text-uppercase small fw-bold">Invoice Details</h6>
+                        <p class="mb-1"><span class="fw-semibold">@Model.InvoiceNumber</span></p>
+                        <p class="mb-0 text-muted small">Semester: @Model.SemesterName@(string.IsNullOrEmpty(Model.AcademicYearName) ? "" : " - " + Model.AcademicYearName)</p>
+                        <p class="mb-0 text-muted small">Issued: @Model.CreatedAt.ToString("MMM dd, yyyy")</p>
+                        @if (Model.DueDate.HasValue)
+                        {
+                            <p class="mb-0 text-muted small">Due: @Model.DueDate.Value.ToString("MMM dd, yyyy")</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="table-responsive mb-3">
+                    <table class="table align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Description</th>
+                                <th class="text-end">Amount (ETB)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ var i = 0; }
+                            @foreach (var line in Model.Lines)
+                            {
+                                i++;
+                                <tr>
+                                    <td>@i</td>
+                                    <td>@line.ItemName</td>
+                                    <td class="text-end">@line.Amount.ToString("N2")</td>
+                                </tr>
+                            }
+                            @if (!Model.Lines.Any())
+                            {
+                                <tr><td colspan="3" class="text-center text-muted">No fee lines on this invoice.</td></tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="2" class="text-end">Total Billed</td>
+                                <td class="text-end fw-bold">@Model.TotalAmount.ToString("N2")</td>
+                            </tr>
+                            @if (waived > 0)
+                            {
+                                <tr>
+                                    <td colspan="2" class="text-end text-primary">Waived / Covered</td>
+                                    <td class="text-end text-primary">-@waived.ToString("N2")</td>
+                                </tr>
+                            }
+                            @if (paid > 0)
+                            {
+                                <tr>
+                                    <td colspan="2" class="text-end text-success">Paid</td>
+                                    <td class="text-end text-success">-@paid.ToString("N2")</td>
+                                </tr>
+                            }
+                            <tr class="border-top border-2">
+                                <td colspan="2" class="text-end fw-bold">Balance</td>
+                                <td class="text-end fw-bold fs-5 @(balance > 0 ? "text-danger" : "text-success")">@balance.ToString("N2")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                @if (Model.Payments.Any(p => p.Status == PaymentStatus.Verified))
+                {
+                    <h6 class="text-muted text-uppercase small fw-bold">Payment Records</h6>
+                    <div class="table-responsive mb-3">
+                        <table class="table table-sm align-middle">
+                            <thead class="table-light">
+                                <tr><th>Date</th><th>Method</th><th>Reference</th><th class="text-end">Amount (ETB)</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in Model.Payments.Where(p => p.Status == PaymentStatus.Verified).OrderBy(p => p.VerifiedAt))
+                                {
+                                    <tr>
+                                        <td>@(p.VerifiedAt ?? p.CreatedAt).ToString("MMM dd, yyyy")</td>
+                                        <td>@(p.Method == PaymentMethod.Chapa ? "Online (Chapa)" : "Bank / Slip")</td>
+                                        <td class="small">@(p.SlipNumber ?? p.Reference)</td>
+                                        <td class="text-end">@p.Amount.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                @if (Model.Waivers.Any())
+                {
+                    <div class="alert alert-primary py-2 small mb-3">
+                        <strong>Coverage applied:</strong>
+                        @string.Join("; ", Model.Waivers.Select(w => $"{w.Reason} ({w.Amount:N2} ETB)"))
+                    </div>
+                }
+
+                <div class="row mt-4 pt-3 border-top align-items-end">
+                    <div class="col-8">
+                        <small class="text-muted">
+                            This receipt reflects payments verified by the university finance office or confirmed by the payment gateway.
+                            Keep it for your records; it is also accepted as proof of payment for registration purposes.
+                        </small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div style="border-top: 1px solid #adb5bd; margin-top: 3rem;" class="pt-1">
+                            <small class="text-muted">Finance Office</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <small class="text-muted">Status: <span class="badge @(Model.Status == InvoiceStatus.Paid ? "bg-success" : Model.Status == InvoiceStatus.PartiallyPaid ? "bg-warning text-dark" : Model.Status == InvoiceStatus.Cancelled ? "bg-secondary" : "bg-danger")">@Model.Status</span></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

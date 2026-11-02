@@ -1,0 +1,274 @@
+@model IEnumerable<AttendanceListDto>
+@using UniversityManagementSystem.Domain.Enums
+@{
+    ViewData["Title"] = "My Attendance";
+    var summary = ViewBag.Summary as AttendanceSummaryDto;
+    var month = ViewBag.Month as string;
+    var todayRecords = Model.Where(a => a.Date.Date == DateTime.Today).ToList();
+    var latestRecords = Model.OrderByDescending(a => a.Date).Take(5).ToList();
+}
+
+<partial name="_PrintStyles" model='new PrintViewModel { Title = "Attendance Report", HideHeaders = new[] { "Actions", "Edit", "Delete" } }' />
+
+<div class="print-header print-only">
+    <h2>Attendance Report</h2>
+    <small>Generated: @DateTime.Now.ToString("MMMM dd, yyyy")</small>
+</div>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 fw-bold"><i class="fas fa-calendar-check me-2 text-success"></i> My Attendance</h1>
+        <p class="text-muted mb-0">
+            <i class="fas fa-user me-1"></i> Track your attendance across all courses
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <form method="get" asp-action="MyAttendance" class="d-flex align-items-center gap-2">
+            <input type="month" name="month" class="form-control form-control-sm" 
+                   value="@(month ?? DateTime.Now.ToString("yyyy-MM"))" 
+                   onchange="this.form.submit()" />
+            <a asp-action="MyAttendance" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-sync"></i>
+            </a>
+        </form>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+        <i class="fas fa-check-circle me-2"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Today's Attendance Highlight -->
+@if (todayRecords.Any())
+{
+    <div class="card shadow-sm border-0 rounded-4 mb-4 overflow-hidden">
+        <div class="card-header bg-white border-0 pt-3 px-4">
+            <h5 class="fw-bold mb-0">
+                <i class="fas fa-sun me-2 text-warning"></i> Today's Attendance — 
+                <span class="text-muted fw-normal">@DateTime.Today.ToString("dddd, MMMM dd, yyyy")</span>
+            </h5>
+        </div>
+        <div class="card-body px-4 pb-3">
+            <div class="row g-3">
+                @foreach (var record in todayRecords)
+                {
+                    var statusColor = record.Status == AttendanceStatus.Present ? "success" :
+                                     record.Status == AttendanceStatus.Absent ? "danger" :
+                                     record.Status == AttendanceStatus.Late ? "warning" : "info";
+                    var statusIcon = record.Status == AttendanceStatus.Present ? "fa-check-circle" :
+                                     record.Status == AttendanceStatus.Absent ? "fa-times-circle" :
+                                     record.Status == AttendanceStatus.Late ? "fa-clock" : "fa-check-double";
+                    <div class="col-md-4 col-6">
+                        <div class="card border-0 shadow-sm rounded-3 h-100">
+                            <div class="card-body p-3 d-flex align-items-center gap-3">
+                                <div class="rounded-circle bg-@(statusColor) bg-opacity-10 p-3">
+                                    <i class="fas @(statusIcon) fa-lg text-@(statusColor)"></i>
+                                </div>
+                                <div>
+                                    <strong class="d-block">@record.CourseName</strong>
+                                    <span class="badge bg-@(statusColor) rounded-pill mt-1">@record.StatusText</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+else if (Model.Any())
+{
+    <!-- No attendance for today -->
+    <div class="alert alert-light border rounded-4 mb-4 py-3">
+        <div class="d-flex align-items-center">
+            <div class="rounded-circle bg-light p-3 me-3">
+                <i class="fas fa-calendar-day fa-lg text-muted"></i>
+            </div>
+            <div>
+                <strong class="d-block">No attendance recorded for today</strong>
+                <small class="text-muted">@DateTime.Today.ToString("dddd, MMMM dd, yyyy") — Attendance will appear here once your instructor marks it.</small>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Summary Stats -->
+@if (summary != null)
+{
+    <div class="print-summary-grid print-only">
+        <div class="item"><strong>@summary.Present</strong>Present</div>
+        <div class="item"><strong>@summary.Absent</strong>Absent</div>
+        <div class="item"><strong>@summary.Late</strong>Late</div>
+        <div class="item"><strong>@summary.Percentage.ToString("F1")%</strong>Rate</div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-4 stats-card stat-grad-b">
+                <div class="text-white">
+                    <small class="opacity-75">Present</small>
+                    <h2 class="fw-bold mb-0">@summary.Present</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-4 stats-card stat-grad-c">
+                <div class="text-white">
+                    <small class="opacity-75">Absent</small>
+                    <h2 class="fw-bold mb-0">@summary.Absent</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-4 stats-card stat-grad-e">
+                <div class="text-white">
+                    <small class="opacity-75">Late</small>
+                    <h2 class="fw-bold mb-0">@summary.Late</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-4 stats-card stat-grad-a">
+                <div class="text-white">
+                    <small class="opacity-75">Rate</small>
+                    <h2 class="fw-bold mb-0">@summary.Percentage.ToString("F1")%</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="progress mb-4" style="height: 12px;">
+        <div class="progress-bar bg-success rounded-pill" role="progressbar"
+             style="width: @Math.Min(summary.Percentage, 100).ToString("F0")%"
+             aria-valuenow="@Math.Min(summary.Percentage, 100).ToString("F0")" aria-valuemin="0" aria-valuemax="100">
+        </div>
+    </div>
+}
+
+<!-- Latest Records Preview (if we have records but none for today) -->
+@if (!todayRecords.Any() && latestRecords.Any())
+{
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-header bg-white border-0 pt-3 px-4 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0">
+                <i class="fas fa-clock me-2 text-info"></i> Recent Attendance
+            </h5>
+            <small class="text-muted">Last @latestRecords.Count record(s)</small>
+        </div>
+        <div class="card-body px-4 pb-3">
+            <div class="row g-2">
+                @foreach (var record in latestRecords)
+                {
+                    var badgeClass = record.Status == AttendanceStatus.Present ? "bg-success" :
+                                     record.Status == AttendanceStatus.Absent ? "bg-danger" :
+                                     record.Status == AttendanceStatus.Late ? "bg-warning text-dark" : "bg-info";
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded-3">
+                            <div>
+                                <small class="text-muted">@record.Date.ToString("MMM dd")</small>
+                                <strong class="ms-2 small">@record.CourseName</strong>
+                            </div>
+                            <span class="badge @badgeClass rounded-pill">@record.StatusText</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<!-- All Records (collapsed by default – click the button to view) -->
+@if (!Model.Any())
+{
+    <div class="alert alert-info shadow-sm rounded-3">
+        <i class="fas fa-info-circle me-2"></i> No attendance records found for this period.
+    </div>
+}
+else
+{
+    <div class="d-flex justify-content-center mb-3">
+        <button type="button" class="btn btn-primary btn-lg px-4 attendance-toggle"
+                data-bs-toggle="collapse" data-bs-target="#allAttendanceRecords"
+                aria-expanded="false" aria-controls="allAttendanceRecords">
+            <i class="fas fa-list me-2"></i> All My Attendance Records
+            <i class="fas fa-chevron-down ms-2 chevron"></i>
+        </button>
+    </div>
+
+    <div class="collapse" id="allAttendanceRecords">
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-white border-0 pt-3 px-4 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0">
+                <i class="fas fa-list me-2 text-primary"></i> All Attendance Records
+            </h5>
+            <small class="text-muted">@Model.Count() total record(s)</small>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Course</th>
+                            <th>Status</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.OrderByDescending(a => a.Date))
+                        {
+                            var rowClass = item.Date.Date == DateTime.Today ? "table-active" : "";
+                            <tr class="@rowClass">
+                                <td>
+                                    <strong>@item.Date.ToString("MMM dd, yyyy")</strong>
+                                    <small class="d-block text-muted">@item.Date.ToString("dddd")</small>
+                                </td>
+                                <td>@item.CourseName</td>
+                                <td>
+                                    <span class="status-indicator">
+                                        <span class="circle @(item.Status == AttendanceStatus.Present ? "success" : item.Status == AttendanceStatus.Absent ? "danger" : item.Status == AttendanceStatus.Late ? "warning" : "info")"></span>
+                                        @item.StatusText
+                                    </span>
+                                </td>
+                                <td><small class="text-muted">@(item.Remarks ?? "-")</small></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </div>
+}
+
+<div class="mt-3 d-flex gap-2">
+    <a asp-action="Dashboard" class="btn-back-pill">
+        <i class="fas fa-chevron-left"></i> Back
+    </a>
+</div>
+
+<div class="print-footer print-only">
+    <small>University Management System - Official Attendance Report</small>
+</div>
+
+<style>
+    .stats-card { transition: transform 0.3s ease; }
+    .stats-card:hover { transform: translateY(-5px); }
+    .table-active { background-color: #f0f7ff !important; }
+
+    /* "All My Attendance Records" toggle button */
+    .attendance-toggle { border-radius: 12px; box-shadow: 0 4px 14px rgba(44,111,191,.25); }
+    .attendance-toggle .chevron { transition: transform .25s ease; }
+    .attendance-toggle[aria-expanded="true"] .chevron { transform: rotate(180deg); }
+
+    /* Printing: hide the toggle and force the records table open so the
+       official attendance report always includes every row */
+    @@media print {
+        .attendance-toggle { display: none !important; }
+        #allAttendanceRecords.collapse { display: block !important; }
+    }
+</style>

@@ -1,0 +1,29 @@
+@model EnrollmentViewDto
+@{
+    ViewData["Title"] = "Approve/Reject Enrollment";
+}
+
+<h2>Approve or Reject Enrollment</h2>
+<div>
+    <dl class="row">
+        <dt class="col-sm-2">Student</dt>
+        <dd class="col-sm-10">@Model.StudentFullName (@Model.StudentId)</dd>
+        <dt class="col-sm-2">Course</dt>
+        <dd class="col-sm-10">@Model.CourseTitle (@Model.CourseCode)</dd>
+        <dt class="col-sm-2">Enrollment Date</dt>
+        <dd class="col-sm-10">@Model.EnrollmentDate.ToShortDateString()</dd>
+        <dt class="col-sm-2">Status</dt>
+        <dd class="col-sm-10">@Model.Status</dd>
+    </dl>
+</div>
+<form asp-action="ApproveEnrollment" asp-route-id="@Model.Id" method="post" style="display:inline">
+    <button type="submit" class="btn btn-success">Approve</button>
+</form>
+<form asp-action="RejectEnrollment" asp-route-id="@Model.Id" method="post" style="display:inline">
+    <div class="form-group">
+        <label>Reason for rejection</label>
+        <input name="reason" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-danger">Reject</button>
+</form>
+<a asp-action="PendingEnrollments" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>

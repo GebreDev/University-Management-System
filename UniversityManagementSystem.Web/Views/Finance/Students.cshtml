@@ -1,0 +1,65 @@
+@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Student Payment Categories";
+    var search = (string?)ViewBag.Search;
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 fw-bold mb-1"><i class="fas fa-user-graduate me-2 text-warning"></i> Student Payment Categories</h1>
+        <small class="text-muted">Government-sponsored students are auto-waived. Self-sponsored students pay via gateway or bank. Every change is audit-logged.</small>
+    </div>
+    <a asp-action="Index" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-body px-4 py-3">
+        <form method="get" class="row g-2">
+            <div class="col-md-6">
+                <input name="search" class="form-control form-control-sm" value="@search" placeholder="Search by name or student ID" />
+            </div>
+            <div class="col-md-2"><button class="btn btn-sm btn-primary w-100">Search</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr><th>Student</th><th>ID</th><th>Current Category</th><th class="text-center">Change To</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model)
+                    {
+                        var cat = (UniversityManagementSystem.Domain.Enums.PaymentCategory)s.PaymentCategory;
+                        <tr>
+                            <td class="fw-semibold">@s.FirstName @s.LastName</td>
+                            <td>@s.StudentId</td>
+                            <td>
+                                <span class="badge @(cat == UniversityManagementSystem.Domain.Enums.PaymentCategory.GovernmentSponsored ? "bg-success" : "bg-primary")">
+                                    @(cat == UniversityManagementSystem.Domain.Enums.PaymentCategory.GovernmentSponsored ? "Government Sponsored (free)" : "Self Sponsored (pays)")
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <form asp-action="SetPaymentCategory" method="post" class="d-inline-flex gap-1 align-items-center">
+                                    <input type="hidden" name="studentId" value="@s.Id" />
+                                    <select name="category" class="form-select form-select-sm" style="width:auto;">
+                                        <option value="2" selected="@(cat == UniversityManagementSystem.Domain.Enums.PaymentCategory.SelfSponsored)">Self Sponsored</option>
+                                        <option value="1" selected="@(cat == UniversityManagementSystem.Domain.Enums.PaymentCategory.GovernmentSponsored)">Government Sponsored</option>
+                                    </select>
+                                    <button class="btn btn-sm btn-outline-primary">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr><td colspan="4" class="text-center text-muted py-4">No students found.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,254 @@
+@{
+    ViewData["Title"] = "Course Management";
+}
+
+<style>
+    .course-class-page { padding: 10px 0 40px; }
+
+    .class-header {
+        background: linear-gradient(135deg, #1a5276, #2e86c1);
+        color: white;
+        border-radius: 20px 20px 0 0;
+        padding: 30px 36px;
+        box-shadow: 0 8px 25px rgba(26,82,118,.16);
+        position: relative;
+        overflow: hidden;
+    }
+    .class-header::after {
+        content: "🎓";
+        position: absolute;
+        right: 30px;
+        top: -15px;
+        font-size: 100px;
+        opacity: .08;
+        transform: rotate(-8deg);
+    }
+    .class-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 17px;
+        background: rgba(255,255,255,.16);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        flex-shrink: 0;
+    }
+
+    .class-content {
+        background: white;
+        border: 1px solid #e4edf2;
+        border-top: 0;
+        border-radius: 0 0 20px 20px;
+        box-shadow: 0 8px 28px rgba(0,0,0,.06);
+        padding: 30px 36px;
+    }
+
+    .class-info {
+        background: #f1f7fa;
+        border: 1px solid #dcebf2;
+        border-radius: 14px;
+        padding: 18px;
+        height: 100%;
+    }
+    .info-label {
+        color: #71828d;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        margin-bottom: 5px;
+    }
+    .info-value {
+        color: #2c4d5d;
+        font-size: 17px;
+        font-weight: 700;
+    }
+
+    .class-action {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 62px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 15px;
+        transition: all .2s ease;
+        text-decoration: none;
+    }
+    .class-action:hover { transform: translateY(-2px); }
+
+    .btn-students    { background: #438BBA; border-color: #438BBA; color: white; }
+    .btn-students:hover { background: #35749E; border-color: #35749E; color: white; }
+    .btn-assignments { background: #e9f5ed; border: 1px solid #cce8d5; color: #198754; }
+    .btn-assignments:hover { background: #d4edda; }
+    .btn-exams       { background: #f1f7fa; border: 1px solid #dcebf2; color: #2879a8; }
+    .btn-exams:hover { background: #e3eef5; }
+    .btn-attendance  { background: #fff8e6; border: 1px solid #f3dfaa; color: #a87900; }
+    .btn-attendance:hover { background: #fef3d0; }
+    .btn-grades      { background: #eaf5f8; border: 1px solid #cce7ed; color: #267b8f; }
+    .btn-grades:hover { background: #d5eef3; }
+
+    .back-btn { border-radius: 10px; font-weight: 600; padding: 10px 18px; }
+
+    .section-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #2c4d5d;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .section-title i { color: #2e86c1; }
+
+    @@media (max-width: 768px) {
+        .class-header, .class-content { padding: 22px 18px; }
+        .class-action { min-height: 56px; font-size: 14px; }
+    }
+</style>
+
+<div class="course-class-page">
+
+    <!-- Header -->
+    <div class="class-header">
+        <div class="d-flex align-items-center gap-3">
+            <div class="class-icon">
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+            <div>
+                <h2 class="fw-bold mb-1">@ViewBag.CourseTitle</h2>
+                <p class="mb-0 opacity-75">
+                    Manage this course — students, assignments, exams, attendance &amp; grades
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="class-content">
+
+        <!-- Course Info -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="class-info">
+                    <div class="info-label">Course Code</div>
+                    <div class="info-value">
+                        <i class="fas fa-barcode me-2"></i>
+                        @ViewBag.CourseCode
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="class-info">
+                    <div class="info-label">Department</div>
+                    <div class="info-value">
+                        <i class="fas fa-building me-2"></i>
+                        @ViewBag.DepartmentName
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="class-info">
+                    <div class="info-label">Credits</div>
+                    <div class="info-value">
+                        <i class="fas fa-star me-2"></i>
+                        @ViewBag.Credits
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="class-info">
+                    <div class="info-label">Students</div>
+                    <div class="info-value">
+                        <i class="fas fa-user-graduate me-2"></i>
+                        @ViewBag.StudentCount enrolled
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="class-info">
+                    <div class="info-label">Assignments</div>
+                    <div class="info-value">
+                        <i class="fas fa-tasks me-2"></i>
+                        @ViewBag.AssignmentCount total
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="class-info">
+                    <div class="info-label">Exams</div>
+                    <div class="info-value">
+                        <i class="fas fa-file-alt me-2"></i>
+                        @ViewBag.ExamCount total
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <i class="fas fa-th-large"></i>
+            Course Management
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-grid gap-3">
+
+            <a asp-controller="Instructor"
+               asp-action="Students"
+               asp-route-courseId="@ViewBag.CourseId"
+               class="btn class-action btn-students">
+                <i class="fas fa-user-graduate"></i>
+                Students
+            </a>
+
+            <a asp-controller="Instructor"
+               asp-action="Assignments"
+               asp-route-courseId="@ViewBag.CourseId"
+               class="btn class-action btn-assignments">
+                <i class="fas fa-tasks"></i>
+                Assignments
+            </a>
+
+            <a asp-controller="Instructor"
+               asp-action="Exams"
+               asp-route-courseId="@ViewBag.CourseId"
+               class="btn class-action btn-exams">
+                <i class="fas fa-file-alt"></i>
+                Examinations
+            </a>
+
+            <a asp-controller="Instructor"
+               asp-action="MarkAttendance"
+               asp-route-courseId="@ViewBag.CourseId"
+               class="btn class-action btn-attendance">
+                <i class="fas fa-calendar-check"></i>
+                Attendance
+            </a>
+
+            <a asp-controller="Instructor"
+               asp-action="Grades"
+               asp-route-courseId="@ViewBag.CourseId"
+               class="btn class-action btn-grades">
+                <i class="fas fa-star"></i>
+                Grades &amp; Results
+            </a>
+
+        </div>
+
+        <!-- Back -->
+        <div class="mt-4 pt-4 border-top">
+            <a asp-controller="Instructor"
+               asp-action="MyAssignments"
+               class="btn-back-pill">
+                <i class="fas fa-chevron-left"></i>
+                Back
+            </a>
+        </div>
+
+    </div>
+</div>

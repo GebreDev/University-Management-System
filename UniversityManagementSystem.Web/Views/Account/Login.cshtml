@@ -1,0 +1,54 @@
+@model LoginDto
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_AuthLayout";
+}
+
+<div class="auth-card">
+    <div class="auth-card-head">
+        <span class="auth-card-logo"><i class="fas fa-user-graduate"></i></span>
+        <h2>Welcome</h2>
+    </div>
+
+    <form asp-action="Login" method="post" class="auth-form" novalidate>
+        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+        <div class="auth-field-row mb-3">
+            <label asp-for="Username" class="auth-field-label">Username:</label>
+            <div class="auth-field-shell">
+                <span class="auth-field-icon"><i class="fas fa-user"></i></span>
+                <input asp-for="Username" class="auth-field-input" placeholder="Enter your username" autocomplete="username" />
+            </div>
+            <span asp-validation-for="Username" class="text-danger small"></span>
+        </div>
+
+        <div class="auth-field-row mb-3">
+            <label asp-for="Password" class="auth-field-label">Password:</label>
+            <div class="auth-field-shell">
+                <span class="auth-field-icon"><i class="fas fa-lock"></i></span>
+                <input asp-for="Password" class="auth-field-input" placeholder="Enter your password" autocomplete="current-password" />
+                <button type="button" class="pw-toggle" tabindex="-1" aria-label="Show password" onclick="togglePassword(this)">
+                    <i class="far fa-eye"></i>
+                </button>
+            </div>
+            <span asp-validation-for="Password" class="text-danger small"></span>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="form-check">
+                <input asp-for="RememberMe" class="form-check-input" />
+                <label asp-for="RememberMe" class="form-check-label small">Remember Me</label>
+            </div>
+            <a asp-action="ForgotPassword" class="small fw-semibold">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn btn-auth">
+            Login <i class="fas fa-arrow-right ms-2"></i>
+        </button>
+    </form>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <AssemblyName>UniversityManagementSystem.Infrastructure</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>14.0</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemGroup />
+  <ItemGroup>
+    <Reference Include="Microsoft.AspNetCore.Identity.UI">
+      <HintPath>UniversityManagementSystem.Web/bin/Debug/net10.0/Microsoft.AspNetCore.Identity.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UniversityManagementSystem.Application">
+      <HintPath>UniversityManagementSystem.Web/bin/Debug/net10.0/UniversityManagementSystem.Application.dll</HintPath>
+    </Reference>
+    <Reference Include="UniversityManagementSystem.Domain">
+      <HintPath>UniversityManagementSystem.Web/bin/Debug/net10.0/UniversityManagementSystem.Domain.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.EntityFrameworkCore">
+      <HintPath>UniversityManagementSystem.Web/bin/Debug/net10.0/Microsoft.EntityFrameworkCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.EntityFrameworkCore.Relational">
+      <HintPath>UniversityManagementSystem.Web/bin/Debug/net10.0/Microsoft.EntityFrameworkCore.Relational.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore">
+      <HintPath>UniversityManagementSystem.Web/bin/Debug/net10.0/Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.EntityFrameworkCore.SqlServer">
+      <HintPath>UniversityManagementSystem.Web/bin/Debug/net10.0/Microsoft.EntityFrameworkCore.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.EntityFrameworkCore.Abstractions">
+      <HintPath>UniversityManagementSystem.Web/bin/Debug/net10.0/Microsoft.EntityFrameworkCore.Abstractions.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

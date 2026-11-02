@@ -1,0 +1,43 @@
+@model IEnumerable<GradeDto>
+@{
+    ViewData["Title"] = "My Grades";
+}
+
+<h1 class="page-title">My Grades</h1>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h5>GPA: <span class="fw-bold text-primary">@ViewBag.Gpa.Gpa</span></h5>
+        <p>Total Credits: <span class="text-muted">@ViewBag.Gpa.TotalCredits</span></p>
+    </div>
+</div>
+
+<div class="data-table-wrapper">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr><th>Course</th><th>Type</th><th>Score</th><th>Max</th><th>Grade</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var g in Model)
+                {
+                    <tr>
+                        <td><span class="fw-semibold">@g.CourseId</span></td>
+                        <td><span class="code-badge">@g.Type</span></td>
+                        <td>@g.Score</td>
+                        <td>@g.MaxScore</td>
+                        <td>
+                            <span class="status-indicator">
+                                <span class="circle @(string.IsNullOrEmpty(g.LetterGrade) || g.LetterGrade == "F" ? "danger" : g.LetterGrade[0] >= 'A' ? "success" : g.LetterGrade[0] == 'B' ? "info" : "warning")"></span>
+                                @g.LetterGrade
+                            </span>
+                        </td>
+                    </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <div class="table-footer-count">
+        <span>@Model.Count() grade record(s)</span>
+    </div>
+</div>

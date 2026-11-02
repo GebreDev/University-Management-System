@@ -1,0 +1,65 @@
+@model AssignmentResultDto
+@{
+    ViewData["Title"] = "Assignment Result";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h3 fw-bold"><i class="fas fa-award me-2 text-warning"></i> Assignment Result</h1>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-lg rounded-4 text-center">
+            <div class="card-header @(Model.IsPass ? "bg-success" : "bg-danger") text-white border-0 rounded-top-4 py-4">
+                <h3 class="mb-0 fw-bold">
+                    <i class="fas @(Model.IsPass ? "fa-trophy" : "fa-frown") me-2"></i>
+                    @(Model.IsPass ? "Congratulations! You Passed!" : "Needs Improvement!")
+                </h3>
+            </div>
+            <div class="card-body py-5">
+                <div class="display-1 @(Model.IsPass ? "text-success" : "text-danger") mb-3">
+                    @(Model.IsPass ? "✓" : "✗")
+                </div>
+                <h4 class="fw-bold mb-4">@Model.AssignmentTitle</h4>
+                <hr />
+                <div class="row g-3">
+                    <div class="col-4">
+                        <div class="p-3 bg-light rounded-3">
+                            <small class="text-muted d-block">Score</small>
+                            <h3 class="fw-bold mb-0 text-primary">@Model.TotalScore</h3>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 bg-light rounded-3">
+                            <small class="text-muted d-block">Grade</small>
+                            <h3 class="mb-0"><span class="badge bg-primary fs-5 rounded-pill px-4">@Model.Grade</span></h3>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 bg-light rounded-3">
+                            <small class="text-muted d-block">Result</small>
+                            <h3 class="mb-0">
+                                <span class="badge @(Model.IsPass ? "bg-success" : "bg-danger") fs-5 rounded-pill px-4">
+                                    @(Model.IsPass ? "PASS" : "FAIL")
+                                </span>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Remarks))
+                {
+                    <div class="mt-4 p-3 bg-warning bg-opacity-10 rounded-3">
+                        <strong class="text-muted"><i class="fas fa-comment me-1"></i> Remarks:</strong>
+                        <p class="mb-0 mt-1">@Model.Remarks</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-4 d-flex gap-2 justify-content-center">     <a asp-action="MyAssignments" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+     <a asp-action="Dashboard" class="btn btn-primary"><i class="fas fa-home me-1"></i> Dashboard</a>
+</div>

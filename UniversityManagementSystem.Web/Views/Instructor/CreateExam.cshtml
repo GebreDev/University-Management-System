@@ -1,0 +1,96 @@
+@model ExamDto
+@{
+    ViewData["Title"] = "Create Exam";
+}
+
+<h2><i class="fas fa-plus-circle me-2"></i> Create New Exam</h2>
+
+<div class="card shadow">
+    <div class="card-body">
+        <form asp-action="CreateExam" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label">Title</label>
+                        <input asp-for="Title" class="form-control" required />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="CourseId" class="form-label">Course</label>
+                        <select asp-for="CourseId" class="form-select" asp-items="@(new SelectList(ViewBag.Courses ?? new List<object>(), "Id", "Title"))">
+                            <option value="">-- Select Course --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label asp-for="Type" class="form-label">Exam Type</label>
+                        <select asp-for="Type" class="form-select">
+                            <option value="Midterm">Midterm</option>
+                            <option value="Final">Final</option>
+                            <option value="Quiz">Quiz</option>
+                            <option value="Assignment">Assignment</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label asp-for="DurationMinutes" class="form-label">Duration (minutes)</label>
+                        <input asp-for="DurationMinutes" class="form-control" type="number" min="1" max="480" value="60" required />
+                        <span asp-validation-for="DurationMinutes" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label asp-for="TotalMarks" class="form-label">Total Marks</label>
+                        <input asp-for="TotalMarks" class="form-control" type="number" min="1" required />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label asp-for="PassingMarks" class="form-label">Passing Marks</label>
+                        <input asp-for="PassingMarks" class="form-control" type="number" min="1" required />
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="StartDateTime" class="form-label">Start Date & Time</label>
+                        <input asp-for="StartDateTime" class="form-control" type="datetime-local" required />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="EndDateTime" class="form-label">End Date & Time</label>
+                        <input asp-for="EndDateTime" class="form-control" type="datetime-local" required />
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label">Description</label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Instructions" class="form-label">Instructions</label>
+                <textarea asp-for="Instructions" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="IsRandomized" class="form-check-input" />
+                <label asp-for="IsRandomized" class="form-check-label">Randomize Questions</label>
+            </div>
+            <div class="mb-3">
+                <label class="form-label"><i class="fas fa-paperclip me-1"></i> Attachment (optional)</label>
+                <input type="file" asp-for="AttachmentFile" class="form-control" />
+                <small class="text-muted">Upload exam question paper, guidelines, or any reference file.</small>
+            </div>
+            <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Create Exam</button>
+            <a asp-action="Exams" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,376 @@
+@model InstructorCreateViewModel
+@{
+    ViewData["Title"] = "Create Instructor";
+    var departments = ViewBag.Departments as IEnumerable<DepartmentListDto>;
+    var regions = ViewBag.Regions as SelectList;
+    var academicGrades = ViewBag.AcademicGrades as SelectList;
+    var courses = ViewBag.Courses as SelectList;
+}
+
+@section Styles {
+    <style>
+        .instructor-form-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+        .instructor-form-title h2 { font-weight: 700; color: #1e293b; margin-bottom: 0.25rem; }
+        .section-card { border: none; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 1rem; overflow: hidden; }
+        .section-header { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: linear-gradient(135deg, #4a90e2, #2c6fbf); color: white; font-weight: 600; font-size: 0.95rem; border-left: 4px solid #1e5aa8; }
+        .section-header.green { background: linear-gradient(135deg, #28a745, #1e7e34); border-left-color: #155724; }
+        .section-header i { font-size: 1rem; }
+        .section-body { padding: 1rem 1.25rem; background: #fff; }
+        .section-body .row > [class*="col-"] { margin-bottom: 0.75rem; }
+        .bottom-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e9ecef; }
+        .file-input-label { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border: 1px solid #dee2e6; border-radius: 6px; background: #f8f9fa; cursor: pointer; font-size: 0.85rem; color: #495057; transition: border-color 0.2s ease; }
+        .file-input-label:hover { border-color: #4a90e2; }
+        .file-input-label i { color: #4a90e2; }
+        .file-input-wrapper { position: relative; overflow: hidden; }
+        .file-input-wrapper input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+        .assignment-card { border: 1px solid #e9ecef; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; background: #fafbfc; position: relative; }
+        .assignment-card .assignment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+        .assignment-card .assignment-header h6 { margin: 0; font-weight: 600; color: #1e293b; }
+        .btn-remove-assignment { background: #dc3545; color: white; border: none; padding: 0.4rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease; }
+        .btn-remove-assignment:hover { background: #c82333; color: white; }
+        .btn-add-assignment { background: #17a2b8; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem; transition: all 0.2s ease; }
+        .btn-add-assignment:hover { background: #138496; color: white; }
+    </style>
+}
+
+<div class="instructor-form-header">
+    <div class="instructor-form-title">
+        <h2><i class="fas fa-chalkboard-user me-2 text-primary"></i>Create Instructor</h2>
+    </div>
+    <div>
+        <a asp-action="Instructors" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+    </div>
+</div>
+
+<form asp-action="CreateInstructor" method="post" enctype="multipart/form-data">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+    <!-- Instructor Information -->
+    <div class="section-card">
+        <div class="section-header"><i class="fas fa-user"></i> Instructor Information</div>
+        <div class="section-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label asp-for="FirstName" class="form-label">First Name</label>
+                    <input asp-for="FirstName" class="form-control" placeholder="Enter first name" />
+                    <span asp-validation-for="FirstName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="MiddleName" class="form-label">Middle Name</label>
+                    <input asp-for="MiddleName" class="form-control" placeholder="Enter middle name" />
+                    <span asp-validation-for="MiddleName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="LastName" class="form-label">Last Name</label>
+                    <input asp-for="LastName" class="form-control" placeholder="Enter last name" />
+                    <span asp-validation-for="LastName" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <label asp-for="Gender" class="form-label">Gender</label>
+                    <select asp-for="Gender" class="form-select">
+                        <option value="">- Select Gender -</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                    <span asp-validation-for="Gender" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <label asp-for="DateOfBirth" class="form-label">Date of Birth</label>
+                    <input asp-for="DateOfBirth" type="date" class="form-control" />
+                    <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" type="email" class="form-control" placeholder="instructor@example.com" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <label asp-for="Phone" class="form-label">Phone</label>
+                    <input asp-for="Phone" class="form-control" placeholder="Enter phone number" />
+                    <span asp-validation-for="Phone" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Address Information -->
+    <div class="section-card">
+        <div class="section-header"><i class="fas fa-map-marker-alt"></i> Address Information</div>
+        <div class="section-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <label asp-for="RegionId" class="form-label">Region</label>
+                    <select asp-for="RegionId" class="form-select" id="InstRegionId">
+                        <option value="">-- Select Region --</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="ZoneId" class="form-label">Zone</label>
+                    <select asp-for="ZoneId" class="form-select" id="InstZoneId">
+                        <option value="">-- Select Zone --</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label asp-for="WoredaId" class="form-label">Woreda</label>
+                    <select asp-for="WoredaId" class="form-select" id="InstWoredaId">
+                        <option value="">-- Select Woreda --</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="KebeleId" class="form-label">Kebele</label>
+                    <select asp-for="KebeleId" class="form-select" id="InstKebeleId">
+                        <option value="">-- Select Kebele --</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Professional Information -->
+    <div class="section-card">
+        <div class="section-header"><i class="fas fa-briefcase"></i> Professional Information</div>
+        <div class="section-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <label asp-for="Qualification" class="form-label">Qualification</label>
+                    <input asp-for="Qualification" class="form-control" placeholder="e.g., PhD, Masters, Bachelors" />
+                    <span asp-validation-for="Qualification" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Profile Picture</label>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            <i class="fas fa-camera"></i>
+                            <span id="instProfilePhotoName">Choose File</span>
+                            <input type="file" asp-for="ProfilePicture" accept="image/*" onchange="document.getElementById('instProfilePhotoName').textContent = this.files[0] ? this.files[0].name : 'Choose File'" />
+                        </label>
+                    </div>
+                    <span class="text-muted small">No file chosen</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label asp-for="HireDate" class="form-label">Hire Date</label>
+                    <input asp-for="HireDate" type="date" class="form-control" />
+                    <span asp-validation-for="HireDate" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="DepartmentId" class="form-label">Department</label>
+                    <select asp-for="DepartmentId" class="form-select" asp-items="@(new SelectList(departments, "Id", "Name"))">
+                        <option value="">-- Select Department --</option>
+                    </select>
+                    <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Assignments -->
+    <div class="section-card">
+        <div class="section-header"><i class="fas fa-book"></i> Course Assignments</div>
+        <div class="section-body">
+            <div id="assignmentsContainer">
+                <div class="assignment-card" data-index="0">
+                    <div class="assignment-header">
+                        <h6>Assignment 1</h6>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Course</label>
+                            <select asp-for="CourseAssignments[0].CourseId" class="form-select inst-course-select">
+                                <option value="">- Select Course -</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Year</label>
+                            <select asp-for="CourseAssignments[0].AcademicGradeId" class="form-select inst-grade-select">
+                                <option value="">- Select Year -</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="form-label">Sections</label>
+                            <input type="text" class="form-control" placeholder="e.g., Section A, Section B" />
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-remove-assignment" onclick="removeAssignment(this)">
+                            <i class="fas fa-trash me-1"></i> Remove Assignment
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-add-assignment" onclick="addAssignment()">
+                <i class="fas fa-plus me-1"></i> Add Another Assignment
+            </button>
+        </div>
+    </div>
+
+    <!-- Instructor Login Account -->
+    <div class="section-card">
+        <div class="section-header"><i class="fas fa-key"></i> Instructor Login Account</div>
+        <div class="section-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <label asp-for="Username" class="form-label">Username</label>
+                    <input asp-for="Username" class="form-control" placeholder="Enter username" />
+                    <span asp-validation-for="Username" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label asp-for="Password" class="form-label">Password</label>
+                    <input asp-for="Password" type="password" class="form-control" placeholder="Enter password" />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
+                    <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Confirm password" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Actions -->
+    <div class="bottom-actions">
+        <a asp-action="Instructors" class="btn btn-secondary"><i class="fas fa-times me-1"></i> Cancel</a>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus me-1"></i> Create Instructor</button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        var assignmentIndex = 1;
+
+        function addAssignment() {
+            var container = document.getElementById('assignmentsContainer');
+            var template = document.querySelector('.assignment-card').cloneNode(true);
+
+            template.setAttribute('data-index', assignmentIndex);
+            template.querySelector('.assignment-header h6').textContent = 'Assignment ' + (assignmentIndex + 1);
+
+            // Update select names
+            var courseSelect = template.querySelector('.inst-course-select');
+            var gradeSelect = template.querySelector('.inst-grade-select');
+            courseSelect.name = 'CourseAssignments[' + assignmentIndex + '].CourseId';
+            gradeSelect.name = 'CourseAssignments[' + assignmentIndex + '].AcademicGradeId';
+            courseSelect.id = 'CourseAssignments_' + assignmentIndex + '__CourseId';
+            gradeSelect.id = 'CourseAssignments_' + assignmentIndex + '__AcademicGradeId';
+
+            // Reset selections
+            courseSelect.selectedIndex = 0;
+            gradeSelect.selectedIndex = 0;
+
+            // Clear sections input
+            var sectionsInput = template.querySelector('input[type="text"]');
+            if (sectionsInput) sectionsInput.value = '';
+
+            container.appendChild(template);
+            assignmentIndex++;
+        }
+
+        function removeAssignment(btn) {
+            var cards = document.querySelectorAll('.assignment-card');
+            if (cards.length > 1) {
+                btn.closest('.assignment-card').remove();
+                // Re-number
+                var remaining = document.querySelectorAll('.assignment-card');
+                remaining.forEach(function(card, idx) {
+                    card.querySelector('.assignment-header h6').textContent = 'Assignment ' + (idx + 1);
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var regions = @Html.Raw(Json.Serialize(regions?.Select(r => new { value = r.Value, text = r.Text })));
+            var grades = @Html.Raw(Json.Serialize(academicGrades?.Select(g => new { value = g.Value, text = g.Text })));
+            var courseList = @Html.Raw(Json.Serialize(courses?.Select(c => new { value = c.Value, text = c.Text })));
+
+            // Populate Region dropdown
+            var instRegionSelect = document.getElementById('InstRegionId');
+            if (regions) {
+                regions.forEach(function (item) {
+                    var opt = document.createElement('option');
+                    opt.value = item.value; opt.textContent = item.text;
+                    instRegionSelect.appendChild(opt);
+                });
+            }
+
+            // Populate all course selects
+            document.querySelectorAll('.inst-course-select').forEach(function(sel) {
+                if (courseList) {
+                    courseList.forEach(function (item) {
+                        var opt = document.createElement('option');
+                        opt.value = item.value; opt.textContent = item.text;
+                        sel.appendChild(opt);
+                    });
+                }
+            });
+
+            // Populate all grade selects
+            document.querySelectorAll('.inst-grade-select').forEach(function(sel) {
+                if (grades) {
+                    grades.forEach(function (item) {
+                        var opt = document.createElement('option');
+                        opt.value = item.value; opt.textContent = item.text;
+                        sel.appendChild(opt);
+                    });
+                }
+            });
+
+            // Cascading address dropdowns
+            instRegionSelect.addEventListener('change', function () {
+                var regionId = this.value;
+                var zoneSelect = document.getElementById('InstZoneId');
+                var woredaSelect = document.getElementById('InstWoredaId');
+                var kebeleSelect = document.getElementById('InstKebeleId');
+                zoneSelect.innerHTML = '<option value="">-- Select Zone --</option>';
+                woredaSelect.innerHTML = '<option value="">-- Select Woreda --</option>';
+                kebeleSelect.innerHTML = '<option value="">-- Select Kebele --</option>';
+                if (regionId) {
+                    fetch('/Admin/GetZones?regionId=' + regionId).then(function (r) { return r.json(); }).then(function (data) {
+                        data.forEach(function (item) { var o = document.createElement('option'); o.value = item.id; o.textContent = item.name; zoneSelect.appendChild(o); });
+                    });
+                }
+            });
+
+            document.getElementById('InstZoneId').addEventListener('change', function () {
+                var zoneId = this.value;
+                var woredaSelect = document.getElementById('InstWoredaId');
+                var kebeleSelect = document.getElementById('InstKebeleId');
+                woredaSelect.innerHTML = '<option value="">-- Select Woreda --</option>';
+                kebeleSelect.innerHTML = '<option value="">-- Select Kebele --</option>';
+                if (zoneId) {
+                    fetch('/Admin/GetWoredas?zoneId=' + zoneId).then(function (r) { return r.json(); }).then(function (data) {
+                        data.forEach(function (item) { var o = document.createElement('option'); o.value = item.id; o.textContent = item.name; woredaSelect.appendChild(o); });
+                    });
+                }
+            });
+
+            document.getElementById('InstWoredaId').addEventListener('change', function () {
+                var woredaId = this.value;
+                var kebeleSelect = document.getElementById('InstKebeleId');
+                kebeleSelect.innerHTML = '<option value="">-- Select Kebele --</option>';
+                if (woredaId) {
+                    fetch('/Admin/GetKebeles?woredaId=' + woredaId).then(function (r) { return r.json(); }).then(function (data) {
+                        data.forEach(function (item) { var o = document.createElement('option'); o.value = item.id; o.textContent = item.name; kebeleSelect.appendChild(o); });
+                    });
+                }
+            });
+        });
+    </script>
+}

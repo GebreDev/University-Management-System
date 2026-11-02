@@ -1,0 +1,374 @@
+@model UniversityManagementSystem.Application.DTOs.Results.CourseAssessmentBoardDto
+@using UniversityManagementSystem.Application.Helpers
+@{
+    ViewData["Title"] = "Assessment - " + Model.CourseTitle;
+    var weightSum = Model.Assessments.Sum(a => a.Weight);
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h3 fw-bold mb-1"><i class="fas fa-clipboard-list me-2 text-primary"></i> Assessment Entry</h1>
+        <small class="text-muted">
+            <strong>@Model.CourseTitle</strong> (@Model.CourseCode) &middot;
+            Credit Hours: <strong>@Model.Credits.ToString("F2")</strong> &middot;
+            ECTS: <strong>@Model.Ects.ToString("F2")</strong>
+        </small>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+        @if (Model.IsPublished)
+        {
+            <span class="badge bg-success rounded-pill px-3 py-2">
+                <i class="fas fa-paper-plane me-1"></i> Results sent @(Model.PublishedAt.HasValue ? "on " + Model.PublishedAt.Value.ToString("MMM dd, yyyy") : "")
+            </span>
+        }         <a asp-action="Grades" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Grades &amp; Results</a>
+    </div>
+</div>
+
+<div id="boardAlert"></div>
+
+<div class="card shadow-sm border-0 rounded-4 mb-3">
+    <div class="card-body">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h6 class="mb-1 fw-bold"><i class="fas fa-users me-1"></i> @Model.Students.Count student(s)</h6>
+                <small class="text-muted">Add assessment columns (e.g. Test, Assignment, Lab, Final Exam) with their weight %, then enter marks for each student.</small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-light text-dark border rounded-pill px-3 py-2">
+                    Total weight: <strong id="weightTotal">@weightSum.ToString("0.#")</strong>%
+                </span>                 <button type="button" class="btn btn-primary" id="addColumnBtn">
+                    <i class="fas fa-plus me-1"></i> Add Assessment Column
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0 assessment-table" id="assessmentTable">
+                <thead>
+                    <tr id="tableHeaderRow">
+                        <th class="text-center bg-light" style="width: 55px; min-width: 55px;">No.</th>
+                        <th class="bg-light" style="min-width: 220px;">Student</th>
+                        <th class="bg-light" style="min-width: 110px;">ID No.</th>
+                        @foreach (var a in Model.Assessments)
+                        {
+                            <th class="text-center assessment-col" data-col-key="existing-@a.Id" data-name="@a.Name" data-weight="@a.Weight.ToString(System.Globalization.CultureInfo.InvariantCulture)" style="min-width: 150px;">
+                                <div class="assessment-col-header">
+                                    <input type="text" class="form-control form-control-sm col-name mb-1" value="@a.Name" placeholder="Assessment name" />
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control col-weight" value="@a.Weight" min="0" max="100" step="0.5" aria-label="Weight %" />
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger col-remove mt-1" title="Remove column"><i class="fas fa-times"></i></button>
+                                </div>
+                            </th>
+                        }
+                        <th class="text-center bg-light" style="min-width: 90px;">Total (%)</th>
+                        <th class="text-center bg-light" style="min-width: 90px;">Grade</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    @{ var rowNo = 0; }
+                    @foreach (var s in Model.Students)
+                    {
+                        rowNo++;
+                        <tr class="student-row" data-student-id="@s.StudentId">
+                            <td class="text-center text-muted">@rowNo</td>
+                            <td>
+                                <span class="fw-semibold">@s.StudentName</span>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">@s.StudentNumber</span></td>
+                            @foreach (var m in s.Marks)
+                            {
+                                <td class="text-center assessment-cell" data-assessment-key="existing-@m.AssessmentId">
+                                    <input type="number" class="form-control form-control-sm mark-input text-center"
+                                           value="@(m.Score.HasValue ? m.Score.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")"
+                                           min="0" step="0.5" placeholder="—" aria-label="Mark" />
+                                </td>
+                            }
+                            <td class="text-center">
+                                <span class="fw-bold total-cell">@(s.TotalMark > 0 ? s.TotalMark.ToString("F1") : "—")</span>
+                            </td>
+                            <td class="text-center">
+                                @if (s.TotalMark > 0)
+                                {
+                                    <span class="badge @GradeHelper.GradeBadgeClass(s.LetterGrade) rounded-pill fs-6 px-3 grade-badge">@s.LetterGrade</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-light text-dark border rounded-pill fs-6 px-3 grade-badge">—</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 mt-3">
+    <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="text-muted small">
+            <i class="fas fa-info-circle me-1"></i>
+            <strong>Save</strong> keeps a draft (students cannot see it).
+            <strong>Send</strong> publishes the results so students can view their grades.
+        </div>
+        <div class="d-flex gap-2">             <button type="button" class="btn btn-outline-secondary px-4" id="saveBtn">
+                <i class="fas fa-save me-2"></i> Save Marks
+            </button>             <button type="button" class="btn btn-success px-4" id="sendBtn">
+                <i class="fas fa-paper-plane me-2"></i> Send Results
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    var courseId = @Model.CourseId;
+    var token = $('input[name="__RequestVerificationToken"]').first().val() || '';
+    var busy = false;
+
+    // ---------- dynamic column state ----------
+    // each column: { key, name, weight }
+    var columns = [];
+    var colSeq = 0;
+
+    function newColKey() {
+        return 'new-' + (Date.now()) + '-' + (++colSeq);
+    }
+
+    function registerExistingColumns() {
+        $('#tableHeaderRow .assessment-col').each(function () {
+            var $th = $(this);
+            columns.push({
+                key: $th.data('col-key'),
+                name: $th.data('name') || '',
+                weight: parseFloat($th.data('weight')) || 0
+            });
+        });
+    }
+
+    function addColumn(name, weight) {
+        var key = newColKey();
+        columns.push({ key: key, name: name || '', weight: weight || 0 });
+
+        var $th = $('<th>', { class: 'text-center assessment-col', style: 'min-width:150px;' }).attr('data-col-key', key);
+        $th.html(
+            '<div class="assessment-col-header">' +
+                '<input type="text" class="form-control form-control-sm col-name mb-1" placeholder="Assessment name" />' +
+                '<div class="input-group input-group-sm">' +
+                    '<input type="number" class="form-control col-weight" value="0" min="0" max="100" step="0.5" aria-label="Weight %" />' +
+                    '<span class="input-group-text">%</span>' +
+                '</div>' +
+                '<button type="button" class="btn btn-sm btn-outline-danger col-remove mt-1" title="Remove column"><i class="fas fa-times"></i></button>' +
+            '</div>'
+        );
+        if (name) $th.find('.col-name').val(name);
+        if (weight) $th.find('.col-weight').val(weight);
+
+        // Insert before the Total column header
+        $th.insertBefore($('#tableHeaderRow th').eq(-2));
+
+        // Add a mark cell to every student row (before the Total cell)
+        $('#tableBody .student-row').each(function () {
+            var $td = $('<td>', { class: 'text-center assessment-cell' }).attr('data-assessment-key', key);
+            $td.html('<input type="number" class="form-control form-control-sm mark-input text-center" min="0" step="0.5" placeholder="0" aria-label="Mark" />');
+            $td.insertBefore($(this).find('td').eq(-2));
+        });
+
+        updateWeightTotal();
+    }
+
+    function removeColumn($th) {
+        var key = $th.data('col-key');
+        if (!key) return;
+        columns = columns.filter(function (c) { return c.key !== key; });
+        $th.remove();
+        $('#tableBody .student-row').each(function () {
+            $(this).find('.assessment-cell[data-assessment-key="' + key + '"]').remove();
+        });
+        recalcAll();
+        updateWeightTotal();
+    }
+
+    // ---------- totals / grade (client-side preview, mirrors server) ----------
+    function computeGrade(total) {
+        if (total >= 90) return 'A';
+        if (total >= 85) return 'A-';
+        if (total >= 80) return 'B+';
+        if (total >= 75) return 'B';
+        if (total >= 70) return 'B-';
+        if (total >= 65) return 'C+';
+        if (total >= 60) return 'C';
+        if (total >= 55) return 'C-';
+        if (total >= 50) return 'D';
+        return 'F';
+    }
+
+    function gradeBadgeClass(letter) {
+        switch (letter) {
+            case 'A': case 'A-': return 'bg-success';
+            case 'B+': case 'B': case 'B-': return 'bg-primary';
+            case 'C+': case 'C': case 'C-': return 'bg-warning text-dark';
+            case 'D': return 'bg-secondary';
+            case 'F': return 'bg-danger';
+            default: return 'bg-light text-dark border';
+        }
+    }
+
+    function recalcRow($row) {
+        var sum = 0, weightSum = 0;
+        $row.find('.assessment-cell').each(function () {
+            var $input = $(this).find('.mark-input');
+            var raw = $input.val();
+            if (raw === '' || raw === null || raw === undefined) return;
+            var val = parseFloat(raw);
+            if (isNaN(val)) return;
+            var key = $(this).data('assessment-key');
+            var col = columns.find(function (c) { return c.key === key; });
+            var w = col ? (col.weight || 0) : 0;
+            sum += val;
+            weightSum += w;
+        });
+        var total = weightSum > 0 ? (sum / weightSum * 100) : 0;
+        $row.find('.total-cell').text(total > 0 ? total.toFixed(1) : '—');
+        var $badge = $row.find('.grade-badge');
+        if (total > 0) {
+            var letter = computeGrade(total);
+            $badge.removeClass().addClass('badge rounded-pill fs-6 px-3 grade-badge ' + gradeBadgeClass(letter)).text(letter);
+        } else {
+            $badge.removeClass().addClass('badge bg-light text-dark border rounded-pill fs-6 px-3 grade-badge').text('—');
+        }
+    }
+
+    function recalcAll() {
+        $('#tableBody .student-row').each(function () { recalcRow($(this)); });
+    }
+
+    function updateWeightTotal() {
+        var sum = 0;
+        $('#tableHeaderRow .assessment-col').each(function () {
+            var w = parseFloat($(this).find('.col-weight').val());
+            if (!isNaN(w)) sum += w;
+        });
+        $('#weightTotal').text(sum.toFixed(1).replace(/\.0$/, ''));
+        $('#weightTotal').toggleClass('text-danger', Math.abs(sum - 100) > 0.01);
+    }
+
+    // ---------- payload ----------
+    function collectColumns() {
+        var result = [];
+        $('#tableHeaderRow .assessment-col').each(function () {
+            var $th = $(this);
+            var name = $th.find('.col-name').val() || '';
+            var weight = parseFloat($th.find('.col-weight').val()) || 0;
+            if (!name.trim() || weight <= 0) return;
+            result.push({ key: $th.data('col-key'), name: name.trim(), weight: weight });
+        });
+        return result;
+    }
+
+    function collectMarks(cols) {
+        var marks = [];
+        var keys = cols.map(function (c) { return c.key; });
+        $('#tableBody .student-row').each(function () {
+            var studentId = parseInt($(this).data('student-id'), 10);
+            $(this).find('.assessment-cell').each(function () {
+                var $input = $(this).find('.mark-input');
+                var key = $(this).data('assessment-key');
+                if (keys.indexOf(key) === -1) return;
+                var val = $input.val();
+                if (val === null || val === undefined || val === '') return;
+                var score = parseFloat(val);
+                if (isNaN(score)) return;
+                marks.push({ assessmentKey: key, studentId: studentId, score: score });
+            });
+        });
+        return marks;
+    }
+
+    // ---------- submit ----------
+    function submit(send) {
+        if (busy) return;
+        var cols = collectColumns();
+        if (!cols.length) {
+            showAlert('danger', 'Add at least one assessment column with a name and a weight before saving.');
+            return;
+        }
+        var totalW = cols.reduce(function (s, c) { return s + c.weight; }, 0);
+        if (totalW > 100) {
+            showAlert('danger', 'The total weight cannot exceed 100%. Current total: ' + totalW + '%');
+            return;
+        }
+        if (send && totalW < 100) {
+            if (!confirm('The assessment weights total ' + totalW + '% (not 100%). Send anyway?')) return;
+        }
+
+        var payload = {
+            courseId: courseId,
+            assessments: cols,
+            marks: collectMarks(cols)
+        };
+
+        busy = true;
+        $('#saveBtn, #sendBtn').prop('disabled', true);
+        showAlert('info', send ? 'Sending results to students...' : 'Saving marks...');
+
+        $.ajax({
+            url: send ? '/Instructor/SendAssessmentResults' : '/Instructor/SaveAssessmentMarks',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            headers: { 'RequestVerificationToken': token },
+            success: function (res) {
+                if (res && res.success) {
+                    showAlert('success', res.message);
+                    if (send) {
+                        setTimeout(function () { window.location.href = '/Instructor/Grades'; }, 1800);
+                    } else {
+                        busy = false;
+                        $('#saveBtn, #sendBtn').prop('disabled', false);
+                    }
+                } else {
+                    showAlert('danger', (res && res.message) || 'Something went wrong. Please try again.');
+                    busy = false;
+                    $('#saveBtn, #sendBtn').prop('disabled', false);
+                }
+            },
+            error: function () {
+                showAlert('danger', 'Network error while saving. Please try again.');
+                busy = false;
+                $('#saveBtn, #sendBtn').prop('disabled', false);
+            }
+        });
+    }
+
+    function showAlert(kind, message) {
+        var icons = { success: 'fa-circle-check', danger: 'fa-circle-exclamation', info: 'fa-circle-info' };
+        $('#boardAlert').html(
+            '<div class="alert alert-' + kind + ' alert-dismissible fade show shadow-sm" role="alert">' +
+                '<i class="fas ' + (icons[kind] || 'fa-circle-info') + ' me-2"></i>' + message +
+                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+            '</div>'
+        );
+    }
+
+    // ---------- events ----------
+    $(document).on('click', '#addColumnBtn', function () { addColumn('', 0); });
+    $(document).on('click', '.col-remove', function () { removeColumn($(this).closest('th')); });
+    $(document).on('input', '.col-name, .col-weight', function () { updateWeightTotal(); });
+    $(document).on('input', '.mark-input', function () { recalcRow($(this).closest('tr')); });
+    $(document).on('click', '#saveBtn', function () { submit(false); });
+    $(document).on('click', '#sendBtn', function () { submit(true); });
+
+    // ---------- init ----------
+    registerExistingColumns();
+    updateWeightTotal();
+})();
+</script>
+}

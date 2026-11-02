@@ -1,0 +1,452 @@
+@model IEnumerable<AuditLogDto>
+@{
+    ViewData["Title"] = "Audit Log";
+    var searchText = ViewBag.SearchText as string;
+    var selectedAction = ViewBag.SelectedAction as string;
+    var selectedEntity = ViewBag.SelectedEntity as string;
+    var fromDate = ViewBag.FromDate as string;
+    var toDate = ViewBag.ToDate as string;
+    var actionList = ViewBag.ActionList as List<string> ?? new List<string>();
+    var entityList = ViewBag.EntityList as List<string> ?? new List<string>();
+    var currentPage = Math.Max(1, (int)(ViewBag.Page ?? 1));
+    var pageSize = Math.Max(1, (int)(ViewBag.PageSize ?? 50));
+    var totalCount = Math.Max(0, (int)(ViewBag.TotalCount ?? 0));
+    var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+    var firstEntry = totalCount == 0 ? 0 : (currentPage - 1) * pageSize + 1;
+    var lastEntry = Math.Min(currentPage * pageSize, totalCount);
+}
+
+@section Styles {
+    <style>
+        .audit-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .audit-header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .audit-header-icon {
+            font-size: 2rem;
+            color: #3b82f6;
+        }
+        .audit-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 0;
+            color: #1e293b;
+        }
+        .audit-header p {
+            margin: 0.25rem 0 0 0;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+        .btn-export-csv {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.25rem;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            background: #fff;
+            color: #3b82f6;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .btn-export-csv:hover {
+            background: #3b82f6;
+            color: #fff;
+        }
+        .filter-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e2e8f0;
+        }
+        .filter-row {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            flex: 1;
+            min-width: 140px;
+        }
+        .filter-group label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .filter-group input,
+        .filter-group select {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            color: #334155;
+            background: #fff;
+            transition: border-color 0.2s;
+        }
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--btn-sky);
+            box-shadow: 0 0 0 3px rgba(74,144,226,0.15);
+        }
+        .btn-search {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--btn-sky);
+            color: #fff;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            min-width: 48px;
+            height: 38px;
+        }
+        .btn-search:hover {
+            background: var(--btn-sky-hover);
+        }
+        .table-card {
+            background: #fff;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: hidden;
+            border: 1px solid #dfe3e8;
+        }
+        .table-card table {
+            margin-bottom: 0;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-card thead th {
+            background: #1e293b;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 0.85rem 1rem;
+            border: 1px solid rgba(255,255,255,.18);
+            border-top: none;
+            border-bottom: 1px solid rgba(255,255,255,.18);
+            white-space: nowrap;
+            text-align: left;
+        }
+        .table-card thead th + th {
+            border-left: 1px solid rgba(255,255,255,.2);
+        }
+        .table-card tbody td {
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            color: #334155;
+            vertical-align: middle;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+            border-bottom: 1px solid #e5e7eb;
+            background: #fff;
+        }
+        .table-card tbody td + td {
+            border-left: 1px solid #dfe3e8;
+        }
+        .table-card tbody tr:hover {
+            background: #f8fafc;
+        }
+        .table-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+        .pagination-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .pagination-controls a,
+        .pagination-controls span.page-static {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.85rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #3b82f6;
+            background: #fff;
+            text-decoration: none;
+        }
+        .pagination-controls a:hover { background: #eff6ff; }
+        .pagination-controls span.page-static { color: #64748b; border: none; }
+        .pagination-controls a.disabled {
+            color: #cbd5e1;
+            pointer-events: none;
+        }
+        .table-footer {
+            padding: 0.85rem 1rem;
+            color: #64748b;
+            font-size: 0.85rem;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        .badge-action {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .badge-create { background: #dcfce7; color: #166534; }
+        .badge-update { background: #dbeafe; color: #1e40af; }
+        .badge-delete { background: #fee2e2; color: #991b1b; }
+        .badge-login { background: #fef9c3; color: #854d0e; }
+        .badge-logout { background: #f3e8ff; color: #6b21a8; }
+        .badge-default { background: #f1f5f9; color: #475569; }
+        .ip-cell code {
+            background: #f1f5f9;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #475569;
+        }
+        .entity-cell {
+            font-weight: 500;
+        }
+        .description-cell {
+            max-width: 350px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .detail-link {
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 0.8rem;
+            margin-left: 0.25rem;
+        }
+        .detail-link:hover { text-decoration: underline; }
+        .role-badge {
+            display: inline-block;
+            padding: 0.2rem 0.55rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .role-admin { background: #fef3c7; color: #92400e; }
+        .role-instructor { background: #dbeafe; color: #1e40af; }
+        .role-student { background: #dcfce7; color: #166534; }
+        .role-default { background: #f1f5f9; color: #475569; }
+        .entity-id-cell code {
+            background: #f1f5f9;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #475569;
+        }
+    </style>
+}
+
+<div class="audit-header">
+    <div class="audit-header-left">
+        <i class="fas fa-shield-halved audit-header-icon"></i>
+        <div>
+            <h1>Audit Log</h1>
+            <p>A record of important actions performed by users across the system.</p>
+        </div>
+    </div>
+    <a asp-action="ExportAuditLogs"
+       asp-route-searchText="@searchText"
+       asp-route-actionFilter="@selectedAction"
+       asp-route-entityFilter="@selectedEntity"
+       asp-route-from="@fromDate"
+       asp-route-to="@toDate"
+       class="btn-export-csv">
+        <i class="fas fa-download"></i> Export CSV
+    </a>
+</div>
+
+<!-- Filter Section -->
+<div class="filter-card">
+    <!-- actionFilter / entityFilter: must NOT be named "action"/"entity" or MVC
+         route-value binding would override them with the page's own action name. -->
+    <form asp-action="AuditLogs" method="get">
+        <div class="filter-row">
+            <div class="filter-group" style="flex: 2;">
+                <label>Search</label>
+                <input type="text" name="searchText" value="@searchText" placeholder="User, email, entity, IP..." />
+            </div>
+            <div class="filter-group">
+                <label>Action</label>
+                <select name="actionFilter">
+                    <option value="">All Actions</option>
+                    @foreach (var a in actionList)
+                    {
+                        <option value="@a" selected="@(a == selectedAction)">@a</option>
+                    }
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Entity Type</label>
+                <select name="entityFilter">
+                    <option value="">All Types</option>
+                    @foreach (var e in entityList)
+                    {
+                        <option value="@e" selected="@(e == selectedEntity)">@e</option>
+                    }
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>From</label>
+                <input type="date" name="from" value="@fromDate" />
+            </div>
+            <div class="filter-group">
+                <label>To</label>
+                <input type="date" name="to" value="@toDate" />
+            </div>
+            <button type="submit" class="btn-search" title="Search">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Table Section -->
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date / Time</th>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>IP Address</th>
+                    <th>Action</th>
+                    <th>Entity</th>
+                    <th>Entity ID</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="table-empty">
+                            No matching audit entries found.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var log in Model)
+                    {
+                        var badgeClass = log.Action?.ToLower() switch
+                        {
+                            "create" => "badge-create",
+                            "update" => "badge-update",
+                            "delete" => "badge-delete",
+                            "login" => "badge-login",
+                            "logout" => "badge-logout",
+                            _ => "badge-default"
+                        };
+                        var roleBadgeClass = log.UserRole?.ToLower() switch
+                        {
+                            "admin" => "role-admin",
+                            "instructor" => "role-instructor",
+                            "student" => "role-student",
+                            _ => "role-default"
+                        };
+                        <tr>
+                            <td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            <td>@log.UserName</td>
+                            <td><span class="role-badge @roleBadgeClass">@log.UserRole</span></td>
+                            <td class="ip-cell"><code>@(log.IpAddress ?? "-")</code></td>
+                            <td><span class="badge-action @badgeClass">@log.Action</span></td>
+                            <td class="entity-cell">@log.Entity</td>
+                            <td class="entity-id-cell"><code>@(log.EntityId?.ToString() ?? "-")</code></td>
+                            <td class="description-cell">
+                                @if (!string.IsNullOrEmpty(log.Details) && log.Details.Length > 60)
+                                {
+                                    <span title="@log.Details">@log.Details.Substring(0, 60)...</span>
+                                }
+                                else
+                                {
+                                    <span>@(log.Details ?? "-")</span>
+                                }
+                                <a asp-action="AuditLogDetails" asp-route-id="@log.Id" class="detail-link" title="View details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="table-footer">
+        <div class="pagination-row">
+            <span>Showing @firstEntry–@lastEntry of @totalCount entries.</span>
+            @if (totalPages > 1)
+            {
+                <div class="pagination-controls">
+                    @if (currentPage > 1)
+                    {
+                        <a asp-action="AuditLogs"
+                           asp-route-searchText="@searchText"
+                           asp-route-actionFilter="@selectedAction"
+                           asp-route-entityFilter="@selectedEntity"
+                           asp-route-from="@fromDate"
+                           asp-route-to="@toDate"
+                           asp-route-page="@(currentPage - 1)"><i class="fas fa-chevron-left"></i> Previous</a>
+                    }
+                    else
+                    {
+                        <a class="disabled"><i class="fas fa-chevron-left"></i> Previous</a>
+                    }
+                    <span class="page-static">Page @currentPage of @totalPages</span>
+                    @if (currentPage < totalPages)
+                    {
+                        <a asp-action="AuditLogs"
+                           asp-route-searchText="@searchText"
+                           asp-route-actionFilter="@selectedAction"
+                           asp-route-entityFilter="@selectedEntity"
+                           asp-route-from="@fromDate"
+                           asp-route-to="@toDate"
+                           asp-route-page="@(currentPage + 1)">Next <i class="fas fa-chevron-right"></i></a>
+                    }
+                    else
+                    {
+                        <a class="disabled">Next <i class="fas fa-chevron-right"></i></a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

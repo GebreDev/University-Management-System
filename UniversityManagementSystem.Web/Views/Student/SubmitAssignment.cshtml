@@ -1,0 +1,38 @@
+@model AssignmentDto
+@{
+    ViewData["Title"] = "Submit Assignment";
+}
+
+<h2><i class="fas fa-upload me-2"></i> Submit Assignment</h2>
+
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5>@Model.Title</h5>
+    </div>
+    <div class="card-body">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+        <dl class="row">
+            <dt class="col-sm-3">Course</dt>
+            <dd class="col-sm-9">@Model.CourseName</dd>
+            <dt class="col-sm-3">Description</dt>
+            <dd class="col-sm-9">@Model.Description</dd>
+            <dt class="col-sm-3">Deadline</dt>
+            <dd class="col-sm-9">@Model.Deadline.ToString("MMM dd, yyyy HH:mm")</dd>
+            <dt class="col-sm-3">Total Marks</dt>
+            <dd class="col-sm-9">@Model.TotalMarks</dd>
+        </dl>
+
+        <hr />
+        <form asp-action="SubmitAssignment" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="AssignmentId" value="@Model.Id" />
+            <div class="mb-3">
+                <label class="form-label">Upload your submission file</label>
+                <input type="file" name="File" class="form-control" accept=".pdf,.docx,.xlsx,.csv,.txt,.zip" required />
+                <small class="text-muted">Supported formats: PDF, DOCX, ZIP</small>
+            </div>
+            <button type="submit" class="btn btn-success"><i class="fas fa-paper-plane me-2"></i> Submit</button>
+            <a asp-action="MyAssignments" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

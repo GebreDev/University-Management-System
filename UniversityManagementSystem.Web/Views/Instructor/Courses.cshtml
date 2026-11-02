@@ -1,0 +1,139 @@
+@model IEnumerable<CourseListDto>
+@{
+    ViewData["Title"] = "My Courses";
+    var items = Model.ToList();
+    var totalStudents = items.Sum(i => i.EnrollmentCount);
+    var totalCredits = items.Sum(i => i.Credits);
+}
+
+<style>
+    /* Course tile action buttons: icon-only by default, label slides out on hover.
+       Each button takes an equal share of the tile width so the row is evenly
+       distributed and scales with the card size. */
+    .course-actions {
+        width: 100%;
+    }
+    .course-actions .btn-icon-expand {
+        flex: 1 1 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.6rem;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+    .course-actions .btn-icon-expand .btn-label {
+        display: inline-block;
+        max-width: 0;
+        opacity: 0;
+        transform: translateX(-2px);
+        transition: max-width .25s ease, opacity .2s ease, margin-left .25s ease, transform .25s ease;
+    }
+    .course-actions .btn-icon-expand:hover .btn-label,
+    .course-actions .btn-icon-expand:focus-visible .btn-label {
+        max-width: 8rem;
+        opacity: 1;
+        margin-left: .4rem;
+        transform: translateX(0);
+    }
+</style>
+
+<div class="dash-page">
+
+    <!-- Header -->
+    <div class="dash-head">
+        <div>
+            <h1 class="dash-greeting"><i class="fas fa-book-open me-2 text-primary"></i>My Courses</h1>
+            <p class="dash-subtitle">Everything you teach, with quick access to students and attendance.</p>
+        </div>
+        <div class="dash-date">
+            <strong>@items.Count courses</strong>
+            <span>@totalStudents students · @totalCredits credits</span>
+        </div>
+    </div>
+
+    <!-- Metric cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-icon stat-grad-a"><i class="fas fa-book-open"></i></div>
+                <div class="metric-body">
+                    <div class="metric-label">Courses</div>
+                    <span class="metric-value">@items.Count</span>
+                    <div class="metric-footer"><span class="metric-sub">currently teaching</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-icon stat-grad-c"><i class="fas fa-user-graduate"></i></div>
+                <div class="metric-body">
+                    <div class="metric-label">Students</div>
+                    <span class="metric-value">@totalStudents.ToString("N0")</span>
+                    <div class="metric-footer"><span class="metric-sub">enrolled seats</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-icon stat-grad-d"><i class="fas fa-layer-group"></i></div>
+                <div class="metric-body">
+                    <div class="metric-label">Credits</div>
+                    <span class="metric-value">@totalCredits</span>
+                    <div class="metric-footer"><span class="metric-sub">total workload</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-icon stat-grad-b"><i class="fas fa-calendar-check"></i></div>
+                <div class="metric-body">
+                    <div class="metric-label">Attendance</div>
+                    <span class="metric-value"><i class="fas fa-arrow-right me-1 opacity-50"></i></span>
+                    <div class="metric-footer">
+                        <a asp-action="Attendance" class="dash-link">Manage now →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!items.Any())
+    {
+        <div class="list-card text-center py-5">
+            <i class="fas fa-book-open fa-4x text-muted mb-3 opacity-50"></i>
+            <h5 class="text-muted">No Courses Assigned</h5>
+            <p class="text-muted mb-0">You don't teach any courses yet. Contact an administrator to assign courses.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var item in items)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <div class="course-tile h-100" data-search="@($"{item.Title} {item.Code} {item.DepartmentName}")">
+                        <div class="course-tile-top">
+                            <span class="course-code">@item.Code</span>
+                            <span class="course-students"><i class="fas fa-user-graduate me-1"></i>@item.EnrollmentCount students</span>
+                        </div>
+                        <h6 class="fw-bold mb-0 mt-1">@item.Title</h6>
+                        <small class="text-muted">@item.DepartmentName · @item.Credits credits</small>
+
+                        <div class="course-actions d-flex flex-nowrap gap-3 mt-3">
+                            <a asp-action="Students" asp-route-courseId="@item.Id" class="btn btn-primary btn-sm btn-icon-expand" title="Students" aria-label="Students">
+                                <i class="fas fa-user-graduate"></i><span class="btn-label">Students</span>
+                            </a>
+                            <a asp-action="MarkAttendance" asp-route-courseId="@item.Id" class="btn btn-outline-primary btn-sm btn-icon-expand" title="Attendance" aria-label="Attendance">
+                                <i class="fas fa-pen"></i><span class="btn-label">Attendance</span>
+                            </a>
+                            <a asp-action="AttendanceHistory" asp-route-courseId="@item.Id" class="btn btn-outline-secondary btn-sm btn-icon-expand" title="History" aria-label="History">
+                                <i class="fas fa-history"></i><span class="btn-label">History</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

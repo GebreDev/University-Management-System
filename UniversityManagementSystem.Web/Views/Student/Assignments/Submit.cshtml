@@ -1,0 +1,16 @@
+@model AssignmentDto
+@{
+    ViewData["Title"] = "Submit Assignment";
+}
+
+<h2>Submit Assignment: @Model.Title</h2>
+
+<form asp-action="SubmitAssignment" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="assignmentId" value="@Model.Id" />
+    <div class="form-group">
+        <label>Upload File</label>
+        <input type="file" name="file" class="form-control-file" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

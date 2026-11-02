@@ -1,0 +1,82 @@
+@model UniversityManagementSystem.Application.DTOs.CourseMaterial.CourseMaterialViewDto
+@{
+    ViewData["Title"] = "Course Material Details";
+}
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="fw-bold mb-0"><i class="fas fa-file-alt me-2 text-primary"></i>Material Details</h2>
+                <a asp-action="Index" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold">@Model.Title</h4>
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <p class="text-muted">@Model.Description</p>
+                    }
+                    <hr />
+
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Course</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-light text-dark border">@Model.CourseCode</span> @Model.CourseTitle
+                        </dd>
+
+                        <dt class="col-sm-4">File Name</dt>
+                        <dd class="col-sm-8"><code>@Model.FileName</code></dd>
+
+                        <dt class="col-sm-4">File Type</dt>
+                        <dd class="col-sm-8"><span class="badge bg-secondary text-uppercase">@Model.FileType</span></dd>
+
+                        <dt class="col-sm-4">File Size</dt>
+                        <dd class="col-sm-8">@FormatSize(Model.FileSize)</dd>
+
+                        <dt class="col-sm-4">Downloads</dt>
+                        <dd class="col-sm-8">@Model.DownloadCount</dd>
+
+                        <dt class="col-sm-4">Uploaded By</dt>
+                        <dd class="col-sm-8">@Model.UploadedByName</dd>
+
+                        <dt class="col-sm-4">Uploaded On</dt>
+                        <dd class="col-sm-8">@Model.CreatedAt.ToString("MMMM dd, yyyy — HH:mm")</dd>
+
+                        @if (Model.UpdatedAt.HasValue)
+                        {
+                            <dt class="col-sm-4">Last Updated</dt>
+                            <dd class="col-sm-8">@Model.UpdatedAt.Value.ToString("MMMM dd, yyyy — HH:mm")</dd>
+                        }
+                    </dl>
+                </div>
+                <div class="card-footer bg-white d-flex justify-content-end gap-2 py-3">
+                    <a asp-action="Download" asp-route-id="@Model.Id" class="btn btn-success">
+                        <i class="fas fa-download me-1"></i> Download
+                    </a>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                        <i class="fas fa-edit me-1"></i> Edit
+                    </a>
+                    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline"
+                          data-confirm-title="Delete course material?"
+                          data-confirm-message="Delete @Model.Title? This cannot be undone.">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i> Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private static string FormatSize(long bytes) => bytes switch
+    {
+        >= 1024 * 1024 => $"{bytes / 1024.0 / 1024.0:F1} MB",
+        >= 1024 => $"{bytes / 1024.0:F0} KB",
+        _ => $"{bytes} B"
+    };
+}

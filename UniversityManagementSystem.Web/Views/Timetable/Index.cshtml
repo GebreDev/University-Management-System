@@ -1,0 +1,190 @@
+@{
+    ViewData["Title"] = "University Timetable";
+    var academicYears = ViewBag.AcademicYears as IEnumerable<AcademicYear> ?? Enumerable.Empty<AcademicYear>();
+    var grades = ViewBag.Grades as IEnumerable<AcademicGrade> ?? Enumerable.Empty<AcademicGrade>();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0"><i class="fas fa-calendar-alt me-2 text-primary"></i>University Timetable</h2>
+    <div>
+        <a asp-action="ManageYears" class="btn btn-sm btn-outline-secondary"><i class="fas fa-calendar me-1"></i> Years</a>
+        <a asp-action="ManageGrades" class="btn btn-sm btn-outline-secondary"><i class="fas fa-layer-group me-1"></i> Grades</a>
+    </div>
+</div>
+
+<!-- Filter bar -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form id="timetableForm" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Academic Year</label>
+                <select id="academicYearSelect" class="form-select">
+                    <option value="">Select Academic Year</option>
+                    @foreach (var y in academicYears)
+                    {
+                        <option value="@y.Id">@y.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Semester</label>
+                <select id="semesterSelect" class="form-select" disabled>
+                    <option value="">Select Semester</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Year</label>
+                <select id="gradeSelect" class="form-select">
+                    <option value="">Select Year</option>
+                    @foreach (var g in grades)
+                    {
+                        <option value="@g.Id">@g.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Section</label>
+                <select id="sectionSelect" class="form-select" disabled>
+                    <option value="">Select Section</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="button" id="goBtn" class="btn btn-primary w-100" disabled>
+                    <i class="fas fa-search me-1"></i> Go
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Info message -->
+<div id="infoMessage" class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>Please select Academic Year, Semester, Year and Section.
+</div>
+
+<!-- Timetable grid -->
+<div id="timetableContainer" class="d-none">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 id="timetableTitle" class="mb-0"></h5>
+        <a id="addEntryLink" href="#" class="btn btn-sm btn-success"><i class="fas fa-plus me-1"></i> Add Entry</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle" id="timetableTable">
+            <thead class="table-dark">
+                <tr>
+                    <th>Day</th>
+                    <th>Period</th>
+                    <th>Course</th>
+                    <th>Instructor</th>
+                    <th>Room</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="timetableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <div id="noEntries" class="text-center text-muted py-4 d-none">
+        <i class="fas fa-calendar-times fa-2x mb-2"></i>
+        <p>No timetable entries found for this selection.</p>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            var days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+            // Academic Year → Semester
+            $('#academicYearSelect').on('change', function () {
+                var yearId = $(this).val();
+                $('#semesterSelect').empty().append('<option value="">Select Semester</option>').prop('disabled', true);
+                $('#sectionSelect').empty().append('<option value="">Select Section</option>').prop('disabled', true);
+                updateGoBtn();
+                if (!yearId) return;
+                $.get('/Timetable/GetSemesters', { academicYearId: yearId }, function (data) {
+                    $.each(data, function (i, s) {
+                        $('#semesterSelect').append($('<option>', { value: s.id, text: s.name }));
+                    });
+                    $('#semesterSelect').prop('disabled', false);
+                });
+            });
+
+            // Grade → Section
+            $('#gradeSelect').on('change', function () {
+                var gradeId = $(this).val();
+                $('#sectionSelect').empty().append('<option value="">Select Section</option>').prop('disabled', true);
+                updateGoBtn();
+                if (!gradeId) return;
+                $.get('/Timetable/GetSections', { gradeId: gradeId }, function (data) {
+                    $.each(data, function (i, s) {
+                        $('#sectionSelect').append($('<option>', { value: s.id, text: s.name }));
+                    });
+                    $('#sectionSelect').prop('disabled', false);
+                });
+            });
+
+            $('#semesterSelect, #sectionSelect').on('change', updateGoBtn);
+
+            function updateGoBtn() {
+                var ready = $('#academicYearSelect').val() && $('#semesterSelect').val() && $('#gradeSelect').val() && $('#sectionSelect').val();
+                $('#goBtn').prop('disabled', !ready);
+            }
+
+            // Go button → load timetable
+            $('#goBtn').on('click', function () {
+                var params = {
+                    academicYearId: $('#academicYearSelect').val(),
+                    semesterId: $('#semesterSelect').val(),
+                    gradeId: $('#gradeSelect').val(),
+                    sectionId: $('#sectionSelect').val()
+                };
+
+                var yearText = $('#academicYearSelect option:selected').text();
+                var semText = $('#semesterSelect option:selected').text();
+                var gradeText = $('#gradeSelect option:selected').text();
+                var sectionText = $('#sectionSelect option:selected').text();
+
+                $('#timetableTitle').text(yearText + ' — ' + semText + ' — ' + gradeText + ' ' + sectionText);
+                $('#addEntryLink').attr('href', '/Timetable/CreateEntry?academicYearId=' + params.academicYearId + '&semesterId=' + params.semesterId + '&gradeId=' + params.gradeId + '&sectionId=' + params.sectionId);
+
+                $.get('/Timetable/GetTimetable', params, function (data) {
+                    var $body = $('#timetableBody').empty();
+                    if (data.length === 0) {
+                        $('#timetableTable').addClass('d-none');
+                        $('#noEntries').removeClass('d-none');
+                    } else {
+                        $('#timetableTable').removeClass('d-none');
+                        $('#noEntries').addClass('d-none');
+                        $.each(data, function (i, entry) {
+                            $body.append(
+                                '<tr>' +
+                                '<td><span class="badge bg-primary">' + entry.day + '</span></td>' +
+                                '<td>' + entry.period + '</td>' +
+                                '<td><strong>' + entry.subject + '</strong></td>' +
+                                '<td>' + (entry.instructor || '—') + '</td>' +
+                                '<td>' + (entry.room || '—') + '</td>' +
+                                '<td class="text-center">' +
+                                '<a href="/Timetable/EditEntry/' + entry.id + '" class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-edit"></i></a>' +
+                                '<form method="post" action="/Timetable/DeleteEntry/' + entry.id + '" class="d-inline" data-confirm-title="Delete timetable entry?" data-confirm-message="Are you sure you want to delete this timetable entry? This action cannot be undone.">' +
+                                '<input type="hidden" name="academicYearId" value="' + params.academicYearId + '" />' +
+                                '<input type="hidden" name="semesterId" value="' + params.semesterId + '" />' +
+                                '<input type="hidden" name="gradeId" value="' + params.gradeId + '" />' +
+                                '<input type="hidden" name="sectionId" value="' + params.sectionId + '" />' +
+                                '@Html.AntiForgeryToken()' +
+                                '<button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>' +
+                                '</form>' +
+                                '</td>' +
+                                '</tr>'
+                            );
+                        });
+                    }
+                    $('#infoMessage').addClass('d-none');
+                    $('#timetableContainer').removeClass('d-none');
+                });
+            });
+        });
+    </script>
+}

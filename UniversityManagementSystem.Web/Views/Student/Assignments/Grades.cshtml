@@ -1,0 +1,23 @@
+@model IEnumerable<SubmissionDto>
+@{
+    ViewData["Title"] = "Assignment Grades";
+}
+
+<h2>Assignment Grades</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr><th>Assignment</th><th>Grade</th><th>Feedback</th><th>Submitted</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var s in Model)
+        {
+            <tr>
+                <td>@s.AssignmentId</td>
+                <td>@s.Grade</td>
+                <td>@s.Feedback</td>
+                <td>@s.SubmittedAt.ToShortDateString()</td>
+            </tr>
+        }
+    </tbody>
+</table>

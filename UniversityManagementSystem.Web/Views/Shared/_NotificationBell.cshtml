@@ -1,0 +1,68 @@
+@using Microsoft.AspNetCore.Identity
+@using UniversityManagementSystem.Domain.Entities
+@using UniversityManagementSystem.Application.Interfaces.Services
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject INotificationService NotificationService
+@if (SignInManager.IsSignedIn(User))
+{
+    var user = await UserManager.GetUserAsync(User);
+    if (user != null)
+    {
+        var unreadCount = await NotificationService.GetUnreadCountAsync(user.Id);
+        var recent = (await NotificationService.GetUserNotificationsAsync(user.Id)).Take(5).ToList();
+        <li class="nav-item position-relative">
+            <button type="button" class="nav-icon-btn" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                <i class="far fa-bell"></i>
+                @if (unreadCount > 0)
+                {
+                    <span class="notif-badge" id="notificationBadge">@unreadCount</span>
+                }
+            </button>
+            <div class="dropdown-menu dropdown-menu-end notification-dropdown shadow-lg border-0 rounded-3">
+                <div class="notification-dropdown-header d-flex justify-content-between align-items-center px-3 py-2">
+                    <strong class="small text-uppercase">Notifications</strong>
+                    @if (unreadCount > 0)
+                    {
+                        <form asp-controller="Notification" asp-action="MarkAllAsRead" method="post" class="m-0" data-ajax-markallread>
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-link btn-sm p-0 text-primary text-decoration-none" data-markallread>Mark all read</button>
+                        </form>
+                    }
+                </div>
+                <div class="notification-dropdown-list">
+                    @if (recent.Any())
+                    {
+                        @foreach (var n in recent)
+                        {
+                            <a class="dropdown-item notification-item @(n.IsRead ? "" : "unread")"
+                               href="@(string.IsNullOrWhiteSpace(n.LinkUrl) ? Url.Action("Index", "Notification") : n.LinkUrl)"
+                               data-notification-id="@n.Id"
+                               data-read="@(n.IsRead ? "true" : "false")">
+                                <div class="d-flex align-items-start">
+                                    <span class="notif-dot @(n.IsRead ? "read" : "")"></span>
+                                    <div class="flex-grow-1 ms-2 min-width-0">
+                                        <strong class="d-block small text-truncate">@n.Title</strong>
+                                        <small class="text-muted d-block text-truncate">@n.Message</small>
+                                        <small class="text-muted d-block notif-time">@n.CreatedAt.ToString("MMM dd, HH:mm")</small>
+                                    </div>
+                                </div>
+                            </a>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="far fa-bell-slash fa-2x mb-2 opacity-50"></i>
+                            <p class="small mb-0">You're all caught up!</p>
+                        </div>
+                    }
+                </div>
+                <div class="dropdown-divider m-0"></div>
+                <a class="dropdown-item text-center small fw-semibold text-primary py-2" asp-controller="Notification" asp-action="Index">
+                    View all notifications
+                </a>
+            </div>
+        </li>
+    }
+}

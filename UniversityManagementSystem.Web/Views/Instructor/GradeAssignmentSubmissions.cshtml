@@ -1,0 +1,101 @@
+@model IEnumerable<AssignmentResultDto>
+@{
+    ViewData["Title"] = "Grade Assignment Submissions";
+    var assignment = ViewBag.Assignment as AssignmentDto;
+    var manualCount = assignment?.Questions?.Count(q => q.Type == UniversityManagementSystem.Domain.Enums.ExamType.Essay || q.Type == UniversityManagementSystem.Domain.Enums.ExamType.ShortAnswer) ?? 0;
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<style>
+    .summary-card {
+        transition: all 0.2s ease;
+    }
+    .summary-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h2 class="fw-bold"><i class="fas fa-check-double me-2 text-success"></i> Grade Submissions</h2>
+        <p class="text-muted mb-0">
+            <strong>@assignment?.Title</strong>
+            <span class="mx-2">|</span>
+            <span class="badge bg-info">Total Marks: @assignment?.TotalMarks</span>
+            <span class="mx-2">|</span>
+            <span class="badge bg-secondary">@Model.Count() submission(s)</span>
+        </p>
+    </div>
+    <div>         <a asp-action="ManageAssignmentQuestions" asp-route-assignmentId="@assignment?.Id" class="btn btn-outline-success">
+            <i class="fas fa-list-check me-1"></i> Manage Questions
+        </a>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info shadow-sm rounded-3">
+        <i class="fas fa-info-circle me-2"></i> No submissions to grade yet. Submissions will appear here once students answer the assignment.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Student</th>
+                    <th>Total Score</th>
+                    <th>Grade</th>
+                    <th>Result</th>
+                    <th>Remarks</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><strong>@item.StudentName</strong></td>
+                        <td><span class="fw-bold">@item.TotalScore</span> / @assignment?.TotalMarks</td>
+                        <td><span class="badge bg-primary rounded-pill px-3">@item.Grade</span></td>
+                        <td>
+                            <span class="badge @(item.IsPass ? "bg-success" : "bg-danger") rounded-pill px-3">
+                                @(item.IsPass ? "Pass" : "Fail")
+                            </span>
+                        </td>
+                        <td>@(string.IsNullOrEmpty(item.Remarks) ? "—" : item.Remarks)</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a asp-action="GradeAssignmentEssays" asp-route-assignmentId="@item.AssignmentId" asp-route-studentId="@item.StudentId"
+                                   class="btn btn-outline-warning" title="Manual Grading (Essays & Short Answers)">
+                                    <i class="fas fa-pen"></i> Manual Grade
+                                </a>
+                                <a asp-action="UpdateAssignmentResult" asp-route-resultId="@item.Id"
+                                   class="btn btn-outline-primary" title="Update Result">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-muted small mt-2">
+        Showing @Model.Count() submission(s)
+        @if (manualCount > 0)
+        {
+            <span class="mx-2">|</span>
+            <span>@manualCount question(s) require manual grading</span>
+        }
+    </div>
+}
+
+<div class="mt-3">     <a asp-action="Assignments" class="btn-back-pill">
+        <i class="fas fa-chevron-left"></i> Back
+    </a>
+</div>

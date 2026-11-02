@@ -1,0 +1,57 @@
+@model DepartmentViewDto
+@{
+    ViewData["Title"] = "Department Details";
+}
+
+<h2>Department Details</h2>
+<div>
+    <dl class="row">
+        <dt class="col-sm-2">Name</dt>
+        <dd class="col-sm-10">@Model.Name</dd>
+        <dt class="col-sm-2">Code</dt>
+        <dd class="col-sm-10">@Model.Code</dd>
+        <dt class="col-sm-2">Description</dt>
+        <dd class="col-sm-10">@Model.Description</dd>
+        <dt class="col-sm-2">Created</dt>
+        <dd class="col-sm-10">@Model.CreatedAt.ToShortDateString()</dd>
+        <dt class="col-sm-2">Status</dt>
+        <dd class="col-sm-10">@Model.Status</dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="EditDepartment" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+    <a asp-action="Departments" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+</div>
+
+<h4>Instructors</h4>
+<table class="table">
+    <thead><tr><th>Name</th><th>Email</th></tr></thead>
+    <tbody>
+        @foreach (var instructor in Model.Instructors)
+        {
+            <tr><td>@instructor.FullName</td><td>@instructor.Email</td></tr>
+        }
+    </tbody>
+</table>
+
+<h4>Students</h4>
+<table class="table">
+    <thead><tr><th>Name</th><th>Student ID</th></tr></thead>
+    <tbody>
+        @foreach (var student in Model.Students)
+        {
+            <tr><td>@student.FullName</td><td>@student.StudentId</td></tr>
+        }
+    </tbody>
+</table>
+
+<h4>Courses</h4>
+<table class="table">
+    <thead><tr><th>Title</th><th>Code</th></tr></thead>
+    <tbody>
+        @foreach (var course in Model.Courses)
+        {
+            <tr><td>@course.Title</td><td>@course.Code</td></tr>
+        }
+    </tbody>
+</table>

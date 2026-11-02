@@ -1,0 +1,150 @@
+@model List<UniversityManagementSystem.Domain.Entities.Period>
+@{
+    ViewData["Title"] = "University Periods";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid py-4">
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">University Periods</h2>
+        <a asp-action="CreatePeriod" class="btn btn-success">
+            <i class="fas fa-plus me-1"></i> Add Period
+        </a>
+    </div>
+
+    <!-- Search -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="input-group">
+                <input type="text" id="periodSearch" class="form-control" placeholder="Search period..." oninput="filterPeriods()" />
+                <button class="btn btn-primary" type="button" onclick="filterPeriods()">
+                    <i class="fas fa-search me-1"></i> Search
+                </button>
+                <button class="btn btn-secondary" type="button" onclick="clearSearch()">
+                    Clear
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <!-- Table -->
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="periodsTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width:70px;">No</th>
+                                <th>Period</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th style="width:210px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var period in Model.OrderBy(p => p.DisplayOrder))
+                            {
+                                <tr class="period-row">
+                                    <td class="fw-bold">@period.DisplayOrder</td>
+                                    <td class="fw-bold">@period.Name</td>
+                                    <td>@period.StartTime.ToString("HH:mm")</td>
+                                    <td>@period.EndTime.ToString("HH:mm")</td>
+                                    <td>
+                                        <div class="period-actions">
+                                            <a asp-action="EditPeriod" asp-route-id="@period.Id" class="btn btn-warning btn-sm" title="Edit">
+                                                <i class="fas fa-edit me-1"></i> Edit
+                                            </a>
+                                            <form asp-action="DeletePeriod" method="post" style="display:inline;"
+                                                  data-confirm-title="Delete timetable period?"
+                                                  data-confirm-message="Are you sure you want to delete this timetable period? This action cannot be undone.">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@period.Id" />
+                                                <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                                                    <i class="fas fa-trash me-1"></i> Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Empty State -->
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted fw-bold">No periods defined yet</h5>
+                <p class="text-muted">Create periods to define the time slots for your university timetable.</p>
+                <a asp-action="CreatePeriod" class="btn btn-success">
+                    <i class="fas fa-plus me-1"></i> Create First Period
+                </a>
+            </div>
+        </div>
+    }
+
+</div>
+
+@section Styles {
+    <style>
+        /* Vertical column separators — full grid look */
+        #periodsTable thead th {
+            border-left: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        #periodsTable thead th:first-child {
+            border-left: none;
+        }
+
+        #periodsTable tbody td {
+            border-left: 1px solid #e9ecef;
+        }
+
+        #periodsTable tbody td:first-child {
+            border-left: none;
+        }
+
+        /* Keep Edit / Delete side by side on one line */
+        #periodsTable .period-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        function filterPeriods() {
+            var search = document.getElementById('periodSearch').value.toLowerCase();
+            var rows = document.querySelectorAll('.period-row');
+            rows.forEach(function (row) {
+                var text = row.textContent.toLowerCase();
+                row.style.display = text.includes(search) ? '' : 'none';
+            });
+        }
+
+        function clearSearch() {
+            document.getElementById('periodSearch').value = '';
+            filterPeriods();
+        }
+    </script>
+}

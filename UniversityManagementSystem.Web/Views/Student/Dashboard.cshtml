@@ -1,0 +1,147 @@
+@model StudentDashboardDto
+@using UniversityManagementSystem.Application.DTOs.Dashboard
+@{
+    ViewData["Title"] = "Student Dashboard";
+}
+<div class="dash-page">
+    <!-- Header: greeting hero banner -->
+    <div class="dash-hero">
+        <div>
+            <p class="dash-hero-eyebrow">@Model.Greeting · Your academic journey</p>
+            <h1 class="dash-hero-title">Welcome back, @Model.StudentName <span class="dash-hero-wave">👋</span></h1>
+            <p class="dash-hero-subtitle">@Model.Subtitle</p>
+        </div>
+        <div class="dash-hero-date">
+            <strong>@Model.Today.ToString("dddd")</strong>
+            <span>@Model.Today.ToString("MMMM dd, yyyy")</span>
+        </div>
+    </div>
+
+    <!-- My Timetable - Today + Upcoming Assignments -->
+    <div class="row g-3 mb-3">
+        <div class="col-lg-7">
+            <div class="list-card" data-search="My Timetable Today @string.Join(" ", Model.Timetable.Select(s => s.Title + " " + s.Code + " " + s.Location))">
+                <div class="list-card-header">
+                    <h6>My Timetable - Today</h6>
+                    <a class="dash-link" asp-controller="Student" asp-action="Enrollments">View full timetable <i class="fas fa-arrow-right ms-1"></i></a>
+                </div>
+                @if (Model.Timetable.Any())
+                {
+                    @foreach (var s in Model.Timetable)
+                    {
+                        <div class="schedule-item">
+                            <div class="schedule-time">@s.Time</div>
+                            <div class="schedule-info">
+                                <strong>@s.Title</strong>
+                                <small><span class="code-badge">@s.Code</span>@s.Location@(string.IsNullOrEmpty(s.Meta) ? "" : " - " + s.Meta)</small>
+                                <div class="schedule-progress"><div class="bar" style="width:@s.Progress%"></div></div>
+                            </div>
+                            <span class="schedule-pct">@s.Progress%</span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="dash-empty"><i class="fas fa-calendar-day"></i><p>No classes scheduled for today.</p></div>
+                }
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="list-card" data-search="Upcoming Assignments @string.Join(" ", Model.UpcomingAssignments.Select(a => a.Title + " " + a.Due))">
+                <div class="list-card-header">
+                    <h6>Upcoming Assignments</h6>
+                    <a class="dash-link" asp-controller="Student" asp-action="MyAssignments">View all assignments <i class="fas fa-arrow-right ms-1"></i></a>
+                </div>
+                @if (Model.UpcomingAssignments.Any())
+                {
+                    @foreach (var a in Model.UpcomingAssignments)
+                    {
+                        <div class="schedule-item">
+                            <div class="schedule-info">
+                                <strong>@a.Title</strong>
+                                <small>@a.Due</small>
+                                <div class="schedule-progress"><div class="bar" style="width:@a.Progress%"></div></div>
+                            </div>
+                            <span class="schedule-pct">@a.Progress%</span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="dash-empty"><i class="fas fa-tasks"></i><p>No upcoming assignments. You're all caught up!</p></div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- My Courses grid -->
+    <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-primary" asp-controller="Registration" asp-action="Index">
+                <i class="fas fa-file-signature me-1"></i> Register Courses
+            </a>
+            <a class="dash-link align-self-center" asp-controller="Student" asp-action="MyCourses">View all courses <i class="fas fa-arrow-right ms-1"></i></a>
+        </div>
+        </div>
+        <div class="row g-3">
+            @if (Model.Courses.Any())
+            {
+                @foreach (var c in Model.Courses)
+                {
+                    <div class="col-xl-3 col-md-6">
+                        <a asp-controller="Student" asp-action="MyGrades" class="text-decoration-none">
+                            <div class="course-tile" data-search="@c.Title @c.Code @c.Instructor">
+                                <div class="course-tile-top">
+                                    <span class="course-code">@c.Code</span>
+                                    <span class="course-students"><i class="fas fa-chalkboard-user me-1"></i>@c.Instructor</span>
+                                </div>
+                                <h6>@c.Title</h6>
+                            </div>
+                        </a>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12">
+                    <div class="dash-empty"><i class="fas fa-book-open"></i><p>You are not enrolled in any courses yet.</p></div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div>
+        <h6 class="fw-bold text-dark mb-2" style="font-size:.98rem;">Quick Links</h6>
+        <div class="row g-3">
+            <div class="col-6 col-md-3 col-xl-3 col-xxl-2">
+                <a class="quick-link" asp-controller="CourseMaterial" asp-action="MyMaterials" data-search="Course Materials Files Resources">
+                    <span class="quick-icon"><i class="fas fa-folder-open"></i></span> Course Materials
+                </a>
+            </div>
+
+            <div class="col-6 col-md-3 col-xl-3 col-xxl-2">
+                <a class="quick-link" asp-controller="Student" asp-action="MyGrades" data-search="Transcript Grades">
+                    <span class="quick-icon"><i class="fas fa-file-alt"></i></span> Transcript
+                </a>
+            </div>
+            <div class="col-6 col-md-3 col-xl-3 col-xxl-2">
+                <a class="quick-link" asp-controller="Student" asp-action="Enrollments" data-search="Degree Audit Enrollments">
+                    <span class="quick-icon"><i class="fas fa-list-check"></i></span> Degree Audit
+                </a>
+            </div>
+
+            <div class="col-6 col-md-3 col-xl-3 col-xxl-2">
+                <a class="quick-link" asp-controller="Notification" asp-action="Index" data-search="Announcements News Updates">
+                    <span class="quick-icon"><i class="fas fa-bullhorn"></i></span> Announcements
+                </a>
+            </div>
+            <div class="col-6 col-md-3 col-xl-3 col-xxl-2">
+                <a class="quick-link" asp-controller="Student" asp-action="MyGrades" data-search="Recent Grades Marks Results">
+                    <span class="quick-icon"><i class="fas fa-star"></i></span> Recent Grades
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

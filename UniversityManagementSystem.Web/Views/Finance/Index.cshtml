@@ -1,0 +1,120 @@
+@model UniversityManagementSystem.Application.DTOs.Finance.FinanceDashboardDto
+@{
+    ViewData["Title"] = "Finance";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 fw-bold mb-1"><i class="fas fa-coins me-2 text-warning"></i> Finance</h1>
+        <small class="text-muted">Fee assessment, payments and balances - fully controlled from here.</small>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="FeeStructures" class="btn btn-outline-primary"><i class="fas fa-list me-1"></i> Fee Structures</a>
+        <a asp-action="Payments" class="btn btn-outline-primary"><i class="fas fa-receipt me-1"></i> Payments</a>
+        <a asp-action="Invoices" class="btn btn-outline-primary"><i class="fas fa-file-invoice me-1"></i> Invoices</a>
+        <a asp-action="Students" class="btn btn-outline-primary"><i class="fas fa-user-graduate me-1"></i> Student Categories</a>
+        <a asp-action="Reports" class="btn btn-outline-warning"><i class="fas fa-chart-line me-1"></i> Reports</a>
+        <a asp-action="Settings" class="btn btn-outline-secondary"><i class="fas fa-gear me-1"></i> Settings</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body">
+                <small class="text-muted">Expected (assessed)</small>
+                <h4 class="fw-bold mb-0">@Model.ExpectedAmount.ToString("N2") ETB</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body">
+                <small class="text-muted">Collected (verified)</small>
+                <h4 class="fw-bold mb-0 text-success">@Model.CollectedAmount.ToString("N2") ETB</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body">
+                <small class="text-muted">Waived (sponsorship)</small>
+                <h4 class="fw-bold mb-0 text-primary">@Model.WaivedAmount.ToString("N2") ETB</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body">
+                <small class="text-muted">Outstanding</small>
+                <h4 class="fw-bold mb-0 text-danger">@Model.OutstandingAmount.ToString("N2") ETB</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 rounded-4 mb-4">
+            <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">Recent Invoices</h5>
+                <a asp-action="Invoices" class="btn btn-sm btn-outline-primary">View all</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead><tr><th>Number</th><th>Student</th><th>Total</th><th>Status</th></tr></thead>
+                        <tbody>
+                            @foreach (var inv in Model.RecentInvoices)
+                            {
+                                <tr>
+                                    <td><a asp-action="InvoiceDetails" asp-route-id="@inv.Id" class="fw-semibold">@inv.InvoiceNumber</a></td>
+                                    <td>@inv.StudentName</td>
+                                    <td>@inv.TotalAmount.ToString("N2")</td>
+                                    <td>
+                                        <span class="badge @(inv.Status == UniversityManagementSystem.Domain.Enums.InvoiceStatus.Paid ? "bg-success" : inv.Status == UniversityManagementSystem.Domain.Enums.InvoiceStatus.PartiallyPaid ? "bg-warning text-dark" : inv.Status == UniversityManagementSystem.Domain.Enums.InvoiceStatus.Cancelled ? "bg-secondary" : "bg-danger")">
+                                            @inv.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                            @if (!Model.RecentInvoices.Any())
+                            {
+                                <tr><td colspan="4" class="text-center text-muted py-4">No invoices yet. They are generated automatically when students register.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">Payments to Verify <span class="badge bg-danger ms-1">@Model.PendingPaymentCount</span></h5>
+                <a asp-action="Payments" asp-route-status="@UniversityManagementSystem.Domain.Enums.PaymentStatus.Pending" class="btn btn-sm btn-outline-primary">Verify</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead><tr><th>Student</th><th>Amount</th><th>Ref</th></tr></thead>
+                        <tbody>
+                            @foreach (var p in Model.PendingPayments)
+                            {
+                                <tr>
+                                    <td>@p.StudentName</td>
+                                    <td>@p.Amount.ToString("N2")</td>
+                                    <td class="text-muted small">@p.Reference</td>
+                                </tr>
+                            }
+                            @if (!Model.PendingPayments.Any())
+                            {
+                                <tr><td colspan="3" class="text-center text-muted py-4">Nothing waiting for verification.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

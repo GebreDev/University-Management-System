@@ -1,0 +1,92 @@
+@{
+    ViewData["Title"] = "Address Management";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0"><i class="fas fa-map-marker-alt me-2 text-primary"></i>Address Management</h2>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <a asp-action="Regions" class="text-decoration-none">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-globe-africa fa-2x text-primary mb-2"></i>
+                    <h3 class="mb-1">@ViewBag.RegionCount</h3>
+                    <p class="text-muted mb-0">Regions</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a asp-action="Zones" class="text-decoration-none">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-map fa-2x text-success mb-2"></i>
+                    <h3 class="mb-1">@ViewBag.ZoneCount</h3>
+                    <p class="text-muted mb-0">Zones</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a asp-action="Woredas" class="text-decoration-none">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-city fa-2x text-warning mb-2"></i>
+                    <h3 class="mb-1">@ViewBag.WoredaCount</h3>
+                    <p class="text-muted mb-0">Woredas</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a asp-action="Kebeles" class="text-decoration-none">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-home fa-2x text-danger mb-2"></i>
+                    <h3 class="mb-1">@ViewBag.KebeleCount</h3>
+                    <p class="text-muted mb-0">Kebeles</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-sitemap me-2"></i>Address Hierarchy</h5>
+                <p class="text-muted">The address system follows a cascading hierarchy:</p>
+                <div class="ms-3">
+                    <p class="mb-1"><i class="fas fa-globe-africa text-primary me-2"></i><strong>Region</strong></p>
+                    <p class="mb-1 ms-4"><i class="fas fa-arrow-down text-muted me-2" style="font-size:.7rem"></i><i class="fas fa-map text-success me-2"></i><strong>Zone</strong></p>
+                    <p class="mb-1 ms-5"><i class="fas fa-arrow-down text-muted me-2" style="font-size:.7rem"></i><i class="fas fa-city text-warning me-2"></i><strong>Woreda</strong></p>
+                    <p class="mb-0 ms-6"><i class="fas fa-arrow-down text-muted me-2" style="font-size:.7rem"></i><i class="fas fa-home text-danger me-2"></i><strong>Kebele</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                <div class="d-grid gap-2">
+                    <a asp-action="CreateRegion" class="btn btn-outline-primary text-start">
+                        <i class="fas fa-plus me-2"></i>Add New Region
+                    </a>
+                    <a asp-action="CreateZone" class="btn btn-outline-success text-start">
+                        <i class="fas fa-plus me-2"></i>Add New Zone
+                    </a>
+                    <a asp-action="CreateWoreda" class="btn btn-outline-warning text-start">
+                        <i class="fas fa-plus me-2"></i>Add New Woreda
+                    </a>
+                    <a asp-action="CreateKebele" class="btn btn-outline-danger text-start">
+                        <i class="fas fa-plus me-2"></i>Add New Kebele
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

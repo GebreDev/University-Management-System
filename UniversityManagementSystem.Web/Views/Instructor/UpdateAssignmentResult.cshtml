@@ -1,0 +1,66 @@
+@model AssignmentResultDto
+@{
+    ViewData["Title"] = "Update Assignment Result";
+}
+
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h2 class="fw-bold"><i class="fas fa-edit me-2 text-success"></i> Update Assignment Result</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-action="Dashboard">Dashboard</a></li>
+                <li class="breadcrumb-item"><a asp-action="Assignments">Assignments</a></li>
+                <li class="breadcrumb-item active">Update Result</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0"><i class="fas fa-file-alt me-2 text-info"></i> @Model.AssignmentTitle</h5>
+            </div>
+            <div class="card-body px-4 pb-4">
+                <div class="alert alert-info rounded-3 mb-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Update the total score and remarks for <strong>@Model.StudentName</strong>.
+                </div>
+
+                <dl class="row">
+                    <dt class="col-sm-4">Student</dt>
+                    <dd class="col-sm-8">@Model.StudentName</dd>
+                    <dt class="col-sm-4">Current Score</dt>
+                    <dd class="col-sm-8">@Model.TotalScore</dd>
+                    <dt class="col-sm-4">Current Grade</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge @(Model.IsPass ? "bg-success" : "bg-danger")">@Model.Grade</span>
+                    </dd>
+                </dl>
+
+                <form asp-action="UpdateAssignmentResult" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="resultId" value="@Model.Id" />
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Total Score</label>
+                        <input type="number" name="totalScore" class="form-control form-control-lg"
+                               value="@Model.TotalScore" min="0" required />
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Remarks</label>
+                        <textarea name="remarks" class="form-control" rows="3" placeholder="Optional remarks...">@Model.Remarks</textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success btn-lg rounded-pill px-5">
+                            <i class="fas fa-save me-2"></i> Update Result
+                        </button>
+                        <a asp-action="GradeAssignmentSubmissions" asp-route-assignmentId="@Model.AssignmentId" class="btn btn-secondary btn-lg rounded-pill px-4">
+                            <i class="fas fa-times me-2"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

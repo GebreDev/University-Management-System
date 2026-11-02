@@ -1,0 +1,117 @@
+@model IEnumerable<MessageDto>
+@{
+    var currentUserId = ViewBag.CurrentUserId as string;
+    var skip = ViewBag.Skip as int? ?? 0;
+    var msgs = (Model ?? Enumerable.Empty<MessageDto>()).ToList();
+
+    string Initials(string name)
+    {
+        var parts = (name ?? "").Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return "?";
+        if (parts.Length == 1) return parts[0].Substring(0, Math.Min(2, parts[0].Length)).ToUpper();
+        return (parts[0][0].ToString() + parts[^1][0]).ToUpper();
+    }
+
+    string DatePill(DateTime local)
+    {
+        var today = DateTime.Today;
+        if (local.Date == today) return "Today";
+        if (local.Date == today.AddDays(-1)) return "Yesterday";
+        return local.ToString("MMMM d, yyyy");
+    }
+}
+
+@if (msgs.Count > 0)
+{
+    DateTime? lastDate = null;
+    string? lastSender = null;
+    DateTime? lastSent = null;
+
+    @for (var i = 0; i < msgs.Count; i++)
+    {
+        var msg = msgs[i];
+        var isMine = msg.SenderId == currentUserId;
+        var local = msg.SentAt.ToLocalTime();
+
+        // Date separator pill
+        if (!lastDate.HasValue || local.Date != lastDate.Value.Date)
+        {
+            <div class="chat-date-pill"><span>@DatePill(local)</span></div>
+        }
+
+        // Group consecutive messages from the same sender within 5 minutes
+        var grouped = lastSender == msg.SenderId
+                      && lastSent.HasValue
+                      && (local - lastSent.Value).TotalMinutes < 5;
+
+        <div class="chat-msg @(isMine ? "sent" : "received") @(grouped ? "grouped" : "")" id="msg-@msg.Id">
+            @if (!isMine)
+            {
+                <div class="chat-msg-avatar chat-avatar">
+                    @if (!string.IsNullOrEmpty(msg.SenderProfilePictureUrl))
+                    {
+                        <img src="@msg.SenderProfilePictureUrl" alt="@msg.SenderName" />
+                    }
+                    else
+                    {
+                        <span>@Initials(msg.SenderName)</span>
+                    }
+                </div>
+            }
+            <div class="chat-bubble">
+                @if (!string.IsNullOrEmpty(msg.Content))
+                {
+                    <span class="chat-bubble-text">@msg.Content</span>
+                }
+                @if (!string.IsNullOrEmpty(msg.AttachmentPath))
+                {
+                    var lower = msg.AttachmentPath.ToLowerInvariant();
+                    if (lower.EndsWith(".png") || lower.EndsWith(".jpg") || lower.EndsWith(".jpeg") || lower.EndsWith(".gif") || lower.EndsWith(".webp"))
+                    {
+                        <a href="@msg.AttachmentPath" target="_blank" class="chat-attach-img-link">
+                            <img src="@msg.AttachmentPath" class="chat-attach-img" alt="attachment" />
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="@msg.AttachmentPath" target="_blank" class="chat-attach-file">
+                            <i class="fa-solid fa-file"></i>
+                            <span>@System.IO.Path.GetFileName(msg.AttachmentPath)</span>
+                            <i class="fa-solid fa-download"></i>
+                        </a>
+                    }
+                }
+                <span class="chat-msg-time">
+                    @local.ToString("h:mm tt")
+                    @if (isMine)
+                    {
+                        <span class="chat-ticks @(msg.IsRead ? "read" : "")">
+                            @if (msg.IsRead)
+                            {
+                                <i class="fa-solid fa-check-double"></i>
+                            }
+                            else
+                            {
+                                <i class="fa-solid fa-check"></i>
+                            }
+                        </span>
+                    }
+                </span>
+            </div>
+        </div>
+
+        lastDate = local;
+        lastSender = msg.SenderId;
+        lastSent = local;
+    }
+
+    <div class="chat-load-older-end" data-skip="@(skip + msgs.Count)" style="display:none;"></div>
+}
+else if (skip == 0)
+{
+    <div class="chat-empty-state">
+        <i class="fa-regular fa-hand-peace"></i>
+        <h6>Say hello!</h6>
+        <p>Send the first message to start the conversation.</p>
+    </div>
+}

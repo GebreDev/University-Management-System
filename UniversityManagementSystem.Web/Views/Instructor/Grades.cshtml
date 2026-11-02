@@ -1,0 +1,104 @@
+@model IEnumerable<UniversityManagementSystem.Application.DTOs.Results.InstructorCourseResultDto>
+@using UniversityManagementSystem.Application.Helpers
+@{
+    ViewData["Title"] = "Grades & Results";
+}
+
+<partial name="_PrintStyles" model='new PrintViewModel { Title = "Grades & Results", HideHeaders = new[] { "Actions" } }' />
+
+<div class="print-header print-only">
+    <h2>Grades &amp; Results</h2>
+    <small>Generated: @DateTime.Now.ToString("MMMM dd, yyyy")</small>
+</div>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h3 fw-bold mb-1"><i class="fas fa-star me-2 text-warning"></i> Grades &amp; Results</h1>
+        <small class="text-muted">Select a course and click <strong>Assessment</strong> to enter and send student marks.</small>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+        <span class="badge bg-light text-dark border rounded-pill px-3 py-2"><i class="fas fa-layer-group me-1"></i> @Model.Count() course(s)</span>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info shadow-sm rounded-3">
+        <i class="fas fa-info-circle me-2"></i> You are not assigned to any courses yet. Results will appear here once you teach a course.
+    </div>
+}
+else
+{
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 55px;">No.</th>
+                            <th>Course Title</th>
+                            <th>Code</th>
+                            <th class="text-center">Credit Hours</th>
+                            <th class="text-center">ECTS</th>
+                            <th>Grade</th>
+                            <th class="text-center" style="width: 150px;">Assessment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ var no = 0; }
+                        @foreach (var item in Model)
+                        {
+                            no++;
+                            <tr>
+                                <td class="text-center text-muted">@no</td>
+                                <td>
+                                    <span class="fw-semibold">@item.CourseTitle</span>
+                                    <small class="d-block text-muted">@item.EnrolledCount student(s) enrolled</small>
+                                </td>
+                                <td><span class="code-badge">@item.CourseCode</span></td>
+                                <td class="text-center">@item.Credits.ToString("F2")</td>
+                                <td class="text-center">@item.Ects.ToString("F2")</td>
+                                <td>
+                                    @if (item.IsPublished)
+                                    {
+                                        <span class="status-indicator"><span class="circle success"></span> Sent</span>
+                                        <small class="d-block text-muted">@(item.PublishedAt.HasValue ? item.PublishedAt.Value.ToString("MMM dd, yyyy") : "")</small>
+                                        @if (item.AverageMark > 0)
+                                        {
+                                            <small class="d-block text-muted">Avg: @item.AverageMark.ToString("F1")%</small>
+                                        }
+                                    }
+                                    else if (item.HasDraft)
+                                    {
+                                        <span class="status-indicator"><span class="circle warning"></span> Draft</span>
+                                        @if (item.AverageMark > 0)
+                                        {
+                                            <small class="d-block text-muted">Avg: @item.AverageMark.ToString("F1")%</small>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="status-indicator"><span class="circle secondary"></span> Not graded</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <a asp-action="AssessmentBoard" asp-route-courseId="@item.CourseId"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-clipboard-list me-1"></i> Assessment
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="mt-3 d-flex gap-2">     <a asp-action="Dashboard" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+</div>
+
+<div class="print-footer print-only">
+    <small>University Management System - Official Grades &amp; Results</small>
+</div>

@@ -1,0 +1,164 @@
+@model UniversitySetting
+@{
+    ViewData["Title"] = "University Settings";
+    var regions = ViewBag.Regions as IEnumerable<Region> ?? Enumerable.Empty<Region>();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0"><i class="fas fa-university me-2 text-primary"></i>University Settings</h2>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <form asp-action="Save" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>General Information</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label asp-for="UniversityName" class="form-label"></label>
+                    <input asp-for="UniversityName" class="form-control" placeholder="Enter university name" />
+                    <span asp-validation-for="UniversityName" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Phone" class="form-label"></label>
+                    <input asp-for="Phone" class="form-control" placeholder="Phone number" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" placeholder="Email address" />
+                </div>
+            </div>
+
+            <h5 class="mb-3"><i class="fas fa-map-marker-alt me-2"></i>Address (Cascading Selection)</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label class="form-label">Region</label>
+                    <select id="regionSelect" class="form-select">
+                        <option value="">-- Select Region --</option>
+                        @foreach (var r in regions)
+                        {
+                            <option value="@r.RegionId" selected="@(ViewBag.SelectedRegionId != null && (int)ViewBag.SelectedRegionId == r.RegionId)">@r.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Zone</label>
+                    <select id="zoneSelect" class="form-select" disabled>
+                        <option value="">-- Select Zone --</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Woreda</label>
+                    <select id="woredaSelect" class="form-select" disabled>
+                        <option value="">-- Select Woreda --</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Kebele</label>
+                    <select id="kebeleSelect" class="form-select" disabled>
+                        <option value="">-- Select Kebele --</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Hidden fields to submit selected IDs -->
+            <input type="hidden" asp-for="RegionId" id="hiddenRegionId" />
+            <input type="hidden" asp-for="ZoneId" id="hiddenZoneId" />
+            <input type="hidden" asp-for="WoredaId" id="hiddenWoredaId" />
+            <input type="hidden" asp-for="KebeleId" id="hiddenKebeleId" />
+
+            <div class="mb-4">
+                <label asp-for="DetailedAddress" class="form-label"></label>
+                <textarea asp-for="DetailedAddress" class="form-control" rows="3" placeholder="Street, building number, etc."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Settings</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            var savedRegionId = '@(ViewBag.SelectedRegionId?.ToString() ?? "")';
+            var savedZoneId = '@(ViewBag.SelectedZoneId?.ToString() ?? "")';
+            var savedWoredaId = '@(ViewBag.SelectedWoredaId?.ToString() ?? "")';
+            var savedKebeleId = '@(ViewBag.SelectedKebeleId?.ToString() ?? "")';
+
+            function populateSelect($select, items, selectedId, placeholder) {
+                $select.empty().append('<option value="">' + placeholder + '</option>');
+                $.each(items, function (i, item) {
+                    var val = item.ZoneId || item.WoredaId || item.KebeleId;
+                    $select.append($('<option>', { value: val, text: item.Name, selected: val == selectedId }));
+                });
+                $select.prop('disabled', false);
+            }
+
+            function resetDownstream(from) {
+                if (from <= 2) { $('#zoneSelect').empty().append('<option value="">-- Select Zone --</option>').prop('disabled', true); $('#hiddenZoneId').val(''); }
+                if (from <= 3) { $('#woredaSelect').empty().append('<option value="">-- Select Woreda --</option>').prop('disabled', true); $('#hiddenWoredaId').val(''); }
+                if (from <= 4) { $('#kebeleSelect').empty().append('<option value="">-- Select Kebele --</option>').prop('disabled', true); $('#hiddenKebeleId').val(''); }
+            }
+
+            $('#regionSelect').on('change', function () {
+                var regionId = $(this).val();
+                $('#hiddenRegionId').val(regionId);
+                resetDownstream(2);
+                if (!regionId) return;
+                $.get('/UniversitySettings/GetZones', { regionId: regionId }, function (data) {
+                    populateSelect($('#zoneSelect'), data, '', '-- Select Zone --');
+                });
+            });
+
+            $('#zoneSelect').on('change', function () {
+                var zoneId = $(this).val();
+                $('#hiddenZoneId').val(zoneId);
+                resetDownstream(3);
+                if (!zoneId) return;
+                $.get('/UniversitySettings/GetWoredas', { zoneId: zoneId }, function (data) {
+                    populateSelect($('#woredaSelect'), data, '', '-- Select Woreda --');
+                });
+            });
+
+            $('#woredaSelect').on('change', function () {
+                var woredaId = $(this).val();
+                $('#hiddenWoredaId').val(woredaId);
+                resetDownstream(4);
+                if (!woredaId) return;
+                $.get('/UniversitySettings/GetKebeles', { woredaId: woredaId }, function (data) {
+                    populateSelect($('#kebeleSelect'), data, '', '-- Select Kebele --');
+                });
+            });
+
+            $('#kebeleSelect').on('change', function () {
+                $('#hiddenKebeleId').val($(this).val());
+            });
+
+            // Auto-load saved cascade
+            if (savedRegionId) {
+                $.get('/UniversitySettings/GetZones', { regionId: savedRegionId }, function (data) {
+                    populateSelect($('#zoneSelect'), data, savedZoneId, '-- Select Zone --');
+                    if (savedZoneId) {
+                        $.get('/UniversitySettings/GetWoredas', { zoneId: savedZoneId }, function (data2) {
+                            populateSelect($('#woredaSelect'), data2, savedWoredaId, '-- Select Woreda --');
+                            if (savedWoredaId) {
+                                $.get('/UniversitySettings/GetKebeles', { woredaId: savedWoredaId }, function (data3) {
+                                    populateSelect($('#kebeleSelect'), data3, savedKebeleId, '-- Select Kebele --');
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+}

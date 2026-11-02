@@ -1,0 +1,142 @@
+﻿@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var isHome = string.Equals(controller, "Home", StringComparison.OrdinalIgnoreCase);
+    var isAccount = string.Equals(controller, "Account", StringComparison.OrdinalIgnoreCase);
+    var hideWelcome = ViewBag.HideWelcome == true;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - University</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="auth-page">
+    <!-- Main navigation header (sticky, white) -->
+    <header class="main-header" id="mainHeader">
+        <nav class="container main-nav" aria-label="Main navigation">
+            <a class="brand" asp-controller="Home" asp-action="Index" title="University — Home">
+                <span class="brand-mark">
+                    <i class="fas fa-graduation-cap cap"></i>
+                    <i class="fas fa-globe globe"></i>
+                </span>
+                <span class="brand-text">University</span>
+            </a>
+
+            <ul class="main-menu">
+                <li class="@(isHome ? "active" : "")"><a asp-controller="Home" asp-action="Index" class="btn-home">Home</a></li>
+                <li><a href="#about">About Us</a></li>
+                <li><a href="#contact">Contact Us</a></li>
+            </ul>
+
+            <a asp-controller="Account" asp-action="Login" class="btn-login">
+                <i class="fas fa-arrow-right me-1"></i> Login
+            </a>
+
+            <button class="menu-icon-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu" aria-label="Open menu">
+                <i class="fas fa-bars"></i>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Mobile off-canvas menu -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title d-flex align-items-center" id="mobileMenuLabel">
+                <span class="brand-mark d-inline-flex me-2">
+                    <i class="fas fa-graduation-cap cap"></i>
+                    <i class="fas fa-globe globe"></i>
+                </span>
+                <span class="brand-text">University</span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul class="mobile-menu">
+                <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                <li><a href="#about">About Us</a></li>
+                <li><a href="#contact">Contact Us</a></li>
+            </ul>
+            <div class="d-grid gap-2 mt-4">
+                <a asp-controller="Account" asp-action="Login" class="btn btn-auth">Login</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero / page content -->
+    <main class="auth-hero">
+        <div class="auth-hero-bg"></div>
+        <div class="auth-hero-overlay"></div>
+        <span class="auth-sparkle"><i class="fas fa-sparkles"></i></span>
+        <div class="container auth-hero-content">
+            @if (!hideWelcome)
+            {
+                <div class="row align-items-center g-5">
+                    <div class="col-lg-5 auth-welcome-col d-none d-lg-block">
+                        <partial name="_AuthWelcome" />
+                    </div>
+                    <div class="col-lg-7 auth-form-col">
+                        @RenderBody()
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    <div class="col-12 text-center">
+                        @RenderBody()
+                    </div>
+                </div>
+            }
+        </div>
+    </main>
+
+    <partial name="_ConfirmationModal" />
+
+    <footer class="auth-footer">
+        <div class="container">
+            © @DateTime.Now.Year University. All rights reserved.
+            <span class="d-none d-sm-inline">| Designed for Education</span>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        // Sticky header — add a deeper shadow once the page is scrolled
+        (function () {
+            var header = document.getElementById('mainHeader');
+            function onScroll() {
+                if (window.scrollY > 8) { header.classList.add('scrolled'); }
+                else { header.classList.remove('scrolled'); }
+            }
+            window.addEventListener('scroll', onScroll, { passive: true });
+            onScroll();
+        })();
+
+        // Password visibility toggle
+        function togglePassword(btn) {
+            var shell = btn.closest('.auth-field-shell') || btn.closest('.input-icon');
+            var input = shell ? shell.querySelector('input') : null;
+            if (!input) return;
+
+            var icon = btn.querySelector('i');
+            var show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            icon.classList.toggle('fa-eye', !show);
+            icon.classList.toggle('fa-eye-slash', show);
+            btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,122 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+@using Microsoft.AspNetCore.Identity
+@using UniversityManagementSystem.Domain.Entities
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Nexus University</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script>
+        // Restore the saved theme BEFORE first paint (avoids a light->dark flash)
+        (function () {
+            try {
+                if (localStorage.getItem('ums-theme') === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (e) { }
+        })();
+    </script>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    @{
+        // Expose the signed-in user's id to SignalR clients (notification hub join group)
+        var currentAppUser = SignInManager.IsSignedIn(User) ? await UserManager.GetUserAsync(User) : null;
+    }
+    @if (currentAppUser != null)
+    {
+        <input type="hidden" id="currentUserId" value="@currentAppUser.Id" />
+    }
+    @Html.AntiForgeryToken()
+
+    <!-- Mobile off-canvas backdrop — click anywhere to close the drawer -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar(false)" aria-hidden="true"></div>
+
+    <div class="wrapper d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar" aria-label="Sidebar navigation">
+            <div class="sidebar-heading">
+                <span class="sidebar-brand"><i class="fas fa-shield-halved"></i> NEXUS <span class="sidebar-brand-highlight">UNIVERSITY</span></span>
+                <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Close menu" onclick="toggleSidebar(false)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <partial name="_Sidebar" />
+        </aside>
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <nav class="navbar navbar-expand-lg navbar-light app-navbar border-bottom">
+                <div class="container-fluid d-flex align-items-center gap-2 flex-nowrap">
+                    <button type="button" class="menu-toggle-btn" id="menu-toggle"
+                            aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="false"
+                            onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+
+                    <!-- Page title -->
+                    <h5 class="mb-0 fw-semibold text-dark ms-2" id="pageTitle">@ViewData["Title"]</h5>
+
+                    <!-- User controls: always visible on every screen size -->
+                    <ul class="navbar-nav flex-row align-items-center gap-2 ms-auto app-actions mb-0">
+                        <li class="nav-item">
+                            <button type="button" class="nav-icon-btn" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+                                <i class="fas fa-moon"></i>
+                            </button>
+                        </li>
+                        <partial name="_NotificationBell" />
+                        <partial name="_LoginPartial" />
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="container-fluid px-4">
+                @if (TempData["Success"] is string success)
+                {
+                    <div class="alert alert-success alert-dismissible fade show mt-3 shadow-sm" role="alert">
+                        <i class="fas fa-circle-check me-2"></i>@success
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @if (TempData["Error"] is string error)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show mt-3 shadow-sm" role="alert">
+                        <i class="fas fa-circle-exclamation me-2"></i>@error
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @if (TempData["Info"] is string info)
+                {
+                    <div class="alert alert-info alert-dismissible fade show mt-3 shadow-sm" role="alert">
+                        <i class="fas fa-circle-info me-2"></i>@info
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                <div class="row my-4">
+                    <div class="col-12">
+                        @RenderBody()
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <partial name="_ConfirmationModal" />
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script src="~/js/notification.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

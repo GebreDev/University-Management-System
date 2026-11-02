@@ -1,0 +1,62 @@
+@model IEnumerable<AttendanceReportDto>
+@{
+    ViewData["Title"] = "Attendance Reports";
+}
+
+<partial name="_PrintStyles" model='new PrintViewModel { Title = "Attendance Report - All Students", HideHeaders = new[] { "Actions", "Edit", "Delete" } }' />
+
+<div class="print-header print-only">
+    <h2>Attendance Report</h2>
+    <small>All Students - Generated: @DateTime.Now.ToString("MMMM dd, yyyy")</small>
+</div>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h3 fw-bold"><i class="fas fa-file-alt me-2 text-info"></i> Attendance Reports</h1>     <a asp-action="AttendanceOverview" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i> Overview</a>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Student</th>
+                        <th>Course</th>
+                        <th>Month</th>
+                        <th>Present</th>
+                        <th>Absent</th>
+                        <th>Late</th>
+                        <th>Excused</th>
+                        <th>%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        <tr>
+                            <td>@r.StudentName</td>
+                            <td>@r.CourseName</td>
+                            <td>@r.Month</td>
+                            <td><span class="badge bg-success">@r.Present</span></td>
+                            <td><span class="badge bg-danger">@r.Absent</span></td>
+                            <td><span class="badge bg-warning text-dark">@r.Late</span></td>
+                            <td><span class="badge bg-info">@r.Excused</span></td>
+                            <td>
+                                <span class="badge @(r.Percentage >= 75 ? "bg-success" : "bg-danger") rounded-pill">
+                                    @r.Percentage%
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer text-muted">
+        <i class="fas fa-info-circle me-1"></i> Total records: @Model.Count()
+    </div>
+</div>
+
+<div class="print-footer print-only">
+    <small>University Management System - Attendance Report</small>
+</div>

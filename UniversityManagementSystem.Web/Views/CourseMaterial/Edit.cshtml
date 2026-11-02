@@ -1,0 +1,51 @@
+@model UniversityManagementSystem.Application.DTOs.CourseMaterial.CourseMaterialUpdateDto
+@{
+    ViewData["Title"] = "Edit Course Material";
+}
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-edit me-2 text-warning"></i>Edit Course Material</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div asp-validation-summary="All" class="text-danger mb-3 small"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Title <span class="text-danger">*</span></label>
+                            <input asp-for="Title" class="form-control" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Replace File (optional)</label>
+                            <input asp-for="File" type="file" class="form-control"
+                                   accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.jpg,.jpeg,.png,.gif" />
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Leave empty to keep the current file. Allowed: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT, ZIP, JPG, PNG, GIF — max 10MB.
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

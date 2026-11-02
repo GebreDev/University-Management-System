@@ -1,0 +1,60 @@
+@{
+    ViewData["Title"] = "Reports";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-chart-bar me-2 text-info"></i> Reports</h1>
+    <a asp-action="Dashboard" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 bg-primary text-white">
+                <h6 class="m-0 font-weight-bold"><i class="fas fa-file-export me-2"></i> Export Reports</h6>
+            </div>
+            <div class="card-body">
+                <form asp-action="ExportReport" method="post" class="needs-validation">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label class="form-label">Report Type</label>
+                        <select name="reportType" class="form-select" required>
+                            <option value="">Select a report type...</option>
+                            <option value="students">Students</option>
+                            <option value="instructors">Instructors</option>
+                            <option value="courses">Courses</option>
+                            <option value="attendance">Attendance</option>
+                            <option value="grades">Grades</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Format</label>
+                        <select name="format" class="form-select" required>
+                            <option value="excel">Excel (.xlsx)</option>
+                            <option value="pdf">PDF</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-download me-1"></i> Export</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 bg-info text-white">
+                <h6 class="m-0 font-weight-bold"><i class="fas fa-link me-2"></i> Quick Links</h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a asp-controller="Admin" asp-action="AttendanceReports" class="list-group-item list-group-item-action">
+                        <i class="fas fa-calendar-check me-2 text-info"></i> Attendance Reports
+                    </a>
+                    <a asp-controller="Admin" asp-action="AuditLogs" class="list-group-item list-group-item-action">
+                        <i class="fas fa-history me-2 text-secondary"></i> Audit Logs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

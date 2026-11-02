@@ -1,0 +1,372 @@
+@model UniversityManagementSystem.Domain.Entities.TimetableEntry
+@{
+    ViewData["Title"] = "Create Timetable";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var periods = ViewBag.PeriodsList as List<UniversityManagementSystem.Domain.Entities.Period>;
+    var courses = ViewBag.Courses as List<UniversityManagementSystem.Domain.Entities.Course>;
+    var workingDays = ViewBag.WorkingDays as List<string>;
+    var allDays = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+
+    var academicYears = ViewBag.AcademicYears as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+    var semesters = ViewBag.Semesters as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+    var grades = ViewBag.Grades as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+    var sections = ViewBag.Sections as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+
+    var activeDays = workingDays ?? allDays.ToList();
+}
+
+<style>
+    .ct-page { padding: 10px 0 40px; max-width: 1200px; }
+
+    .ct-header {
+        background: linear-gradient(135deg, var(--btn-sky), var(--btn-sky-hover));
+        color: white;
+        border-radius: 14px 14px 0 0;
+        padding: 24px 28px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .ct-header i { font-size: 1.3rem; }
+    .ct-header h3 { font-weight: 700; margin: 0; font-size: 1.2rem; }
+
+    .ct-body {
+        background: white;
+        border: 1px solid #e8eef3;
+        border-top: 0;
+        border-radius: 0 0 14px 14px;
+        padding: 28px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    }
+
+    .ct-filters {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .ct-filters label {
+        font-size: .82rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 6px;
+        display: block;
+    }
+    .ct-filters select {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #d1d9e0;
+        border-radius: 8px;
+        font-size: .88rem;
+        color: #334155;
+        background: white;
+        appearance: auto;
+    }
+    .ct-filters select:focus {
+        border-color: var(--btn-sky);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(74,144,226,.12);
+    }
+
+    .ct-grid-wrap {
+        overflow-x: auto;
+        margin-bottom: 20px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+    }
+    .ct-grid {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 700px;
+    }
+    .ct-grid thead th {
+        background: #1e293b;
+        color: white;
+        font-weight: 700;
+        font-size: .82rem;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        padding: 14px 12px;
+        text-align: center;
+        white-space: nowrap;
+    }
+    .ct-grid thead th:first-child {
+        min-width: 140px;
+        text-align: left;
+    }
+    .ct-grid tbody td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+    .ct-grid tbody td:first-child {
+        background: #f8fafc;
+        font-weight: 700;
+        color: #1e293b;
+        text-align: center;
+    }
+    .ct-grid tbody td:first-child .period-num {
+        font-size: 1.05rem;
+        display: block;
+    }
+    .ct-grid tbody td:first-child .period-time {
+        font-size: .72rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+    .ct-grid tbody tr:last-child td { border-bottom: none; }
+    .ct-grid tbody tr:hover td { background: #f8fbfe; }
+    .ct-grid tbody tr:hover td:first-child { background: #eef4fb; }
+
+    .ct-grid select {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #d1d9e0;
+        border-radius: 8px;
+        font-size: .82rem;
+        color: #334155;
+        background: white;
+        appearance: auto;
+    }
+    .ct-grid select:focus {
+        border-color: var(--btn-sky);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(74,144,226,.12);
+    }
+
+    .ct-info {
+        background: #eef8ff;
+        border: 1px solid #d0ebff;
+        border-radius: 10px;
+        padding: 14px 20px;
+        margin-bottom: 20px;
+        font-size: .88rem;
+        color: #1a5276;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .ct-info i { color: var(--btn-sky); font-size: 1rem; }
+    .ct-info strong { font-weight: 700; }
+
+    .ct-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+    .btn-save-timetable {
+        background: linear-gradient(135deg, var(--btn-sky), var(--btn-sky-hover));
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 24px;
+        font-weight: 700;
+        font-size: .9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all .2s ease;
+        box-shadow: 0 4px 12px rgba(74,144,226,.3);
+    }
+    .btn-save-timetable:hover {
+        background: linear-gradient(135deg, var(--btn-sky-hover), var(--btn-sky-deep));
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    @@media (max-width: 768px) {
+        .ct-filters { grid-template-columns: 1fr 1fr; }
+        .ct-body { padding: 18px 14px; }
+    }
+</style>
+
+<div class="ct-page">
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Header -->
+    <div class="ct-header">
+        <i class="fas fa-table"></i>
+        <h3>Create Timetable</h3>
+    </div>
+
+    <div class="ct-body">
+
+        <form asp-action="CreateTimetable" method="post" id="timetableForm">
+            @Html.AntiForgeryToken()
+
+            <!-- Filters -->
+            <div class="ct-filters">
+                <div>
+                    <label>Academic Year</label>
+                    <select name="AcademicYearId" id="ddlYear">
+                        <option value="">-- Select Academic Year --</option>
+                        @if (academicYears != null)
+                        {
+                            @foreach (var item in academicYears)
+                            {
+                                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label>Semester</label>
+                    <select name="SemesterId" id="ddlSemester">
+                        <option value="">-- Select Semester --</option>
+                        @if (semesters != null)
+                        {
+                            @foreach (var item in semesters)
+                            {
+                                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label>Year</label>
+                    <select name="GradeId" id="ddlGrade">
+                        <option value="">-- Select Year --</option>
+                        @if (grades != null)
+                        {
+                            @foreach (var item in grades)
+                            {
+                                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label>Section</label>
+                    <select name="SectionId" id="ddlSection">
+                        <option value="">-- Select Section --</option>
+                        @if (sections != null)
+                        {
+                            @foreach (var item in sections)
+                            {
+                                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <!-- Grid -->
+            <div class="ct-grid-wrap">
+                <table class="ct-grid">
+                    <thead>
+                        <tr>
+                            <th>Period</th>
+                            @foreach (var day in activeDays)
+                            {
+                                <th>@day</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (periods != null)
+                        {
+                            @foreach (var period in periods)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="period-num">@period.DisplayOrder</span>
+                                        <span class="period-time">@period.StartTime – @period.EndTime</span>
+                                    </td>
+                                    @foreach (var day in activeDays)
+                                    {
+                                        <td>
+                                            <select name="subjects">
+                                                <option value="">-- Select Course --</option>
+                                                @if (courses != null)
+                                                {
+                                                    @foreach (var c in courses)
+                                                    {
+                                                        <option value="@c.Title">@c.Title</option>
+                                                    }
+                                                }
+                                            </select>
+                                            <input type="hidden" name="days" value="@day" />
+                                            <input type="hidden" name="periodIds" value="@period.Id" />
+                                            <input type="hidden" name="instructors" value="" />
+                                            <input type="hidden" name="rooms" value="" />
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Working Days Info -->
+            @if (activeDays.Any())
+            {
+                <div class="ct-info">
+                    <i class="fas fa-info-circle"></i>
+                    <span><strong>Working days:</strong> @string.Join(", ", activeDays)</span>
+                </div>
+            }
+
+            <!-- Actions -->
+            <div class="ct-actions">
+                <button type="submit" class="btn-save-timetable">
+                    <i class="fas fa-save"></i> Save Timetable
+                </button>
+                <a asp-action="ShowTimetable" class="btn-back-pill">
+                    <i class="fas fa-chevron-left"></i> Back
+                </a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            // Academic Year -> Semester cascade
+            $('#ddlYear').on('change', function () {
+                var yearId = $(this).val();
+                var $sem = $('#ddlSemester');
+                $sem.html('<option value="">-- Select Semester --</option>');
+                if (yearId) {
+                    $.get('/Timetable/GetSemesters', { academicYearId: yearId }, function (data) {
+                        $.each(data, function (i, item) {
+                            $sem.append('<option value="' + item.id + '">' + item.name + '</option>');
+                        });
+                    });
+                }
+            });
+
+            // Grade -> Section cascade
+            $('#ddlGrade').on('change', function () {
+                var gradeId = $(this).val();
+                var $sec = $('#ddlSection');
+                $sec.html('<option value="">-- Select Section --</option>');
+                if (gradeId) {
+                    $.get('/Timetable/GetSections', { gradeId: gradeId }, function (data) {
+                        $.each(data, function (i, item) {
+                            $sec.append('<option value="' + item.id + '">' + item.name + '</option>');
+                        });
+                    });
+                }
+            });
+        });
+    </script>
+}

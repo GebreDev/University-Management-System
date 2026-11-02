@@ -1,0 +1,31 @@
+@model SubmissionGradeDto
+@{
+    ViewData["Title"] = "Grade Submission";
+}
+
+<h2><i class="fas fa-check-double me-2"></i> Grade Submission</h2>
+
+<div class="card shadow">
+    <div class="card-body">
+        <form asp-action="GradeSubmission" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="SubmissionId" />
+            <input type="hidden" asp-for="AssignmentId" />
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Grade" class="form-label">Grade</label>
+                        <input asp-for="Grade" class="form-control" type="number" min="0" max="1000" required />
+                        <span asp-validation-for="Grade" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Feedback" class="form-label">Feedback</label>
+                <textarea asp-for="Feedback" class="form-control" rows="4" placeholder="Provide feedback to the student..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Submit Grade</button>
+            <a asp-action="ViewSubmissions" asp-route-assignmentId="@Model.AssignmentId" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

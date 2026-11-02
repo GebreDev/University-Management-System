@@ -1,0 +1,31 @@
+@model AttendanceUpdateDto
+@{
+    ViewData["Title"] = "Edit Attendance";
+}
+
+<h2><i class="fas fa-edit me-2"></i> Edit Attendance</h2>
+
+<div class="card shadow">
+    <div class="card-body">
+        <form asp-action="EditAttendance" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="CourseId" />
+            <div class="mb-3">
+                <label asp-for="Status" class="form-label">Status</label>
+                <select asp-for="Status" class="form-select">
+                    <option value="Present">Present</option>
+                    <option value="Absent">Absent</option>
+                    <option value="Late">Late</option>
+                    <option value="Excused">Excused</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Remarks" class="form-label">Remarks</label>
+                <textarea asp-for="Remarks" class="form-control" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+            <a asp-action="AttendanceHistory" asp-route-courseId="@Model.CourseId" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

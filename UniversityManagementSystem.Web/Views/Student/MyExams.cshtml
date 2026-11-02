@@ -1,0 +1,40 @@
+@model IEnumerable<ExamDto>
+@{
+    ViewData["Title"] = "My Exams";
+}
+
+<h2><i class="fas fa-file-alt me-2"></i> My Exams</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No exams available yet.</div>
+}
+else
+{
+    <div class="row">
+        @foreach (var exam in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card shadow h-100">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i> @exam.Title</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Type:</strong> <span class="badge bg-secondary">@exam.Type</span></p>
+                        <p><strong>Total Marks:</strong> @exam.TotalMarks</p>
+                        <p><strong>Duration:</strong> @exam.DurationMinutes minutes</p>
+                        <p><strong>Start:</strong> @exam.StartDateTime.ToString("MMM dd, yyyy HH:mm")</p>
+                        <p><strong>End:</strong> @exam.EndDateTime.ToString("MMM dd, yyyy HH:mm")</p>
+                    </div>
+                    <div class="card-footer">
+                        <a asp-action="TakeExam" asp-route-examId="@exam.Id" class="btn btn-primary w-100">
+                            <i class="fas fa-play"></i> Take Exam
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<a asp-action="Dashboard" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>

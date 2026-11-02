@@ -1,0 +1,47 @@
+@model ExamDto
+@{
+    ViewData["Title"] = "Take Exam";
+}
+
+<h2>@Model.Title</h2>
+<p>Duration: @Model.DurationMinutes minutes</p>
+<p>Total Marks: @Model.TotalMarks</p>
+<p>Instructions: @Model.Instructions</p>
+
+<form asp-action="SubmitExam" method="post">
+    <input type="hidden" name="examId" value="@Model.Id" />
+    @foreach (var q in Model.Questions)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5>Q: @q.QuestionText</h5>
+                @if (q.Type == ExamType.MCQ)
+                {
+                    foreach (var opt in q.Options)
+                    {
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="answers[@q.Id]" value="@opt.OptionText" />
+                            <label class="form-check-label">@opt.OptionText</label>
+                        </div>
+                    }
+                }
+                else if (q.Type == ExamType.TrueFalse)
+                {
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="answers[@q.Id]" value="True" />
+                        <label class="form-check-label">True</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="answers[@q.Id]" value="False" />
+                        <label class="form-check-label">False</label>
+                    </div>
+                }
+                else
+                {
+                    <textarea class="form-control" name="answers[@q.Id]" rows="3"></textarea>
+                }
+            </div>
+        </div>
+    }
+    <button type="submit" class="btn btn-primary">Submit Exam</button>
+</form>

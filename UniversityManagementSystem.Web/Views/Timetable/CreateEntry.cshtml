@@ -1,0 +1,74 @@
+@model TimetableEntry
+@{
+    ViewData["Title"] = "Add Timetable Entry";
+}
+
+<h2><i class="fas fa-plus-circle me-2 text-success"></i>Add Timetable Entry</h2>
+
+<div class="card border-0 shadow-sm mt-3">
+    <div class="card-body">
+        <form asp-action="CreateEntry" method="post">
+            <input type="hidden" asp-for="AcademicYearId" />
+            <input type="hidden" asp-for="SemesterId" />
+            <input type="hidden" asp-for="GradeId" />
+            <input type="hidden" asp-for="SectionId" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Academic Year</label>
+                    <select asp-for="AcademicYearId" asp-items="ViewBag.AcademicYears" class="form-select" disabled></select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Semester</label>
+                    <select asp-for="SemesterId" asp-items="ViewBag.Semesters" class="form-select" disabled></select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Year</label>
+                    <select asp-for="GradeId" asp-items="ViewBag.Grades" class="form-select" disabled></select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Section</label>
+                    <select asp-for="SectionId" asp-items="ViewBag.Sections" class="form-select" disabled></select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Day" class="form-label"></label>
+                    <select asp-for="Day" class="form-select">
+                        <option value="">-- Select Day --</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                        <option value="Sunday">Sunday</option>
+                    </select>
+                    <span asp-validation-for="Day" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Period" class="form-label"></label>
+                    <input asp-for="Period" class="form-control" placeholder="e.g. 08:00-09:30" />
+                    <span asp-validation-for="Period" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Subject" class="form-label"></label>
+                    <input asp-for="Subject" class="form-control" placeholder="e.g. Mathematics" />
+                    <span asp-validation-for="Subject" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Instructor" class="form-label"></label>
+                    <input asp-for="Instructor" class="form-control" placeholder="Instructor name" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Room" class="form-label"></label>
+                    <input asp-for="Room" class="form-control" placeholder="e.g. Room 101" />
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i> Add Entry</button>
+                <a asp-action="Entries" asp-route-academicYearId="@Model.AcademicYearId" asp-route-semesterId="@Model.SemesterId" asp-route-gradeId="@Model.GradeId" asp-route-sectionId="@Model.SectionId" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

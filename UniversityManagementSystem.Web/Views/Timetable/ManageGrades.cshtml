@@ -1,0 +1,186 @@
+@model IEnumerable<AcademicGrade>
+@{
+    ViewData["Title"] = "Year List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .yl-page { padding: 10px 0 40px; max-width: 900px; }
+
+    .yl-header {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+    .yl-header h2 {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+    .yl-header h2 i { color: var(--btn-sky); }
+
+    .btn-add-year {
+        background: var(--btn-sky);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 22px;
+        font-weight: 700;
+        font-size: .88rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all .2s ease;
+        width: fit-content;
+    }
+    .btn-add-year:hover { background: var(--btn-sky-hover); color: white; }
+
+    .yl-search {
+        display: flex;
+        gap: 0;
+        margin-bottom: 20px;
+    }
+    .yl-search input {
+        flex: 1;
+        padding: 10px 16px;
+        border: 1px solid #d1d9e0;
+        border-radius: 8px 0 0 8px;
+        font-size: .88rem;
+        color: #334155;
+    }
+    .yl-search input:focus { border-color: var(--btn-sky); outline: none; }
+    .yl-search button {
+        padding: 10px 20px;
+        border: none;
+        font-weight: 700;
+        font-size: .85rem;
+        cursor: pointer;
+    }
+    .yl-search .btn-search { background: var(--btn-sky); color: white; border-radius: 0; }
+    .yl-search .btn-search:hover { background: var(--btn-sky-hover); }
+    .yl-search .btn-clear { background: #64748b; color: white; border-radius: 0 8px 8px 0; }
+    .yl-search .btn-clear:hover { background: #475569; }
+
+    .yl-table-wrap {
+        background: white;
+        border: 1px solid #e8eef3;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .yl-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .yl-table thead th {
+        background: #1e293b;
+        color: white;
+        font-weight: 700;
+        font-size: .82rem;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        padding: 14px 16px;
+        text-align: left;
+    }
+    .yl-table tbody td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: .88rem;
+        color: #334155;
+    }
+    .yl-table tbody tr:last-child td { border-bottom: none; }
+    .yl-table tbody tr:hover td { background: #f8fbfe; }
+
+    .yl-empty {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    .yl-empty i { font-size: 40px; color: #d0dce4; margin-bottom: 12px; }
+    .yl-empty h5 { color: #1e293b; font-weight: 700; }
+    .yl-empty p { color: #64748b; }
+</style>
+
+<div class="yl-page">
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Header -->
+    <div class="yl-header">
+        <h2><i class="fas fa-layer-group me-2"></i>Year List</h2>
+        <a asp-action="CreateGrade" class="btn-add-year">
+            <i class="fas fa-plus"></i> Add Year
+        </a>
+    </div>
+
+    <!-- Search -->
+    <div class="yl-search">
+        <input type="text" id="yearSearch" placeholder="Search year..." oninput="filterYears()" />
+        <button class="btn-search" type="button" onclick="filterYears()">Search</button>
+        <button class="btn-clear" type="button" onclick="clearSearch()">Clear</button>
+    </div>
+
+    <!-- Table -->
+    @if (Model.Any())
+    {
+        <div class="yl-table-wrap">
+            <table class="yl-table" id="yearsTable">
+                <thead>
+                    <tr>
+                        <th style="width:60px;">No</th>
+                        <th>Year</th>
+                        <th>Sections</th>
+                        <th style="width:140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ var idx = 0; }
+                    @foreach (var item in Model)
+                    {
+                        idx++;
+                        <tr class="year-row">
+                            <td class="fw-bold">@idx</td>
+                            <td class="fw-bold">@item.Name</td>
+                            <td><span style="background:#eef4fb; color:var(--btn-sky); padding:3px 12px; border-radius:12px; font-size:.78rem; font-weight:700;">@item.Sections.Count sections</span></td>
+                            <td>
+                                <a asp-action="ManageSections" asp-route-gradeId="@item.Id" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-list me-1"></i> Sections
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="yl-empty">
+            <i class="fas fa-layer-group"></i>
+            <h5>No Years Found</h5>
+            <p>Create your first university year to get started.</p>
+        </div>
+    }
+
+</div>
+
+@section Scripts {
+    <script>
+        function filterYears() {
+            var search = document.getElementById('yearSearch').value.toLowerCase();
+            document.querySelectorAll('.year-row').forEach(function (row) {
+                row.style.display = row.textContent.toLowerCase().includes(search) ? '' : 'none';
+            });
+        }
+        function clearSearch() {
+            document.getElementById('yearSearch').value = '';
+            filterYears();
+        }
+    </script>
+}

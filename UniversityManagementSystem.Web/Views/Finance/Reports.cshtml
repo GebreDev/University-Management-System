@@ -1,0 +1,200 @@
+@model UniversityManagementSystem.Application.DTOs.Finance.FinanceAnalyticsDto
+@{
+    ViewData["Title"] = "Finance Reports";
+
+    // Chart data (JSON) for the two charts.
+    var semesterLabels = System.Text.Json.JsonSerializer.Serialize(Model.SemesterCollections.Select(s => s.SemesterName));
+    var expectedData = System.Text.Json.JsonSerializer.Serialize(Model.SemesterCollections.Select(s => s.Expected));
+    var collectedData = System.Text.Json.JsonSerializer.Serialize(Model.SemesterCollections.Select(s => s.Collected));
+    var waivedData = System.Text.Json.JsonSerializer.Serialize(Model.SemesterCollections.Select(s => s.Waived));
+
+    var deptLabels = System.Text.Json.JsonSerializer.Serialize(Model.DepartmentCollections.Select(d => d.DepartmentName));
+    var deptExpected = System.Text.Json.JsonSerializer.Serialize(Model.DepartmentCollections.Select(d => d.Expected));
+    var deptCollected = System.Text.Json.JsonSerializer.Serialize(Model.DepartmentCollections.Select(d => d.Collected));
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 fw-bold mb-1"><i class="fas fa-chart-line me-2 text-warning"></i> Finance Reports</h1>
+        <small class="text-muted">Collection trends per semester and per department.</small>
+    </div>
+    <div class="d-flex gap-2 align-items-end">
+        <form method="get" asp-action="Reports" class="d-flex gap-2 align-items-end">
+            <div>
+                <label class="form-label small text-muted mb-1">Academic Year</label>
+                <select name="academicYearId" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">All years</option>
+                    @if (ViewBag.AcademicYears is SelectList years)
+                    {
+                        foreach (var y in years)
+                        {
+                            <option value="@y.Value" selected="@(y.Value == (Model.AcademicYearId?.ToString() ?? ""))">@y.Text</option>
+                        }
+                    }
+                </select>
+            </div>
+        </form>
+        <a asp-action="Index" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body">
+                <small class="text-muted">Expected</small>
+                <h4 class="fw-bold mb-0">@Model.TotalExpected.ToString("N2") <span class="fs-6 text-muted">ETB</span></h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body">
+                <small class="text-muted">Collected</small>
+                <h4 class="fw-bold mb-0 text-success">@Model.TotalCollected.ToString("N2") <span class="fs-6 text-muted">ETB</span></h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body">
+                <small class="text-muted">Waived</small>
+                <h4 class="fw-bold mb-0 text-primary">@Model.TotalWaived.ToString("N2") <span class="fs-6 text-muted">ETB</span></h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body">
+                <small class="text-muted">Collection Rate</small>
+                <h4 class="fw-bold mb-0 @(Model.CollectionRate >= 75 ? "text-success" : Model.CollectionRate >= 50 ? "text-warning" : "text-danger")">@Model.CollectionRate.ToString("N1")%</h4>
+                <div class="progress mt-2" style="height: 6px;">
+                    <div class="progress-bar @(Model.CollectionRate >= 75 ? "bg-success" : Model.CollectionRate >= 50 ? "bg-warning" : "bg-danger")" style="width: @(Model.CollectionRate)%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-header bg-white py-3 px-4">
+                <h5 class="fw-bold mb-0"><i class="fas fa-chart-column me-2 text-muted"></i> Collection per Semester</h5>
+            </div>
+            <div class="card-body p-4">
+                @if (Model.SemesterCollections.Any())
+                {
+                    <canvas id="semesterChart" height="110"></canvas>
+                }
+                else
+                {
+                    <p class="text-center text-muted py-5 mb-0">No invoices issued yet.</p>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-header bg-white py-3 px-4">
+                <h5 class="fw-bold mb-0"><i class="fas fa-chart-pie me-2 text-muted"></i> Payment Status</h5>
+            </div>
+            <div class="card-body p-4">
+                @if (Model.PendingCount + Model.VerifiedCount + Model.FailedCount + Model.RefundedCount > 0)
+                {
+                    <canvas id="statusChart" height="220"></canvas>
+                }
+                else
+                {
+                    <p class="text-center text-muted py-5 mb-0">No payments recorded yet.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-header bg-white py-3 px-4">
+        <h5 class="fw-bold mb-0"><i class="fas fa-building-columns me-2 text-muted"></i> Collection per Department</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th class="text-center">Students Billed</th>
+                        <th class="text-end">Expected (ETB)</th>
+                        <th class="text-end">Collected (ETB)</th>
+                        <th class="text-end">Outstanding (ETB)</th>
+                        <th style="width:180px;">Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var d in Model.DepartmentCollections)
+                    {
+                        var rate = d.Expected <= 0 ? 0 : Math.Round(d.Collected / d.Expected * 100m, 1);
+                        <tr>
+                            <td class="fw-semibold">@d.DepartmentName</td>
+                            <td class="text-center">@d.StudentCount</td>
+                            <td class="text-end">@d.Expected.ToString("N2")</td>
+                            <td class="text-end text-success">@d.Collected.ToString("N2")</td>
+                            <td class="text-end @(d.Outstanding > 0 ? "text-danger" : "")">@d.Outstanding.ToString("N2")</td>
+                            <td>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar @(rate >= 75 ? "bg-success" : rate >= 50 ? "bg-warning" : "bg-danger")" style="width: @rate%"></div>
+                                </div>
+                                <small class="text-muted">@rate.ToString("N1")%</small>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.DepartmentCollections.Any())
+                    {
+                        <tr><td colspan="6" class="text-center text-muted py-4">No data for the selected scope.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    @if (Model.SemesterCollections.Any())
+    {
+        <text>
+        new Chart(document.getElementById('semesterChart'), {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(semesterLabels),
+                datasets: [
+                    { label: 'Expected', data: @Html.Raw(expectedData), backgroundColor: 'rgba(108,117,125,0.55)' },
+                    { label: 'Collected', data: @Html.Raw(collectedData), backgroundColor: 'rgba(25,135,84,0.75)' },
+                    { label: 'Waived', data: @Html.Raw(waivedData), backgroundColor: 'rgba(13,110,253,0.65)' }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+        </text>
+    }
+    @if (Model.PendingCount + Model.VerifiedCount + Model.FailedCount + Model.RefundedCount > 0)
+    {
+        <text>
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Verified', 'Pending', 'Failed/Rejected', 'Refunded'],
+                datasets: [{
+                    data: [@Model.VerifiedCount, @Model.PendingCount, @Model.FailedCount, @Model.RefundedCount],
+                    backgroundColor: ['rgba(25,135,84,0.8)', 'rgba(255,193,7,0.8)', 'rgba(220,53,69,0.8)', 'rgba(13,202,240,0.8)']
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+        </text>
+    }
+</script>
+}

@@ -1,0 +1,107 @@
+@model IEnumerable<UniversityManagementSystem.Application.DTOs.Finance.PaymentDto>
+@{
+    ViewData["Title"] = "Payments";
+    var semesters = ViewBag.Semesters as SelectList;
+    var status = (UniversityManagementSystem.Domain.Enums.PaymentStatus?)ViewBag.Status;
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 fw-bold mb-1"><i class="fas fa-receipt me-2 text-warning"></i> Payments</h1>
+        <small class="text-muted">Gateway payments verify automatically. Bank/slip payments need your verification.</small>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="ExportPayments" asp-route-format="excel" asp-route-semesterId="@ViewBag.SelectedSemesterId" asp-route-status="@status" class="btn btn-outline-success"><i class="fas fa-file-excel me-1"></i> Excel</a>
+        <a asp-action="ExportPayments" asp-route-format="pdf" asp-route-semesterId="@ViewBag.SelectedSemesterId" asp-route-status="@status" class="btn btn-outline-danger"><i class="fas fa-file-pdf me-1"></i> PDF</a>
+        <a asp-action="Index" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-body px-4 py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">Semester</label>
+                <select name="semesterId" class="form-select form-select-sm" asp-items="semesters"><option value="">All semesters</option></select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">Status</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    <option value="Pending" selected="@(status == UniversityManagementSystem.Domain.Enums.PaymentStatus.Pending)">Pending verification</option>
+                    <option value="Refunded" selected="@(status == UniversityManagementSystem.Domain.Enums.PaymentStatus.Refunded)">Refunded</option>
+                    <option value="Verified" selected="@(status == UniversityManagementSystem.Domain.Enums.PaymentStatus.Verified)">Verified</option>
+                    <option value="Failed" selected="@(status == UniversityManagementSystem.Domain.Enums.PaymentStatus.Failed)">Failed / Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-2"><button class="btn btn-sm btn-primary w-100">Filter</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th><th>Student</th><th>Reference / Slip</th><th>Method</th>
+                        <th class="text-end">Amount</th><th>Status</th><th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model)
+                    {
+                        <tr>
+                            <td class="small">@p.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td>@p.StudentName <small class="text-muted d-block">@p.StudentNumber</small></td>
+                            <td class="small">
+                                @p.Reference
+                                @if (!string.IsNullOrEmpty(p.SlipNumber))
+                                {
+                                    <span class="text-muted d-block">Slip: @p.SlipNumber</span>
+                                }
+                            </td>
+                            <td><span class="badge @(p.Method == UniversityManagementSystem.Domain.Enums.PaymentMethod.Chapa ? "bg-info text-dark" : "bg-secondary")">@p.Method</span></td>
+                            <td class="text-end fw-semibold">@p.Amount.ToString("N2")</td>
+                            <td>
+                                <span class="badge @(p.Status == UniversityManagementSystem.Domain.Enums.PaymentStatus.Verified ? "bg-success" : p.Status == UniversityManagementSystem.Domain.Enums.PaymentStatus.Pending ? "bg-warning text-dark" : p.Status == UniversityManagementSystem.Domain.Enums.PaymentStatus.Refunded ? "bg-info text-dark" : "bg-danger")">@p.Status</span>
+                                @if (!string.IsNullOrEmpty(p.Remarks))
+                                {
+                                    <small class="text-muted d-block">@p.Remarks</small>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (p.Status == UniversityManagementSystem.Domain.Enums.PaymentStatus.Pending)
+                                {
+                                    <form asp-action="VerifyPayment" method="post" class="d-inline">
+                                        <input type="hidden" name="paymentId" value="@p.Id" />
+                                        <button class="btn btn-sm btn-success" title="Confirm the money actually arrived"><i class="fas fa-check me-1"></i> Verify</button>
+                                    </form>
+                                    <form asp-action="RejectPayment" method="post" class="d-inline" onsubmit="var r = prompt('Reason for rejection:'); if(!r) return false; this.querySelector('[name=reason]').value = r; return true;">
+                                        <input type="hidden" name="paymentId" value="@p.Id" />
+                                        <input type="hidden" name="reason" value="" />
+                                        <button class="btn btn-sm btn-outline-danger"><i class="fas fa-times me-1"></i> Reject</button>
+                                    </form>
+                                }
+                                @if (p.Status == UniversityManagementSystem.Domain.Enums.PaymentStatus.Verified)
+                                {
+                                    <form asp-action="RefundPayment" method="post" class="d-inline"
+                                          onsubmit="var r = prompt('Refund reason (the student\'s balance will be restored):'); if(!r) return false; this.querySelector('[name=reason]').value = r; return true;">
+                                        <input type="hidden" name="paymentId" value="@p.Id" />
+                                        <input type="hidden" name="reason" value="" />
+                                        <button class="btn btn-sm btn-outline-warning" title="Reverse this payment and restore the student's balance"><i class="fas fa-rotate-left me-1"></i> Refund</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr><td colspan="7" class="text-center text-muted py-4">No payments found.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

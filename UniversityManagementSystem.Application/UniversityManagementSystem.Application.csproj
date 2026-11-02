@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UniversityManagementSystem.Domain\UniversityManagementSystem.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="16.2.0" />
+    <PackageReference Include="EPPlus" Version="8.6.3" />
+    <PackageReference Include="iTextSharp.LGPLv2.Core" Version="3.8.3" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!--
+      DTO properties are populated by MVC model binding / AutoMapper after construction,
+      so the 'non-nullable property must contain a non-null value' (CS8618) warnings are
+      noise for this layer. Suppressed project-wide for DTOs.
+    -->
+    <NoWarn>$(NoWarn);CS8618</NoWarn>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,110 @@
+@model UniversityManagementSystem.Application.DTOs.Modules.ModuleOverviewDto
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="dash-page" data-search="@($"{Model.Title} {Model.Subtitle} {Model.Description}")">
+
+    <!-- ======= Module hero ======= -->
+    <div class="module-hero @Model.Gradient">
+        <div class="module-hero-glow"></div>
+        <div class="module-hero-content">
+            <div class="module-hero-icon"><i class="@Model.Icon"></i></div>
+            <div>
+                <h1 class="module-hero-title">@Model.Title</h1>
+                <p class="module-hero-subtitle mb-0">@Model.Subtitle</p>
+            </div>
+        </div>
+    </div>
+
+    <p class="module-description">@Model.Description</p>
+
+    <!-- ======= Stat cards ======= -->
+    @if (Model.Stats.Any())
+    {
+        <div class="row g-3 mb-4">
+            @foreach (var stat in Model.Stats)
+            {
+                <div class="col-6 col-xl-3">
+                    <div class="metric-card">
+                        <div class="metric-icon @stat.Gradient">
+                            <i class="@stat.Icon"></i>
+                        </div>
+                        <div class="metric-body">
+                            <div class="metric-label">@stat.Label</div>
+                            <span class="metric-value">@stat.Value</span>
+                            <div class="metric-footer">
+                                <span class="metric-sub">@stat.Sub</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- ======= Quick links ======= -->
+        @if (Model.QuickLinks.Any())
+        {
+            <div class="col-lg-6">
+                <div class="list-card h-100">
+                    <div class="list-card-header">
+                        <h6><i class="fas fa-bolt me-2 text-primary"></i>Quick Actions</h6>
+                    </div>
+                    <div class="module-links">
+                        @foreach (var link in Model.QuickLinks)
+                        {
+                            <a class="module-link" href="@link.Url">
+                                <span class="module-link-icon @Model.Gradient"><i class="@link.Icon"></i></span>
+                                <span class="module-link-body">
+                                    <strong>@link.Label</strong>
+                                    <small>@link.Description</small>
+                                </span>
+                                <i class="fas fa-chevron-right module-link-arrow"></i>
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- ======= Real data items ======= -->
+        @if (Model.Items.Any())
+        {
+            <div class="col-lg-6">
+                <div class="list-card h-100">
+                    <div class="list-card-header">
+                        <h6><i class="fas fa-stream me-2 text-primary"></i>@Model.ItemsTitle</h6>
+                    </div>
+                    <div class="module-items">
+                        @foreach (var item in Model.Items)
+                        {
+                            <div class="activity-item" data-search="@($"{item.Title} {item.Meta}")">
+                                <span class="activity-icon icon-bg-@item.Color"><i class="@item.Icon"></i></span>
+                                <div class="activity-body">
+                                    <div class="activity-title">@item.Title</div>
+                                    <div class="activity-detail">@item.Meta</div>
+                                </div>
+                                @if (!string.IsNullOrEmpty(item.Date))
+                                {
+                                    <span class="activity-time">@item.Date</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (!Model.QuickLinks.Any() && !Model.Items.Any())
+    {
+        <div class="text-center text-muted py-5">
+            <i class="fas fa-cube fa-3x mb-3 opacity-50"></i>
+            <p class="mb-1">This module is being prepared.</p>
+            <p class="small">Your dashboard is the best place to start.</p>
+            <a class="dash-link" asp-controller="Student" asp-action="Dashboard">Go to dashboard →</a>
+        </div>
+    }
+</div>

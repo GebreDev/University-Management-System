@@ -1,0 +1,141 @@
+@model IEnumerable<UniversityManagementSystem.Web.Models.InstructorAttendanceViewModel>
+@using UniversityManagementSystem.Domain.Enums
+@{
+    ViewData["Title"] = "Attendance";
+    var items = Model.ToList();
+    var totalRecords = items.Sum(i => i.TotalRecords);
+    var totalPresent = items.Sum(i => i.PresentCount);
+    var overallRate = totalRecords == 0 ? 0 : (int)Math.Round(totalPresent * 100.0 / totalRecords);
+}
+
+<div class="dash-page">
+
+    <!-- Header -->
+    <div class="dash-head">
+        <div>
+            <h1 class="dash-greeting"><i class="fas fa-calendar-check me-2 text-primary"></i>Attendance</h1>
+            <p class="dash-subtitle">Take attendance and review records for every course you teach.</p>
+        </div>
+        <div class="dash-date">
+            <strong>@DateTime.Today.ToString("dddd")</strong>
+            <span>@DateTime.Today.ToString("MMM dd, yyyy")</span>
+        </div>
+    </div>
+
+    <!-- Metric cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-icon stat-grad-a"><i class="fas fa-book-open"></i></div>
+                <div class="metric-body">
+                    <div class="metric-label">Courses</div>
+                    <span class="metric-value">@items.Count</span>
+                    <div class="metric-footer"><span class="metric-sub">you teach</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-icon stat-grad-c"><i class="fas fa-clipboard-list"></i></div>
+                <div class="metric-body">
+                    <div class="metric-label">Records</div>
+                    <span class="metric-value">@totalRecords.ToString("N0")</span>
+                    <div class="metric-footer"><span class="metric-sub">attendance entries</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-icon stat-grad-d"><i class="fas fa-chart-line"></i></div>
+                <div class="metric-body">
+                    <div class="metric-label">Overall Rate</div>
+                    <span class="metric-value">@overallRate%</span>
+                    <div class="metric-footer"><span class="metric-sub">present</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-icon stat-grad-b"><i class="fas fa-circle-check"></i></div>
+                <div class="metric-body">
+                    <div class="metric-label">Marked Today</div>
+                    <span class="metric-value">@items.Count(i => i.MarkedToday)</span>
+                    <div class="metric-footer"><span class="metric-sub">of @items.Count courses</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!items.Any())
+    {
+        <div class="list-card text-center py-5">
+            <i class="fas fa-calendar-times fa-4x text-muted mb-3 opacity-50"></i>
+            <h5 class="text-muted">No Courses Assigned</h5>
+            <p class="text-muted mb-3">You don't teach any courses yet, so there is no attendance to manage.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var item in items)
+            {
+                <div class="col-lg-6">
+                    <div class="list-card h-100" data-search="@($"{item.CourseTitle} {item.CourseCode}")">
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                            <div>
+                                <span class="course-code">@item.CourseCode</span>
+                                <h6 class="mt-2 mb-0">@item.CourseTitle</h6>
+                                <small class="text-muted">@item.TotalRecords attendance record(s)</small>
+                            </div>
+                            @if (item.MarkedToday)
+                            {
+                                <span class="trend-pill positive"><i class="fas fa-check-circle me-1"></i>Marked today</span>
+                            }
+                            else
+                            {
+                                <span class="trend-pill neutral"><i class="fas fa-clock me-1"></i>Not marked today</span>
+                            }
+                        </div>
+
+                        <!-- Status summary -->
+                        <div class="d-flex gap-2 flex-wrap mb-3">
+                            <span class="stats-count" style="background: #d1e7dd; color: #155724;">
+                                <i class="fas fa-check-circle me-1"></i> Present: <strong>@item.PresentCount</strong>
+                            </span>
+                            <span class="stats-count" style="background: #f8d7da; color: #721c24;">
+                                <i class="fas fa-times-circle me-1"></i> Absent: <strong>@item.AbsentCount</strong>
+                            </span>
+                            <span class="stats-count" style="background: #fff3cd; color: #856404;">
+                                <i class="fas fa-clock me-1"></i> Late: <strong>@item.LateCount</strong>
+                            </span>
+                            <span class="stats-count" style="background: #cff4fc; color: #055160;">
+                                <i class="fas fa-check-double me-1"></i> Excused: <strong>@item.ExcusedCount</strong>
+                            </span>
+                        </div>
+
+                        <!-- Rate bar -->
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <div class="schedule-progress flex-grow-1" style="margin-top: 0;">
+                                <div class="bar" style="width: @Math.Round(item.AttendanceRate)%"></div>
+                            </div>
+                            <span class="schedule-pct">@Math.Round(item.AttendanceRate)%</span>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="crud-actions">
+                            <a asp-action="MarkAttendance" asp-route-courseId="@item.CourseId" class="btn btn-sm btn-primary">
+                                <i class="fas fa-pen me-1"></i>Mark
+                            </a>
+                            <a asp-action="AttendanceHistory" asp-route-courseId="@item.CourseId" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-history me-1"></i>History
+                            </a>
+                            <a asp-action="MyStudents" asp-route-courseId="@item.CourseId" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-users me-1"></i>Students
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

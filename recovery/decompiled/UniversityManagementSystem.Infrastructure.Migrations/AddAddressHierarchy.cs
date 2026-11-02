@@ -1,0 +1,1171 @@
+using System;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
+using Microsoft.EntityFrameworkCore.Migrations.Operations.Builders;
+using UniversityManagementSystem.Infrastructure.Data;
+
+namespace UniversityManagementSystem.Infrastructure.Migrations;
+
+[DbContext(typeof(ApplicationDbContext))]
+[Migration("20260901170346_AddAddressHierarchy")]
+public class AddAddressHierarchy : Migration
+{
+	protected override void Up(MigrationBuilder migrationBuilder)
+	{
+		migrationBuilder.DropTable("FeePayments");
+		migrationBuilder.DropTable("FeeStructures");
+		migrationBuilder.CreateTable("Regions", (ColumnsBuilder table) =>
+		{
+			OperationBuilder<AddColumnOperation> regionId = table.Column<int>("int").Annotation("SqlServer:Identity", "1, 1");
+			int? maxLength = 100;
+			return new
+			{
+				RegionId = regionId,
+				Name = table.Column<string>("nvarchar(100)", null, maxLength)
+			};
+		}, null, table =>
+		{
+			table.PrimaryKey("PK_Regions", x => x.RegionId);
+		});
+		migrationBuilder.CreateTable("Zones", (ColumnsBuilder table) =>
+		{
+			OperationBuilder<AddColumnOperation> zoneId = table.Column<int>("int").Annotation("SqlServer:Identity", "1, 1");
+			int? maxLength = 100;
+			return new
+			{
+				ZoneId = zoneId,
+				Name = table.Column<string>("nvarchar(100)", null, maxLength),
+				RegionId = table.Column<int>("int")
+			};
+		}, null, table =>
+		{
+			table.PrimaryKey("PK_Zones", x => x.ZoneId);
+			table.ForeignKey("FK_Zones_Regions_RegionId", x => x.RegionId, "Regions", "RegionId", null, ReferentialAction.NoAction, ReferentialAction.Restrict);
+		});
+		migrationBuilder.CreateTable("Woredas", (ColumnsBuilder table) =>
+		{
+			OperationBuilder<AddColumnOperation> woredaId = table.Column<int>("int").Annotation("SqlServer:Identity", "1, 1");
+			int? maxLength = 100;
+			return new
+			{
+				WoredaId = woredaId,
+				Name = table.Column<string>("nvarchar(100)", null, maxLength),
+				ZoneId = table.Column<int>("int")
+			};
+		}, null, table =>
+		{
+			table.PrimaryKey("PK_Woredas", x => x.WoredaId);
+			table.ForeignKey("FK_Woredas_Zones_ZoneId", x => x.ZoneId, "Zones", "ZoneId", null, ReferentialAction.NoAction, ReferentialAction.Restrict);
+		});
+		migrationBuilder.CreateTable("Kebeles", (ColumnsBuilder table) =>
+		{
+			OperationBuilder<AddColumnOperation> kebeleId = table.Column<int>("int").Annotation("SqlServer:Identity", "1, 1");
+			int? maxLength = 100;
+			return new
+			{
+				KebeleId = kebeleId,
+				Name = table.Column<string>("nvarchar(100)", null, maxLength),
+				WoredaId = table.Column<int>("int")
+			};
+		}, null, table =>
+		{
+			table.PrimaryKey("PK_Kebeles", x => x.KebeleId);
+			table.ForeignKey("FK_Kebeles_Woredas_WoredaId", x => x.WoredaId, "Woredas", "WoredaId", null, ReferentialAction.NoAction, ReferentialAction.Restrict);
+		});
+		migrationBuilder.CreateIndex("IX_Kebeles_WoredaId", "Kebeles", "WoredaId");
+		migrationBuilder.CreateIndex("IX_Woredas_ZoneId", "Woredas", "ZoneId");
+		migrationBuilder.CreateIndex("IX_Zones_RegionId", "Zones", "RegionId");
+	}
+
+	protected override void Down(MigrationBuilder migrationBuilder)
+	{
+		migrationBuilder.DropTable("Kebeles");
+		migrationBuilder.DropTable("Woredas");
+		migrationBuilder.DropTable("Zones");
+		migrationBuilder.DropTable("Regions");
+		migrationBuilder.CreateTable("FeeStructures", (ColumnsBuilder table) => new
+		{
+			Id = table.Column<int>("int").Annotation("SqlServer:Identity", "1, 1"),
+			DepartmentId = table.Column<int>("int", null, null, rowVersion: false, null, nullable: true),
+			StudentId = table.Column<int>("int", null, null, rowVersion: false, null, nullable: true),
+			Amount = table.Column<decimal>("decimal(18,2)"),
+			CreatedAt = table.Column<DateTime>("datetime2"),
+			Description = table.Column<string>("nvarchar(max)"),
+			DueDate = table.Column<DateTime>("datetime2"),
+			IsActive = table.Column<bool>("bit"),
+			Name = table.Column<string>("nvarchar(max)"),
+			Status = table.Column<int>("int"),
+			UpdatedAt = table.Column<DateTime>("datetime2", null, null, rowVersion: false, null, nullable: true)
+		}, null, table =>
+		{
+			table.PrimaryKey("PK_FeeStructures", x => x.Id);
+			table.ForeignKey("FK_FeeStructures_Departments_DepartmentId", x => x.DepartmentId, "Departments", "Id");
+			table.ForeignKey("FK_FeeStructures_Students_StudentId", x => x.StudentId, "Students", "Id");
+		});
+		migrationBuilder.CreateTable("FeePayments", (ColumnsBuilder table) => new
+		{
+			Id = table.Column<int>("int").Annotation("SqlServer:Identity", "1, 1"),
+			FeeStructureId = table.Column<int>("int"),
+			StudentId = table.Column<int>("int"),
+			AmountPaid = table.Column<decimal>("decimal(18,2)"),
+			CreatedAt = table.Column<DateTime>("datetime2"),
+			DiscountAmount = table.Column<decimal>("decimal(18,2)"),
+			LatePenalty = table.Column<decimal>("decimal(18,2)"),
+			PaymentDate = table.Column<DateTime>("datetime2"),
+			PaymentMethod = table.Column<string>("nvarchar(max)"),
+			ReceiptNumber = table.Column<string>("nvarchar(max)"),
+			Remarks = table.Column<string>("nvarchar(max)", null, null, rowVersion: false, null, nullable: true, ""),
+			ScholarshipAmount = table.Column<decimal>("decimal(18,2)"),
+			Status = table.Column<int>("int"),
+			TransactionId = table.Column<string>("nvarchar(max)", null, null, rowVersion: false, null, nullable: true, ""),
+			UpdatedAt = table.Column<DateTime>("datetime2", null, null, rowVersion: false, null, nullable: true)
+		}, null, table =>
+		{
+			table.PrimaryKey("PK_FeePayments", x => x.Id);
+			table.ForeignKey("FK_FeePayments_FeeStructures_FeeStructureId", x => x.FeeStructureId, "FeeStructures", "Id", null, ReferentialAction.NoAction, ReferentialAction.Restrict);
+			table.ForeignKey("FK_FeePayments_Students_StudentId", x => x.StudentId, "Students", "Id", null, ReferentialAction.NoAction, ReferentialAction.Restrict);
+		});
+		migrationBuilder.CreateIndex("IX_FeePayments_FeeStructureId", "FeePayments", "FeeStructureId");
+		migrationBuilder.CreateIndex("IX_FeePayments_StudentId", "FeePayments", "StudentId");
+		migrationBuilder.CreateIndex("IX_FeeStructures_DepartmentId", "FeeStructures", "DepartmentId");
+		migrationBuilder.CreateIndex("IX_FeeStructures_StudentId", "FeeStructures", "StudentId");
+	}
+
+	protected override void BuildTargetModel(ModelBuilder modelBuilder)
+	{
+		modelBuilder.HasAnnotation("ProductVersion", "10.0.10").HasAnnotation("Relational:MaxIdentifierLength", 128);
+		modelBuilder.UseIdentityColumns(1L);
+		modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", (EntityTypeBuilder b) =>
+		{
+			b.Property<string>("Id").HasColumnType("nvarchar(450)");
+			b.Property<string>("ConcurrencyStamp").IsConcurrencyToken().HasColumnType("nvarchar(max)");
+			b.Property<string>("Name").HasMaxLength(256).HasColumnType("nvarchar(256)");
+			b.Property<string>("NormalizedName").HasMaxLength(256).HasColumnType("nvarchar(256)");
+			b.HasKey("Id");
+			b.HasIndex("NormalizedName").IsUnique().HasDatabaseName("RoleNameIndex")
+				.HasFilter("[NormalizedName] IS NOT NULL");
+			b.ToTable("AspNetRoles", (string?)null);
+		});
+		modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<string>("ClaimType").HasColumnType("nvarchar(max)");
+			b.Property<string>("ClaimValue").HasColumnType("nvarchar(max)");
+			b.Property<string>("RoleId").IsRequired().HasColumnType("nvarchar(450)");
+			b.HasKey("Id");
+			b.HasIndex("RoleId");
+			b.ToTable("AspNetRoleClaims", (string?)null);
+		});
+		modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<string>("ClaimType").HasColumnType("nvarchar(max)");
+			b.Property<string>("ClaimValue").HasColumnType("nvarchar(max)");
+			b.Property<string>("UserId").IsRequired().HasColumnType("nvarchar(450)");
+			b.HasKey("Id");
+			b.HasIndex("UserId");
+			b.ToTable("AspNetUserClaims", (string?)null);
+		});
+		modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", (EntityTypeBuilder b) =>
+		{
+			b.Property<string>("LoginProvider").HasColumnType("nvarchar(450)");
+			b.Property<string>("ProviderKey").HasColumnType("nvarchar(450)");
+			b.Property<string>("ProviderDisplayName").HasColumnType("nvarchar(max)");
+			b.Property<string>("UserId").IsRequired().HasColumnType("nvarchar(450)");
+			b.HasKey("LoginProvider", "ProviderKey");
+			b.HasIndex("UserId");
+			b.ToTable("AspNetUserLogins", (string?)null);
+		});
+		modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", (EntityTypeBuilder b) =>
+		{
+			b.Property<string>("UserId").HasColumnType("nvarchar(450)");
+			b.Property<string>("RoleId").HasColumnType("nvarchar(450)");
+			b.HasKey("UserId", "RoleId");
+			b.HasIndex("RoleId");
+			b.ToTable("AspNetUserRoles", (string?)null);
+		});
+		modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", (EntityTypeBuilder b) =>
+		{
+			b.Property<string>("UserId").HasColumnType("nvarchar(450)");
+			b.Property<string>("LoginProvider").HasColumnType("nvarchar(450)");
+			b.Property<string>("Name").HasColumnType("nvarchar(450)");
+			b.Property<string>("Value").HasColumnType("nvarchar(max)");
+			b.HasKey("UserId", "LoginProvider", "Name");
+			b.ToTable("AspNetUserTokens", (string?)null);
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.ApplicationUser", (EntityTypeBuilder b) =>
+		{
+			b.Property<string>("Id").HasColumnType("nvarchar(450)");
+			b.Property<int>("AccessFailedCount").HasColumnType("int");
+			b.Property<int>("AccountStatus").HasColumnType("int");
+			b.Property<string>("Address").HasColumnType("nvarchar(max)");
+			b.Property<string>("ConcurrencyStamp").IsConcurrencyToken().HasColumnType("nvarchar(max)");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<DateTime>("DateOfBirth").HasColumnType("datetime2");
+			b.Property<string>("Email").HasMaxLength(256).HasColumnType("nvarchar(256)");
+			b.Property<bool>("EmailConfirmed").HasColumnType("bit");
+			b.Property<string>("FirstName").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<string>("LastName").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<bool>("LockoutEnabled").HasColumnType("bit");
+			b.Property<DateTimeOffset?>("LockoutEnd").HasColumnType("datetimeoffset");
+			b.Property<string>("NormalizedEmail").HasMaxLength(256).HasColumnType("nvarchar(256)");
+			b.Property<string>("NormalizedUserName").HasMaxLength(256).HasColumnType("nvarchar(256)");
+			b.Property<string>("PasswordHash").HasColumnType("nvarchar(max)");
+			b.Property<string>("PhoneNumber").HasColumnType("nvarchar(max)");
+			b.Property<bool>("PhoneNumberConfirmed").HasColumnType("bit");
+			b.Property<string>("ProfilePictureUrl").HasColumnType("nvarchar(max)");
+			b.Property<string>("SecurityStamp").HasColumnType("nvarchar(max)");
+			b.Property<bool>("TwoFactorEnabled").HasColumnType("bit");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.Property<string>("UserName").HasMaxLength(256).HasColumnType("nvarchar(256)");
+			b.HasKey("Id");
+			b.HasIndex("NormalizedEmail").HasDatabaseName("EmailIndex");
+			b.HasIndex("NormalizedUserName").IsUnique().HasDatabaseName("UserNameIndex")
+				.HasFilter("[NormalizedUserName] IS NOT NULL");
+			b.ToTable("AspNetUsers", (string?)null);
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.AssessmentMark", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<int>("CourseAssessmentId").HasColumnType("int");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<decimal>("Score").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<int>("StudentId").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("StudentId");
+			b.HasIndex("CourseAssessmentId", "StudentId").IsUnique();
+			b.ToTable("AssessmentMarks");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Assignment", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<bool>("AllowLateSubmission").HasColumnType("bit");
+			b.Property<string>("AttachmentPath").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<int>("CourseId").HasColumnType("int");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<DateTime>("Deadline").HasColumnType("datetime2");
+			b.Property<string>("Description").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<int>("InstructorId").HasColumnType("int");
+			b.Property<bool>("IsPublished").HasColumnType("bit");
+			b.Property<int?>("LateSubmissionPenalty").HasColumnType("int");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<string>("Title").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<int>("TotalMarks").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("CourseId");
+			b.HasIndex("InstructorId");
+			b.ToTable("Assignments");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.AssignmentAnswer", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<string>("AnswerText").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<int>("AssignmentQuestionId").HasColumnType("int");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<bool>("IsCorrect").HasColumnType("bit");
+			b.Property<int?>("Score").HasColumnType("int");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<int>("StudentId").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("AssignmentQuestionId");
+			b.HasIndex("StudentId");
+			b.ToTable("AssignmentAnswers");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.AssignmentQuestion", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<int>("AssignmentId").HasColumnType("int");
+			b.Property<string>("CorrectAnswer").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<string>("DifficultyLevel").HasColumnType("nvarchar(max)");
+			b.Property<string>("Explanation").HasColumnType("nvarchar(max)");
+			b.Property<int>("Marks").HasColumnType("int");
+			b.Property<string>("QuestionText").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<int>("Type").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("AssignmentId");
+			b.ToTable("AssignmentQuestions");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.AssignmentQuestionOption", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<int>("AssignmentQuestionId").HasColumnType("int");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<bool>("IsCorrect").HasColumnType("bit");
+			b.Property<string>("OptionText").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("AssignmentQuestionId");
+			b.ToTable("AssignmentQuestionOptions");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.AssignmentResult", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<int>("AssignmentId").HasColumnType("int");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<string>("Grade").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<bool>("IsPass").HasColumnType("bit");
+			b.Property<string>("Remarks").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<int>("StudentId").HasColumnType("int");
+			b.Property<int>("TotalScore").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("AssignmentId");
+			b.HasIndex("StudentId");
+			b.ToTable("AssignmentResults");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Attendance", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<int>("CourseId").HasColumnType("int");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<DateTime>("Date").HasColumnType("datetime2");
+			b.Property<int?>("InstructorId").HasColumnType("int");
+			b.Property<string>("Remarks").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<int>("StudentId").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("CourseId");
+			b.HasIndex("InstructorId");
+			b.HasIndex("StudentId");
+			b.ToTable("Attendances");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.AuditLog", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<string>("Action").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<string>("Details").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<string>("DeviceInfo").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<string>("Entity").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<int?>("EntityId").HasColumnType("int");
+			b.Property<string>("IpAddress").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<DateTime>("Timestamp").HasColumnType("datetime2");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.Property<string>("UserId").IsRequired().HasColumnType("nvarchar(450)");
+			b.Property<string>("UserName").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<string>("UserRole").IsRequired().HasColumnType("nvarchar(max)");
+			b.HasKey("Id");
+			b.HasIndex("UserId");
+			b.ToTable("AuditLogs");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.ChatConversation", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<string>("LastMessage").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<DateTime?>("LastMessageTime").HasColumnType("datetime2");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.Property<string>("User1Id").IsRequired().HasColumnType("nvarchar(450)");
+			b.Property<string>("User1Role").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<string>("User2Id").IsRequired().HasColumnType("nvarchar(450)");
+			b.Property<string>("User2Role").IsRequired().HasColumnType("nvarchar(max)");
+			b.HasKey("Id");
+			b.HasIndex("User1Id");
+			b.HasIndex("User2Id");
+			b.ToTable("ChatConversations");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.ChatMessage", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<string>("AttachmentPath").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<string>("AttachmentType").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<string>("Content").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<int>("ConversationId").HasColumnType("int");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<bool>("IsRead").HasColumnType("bit");
+			b.Property<DateTime?>("ReadAt").HasColumnType("datetime2");
+			b.Property<string>("SenderId").IsRequired().HasColumnType("nvarchar(450)");
+			b.Property<DateTime>("SentAt").HasColumnType("datetime2");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("ConversationId");
+			b.HasIndex("SenderId");
+			b.ToTable("ChatMessages");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Course", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<string>("Code").IsRequired().HasColumnType("nvarchar(450)");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<int>("Credits").HasColumnType("int");
+			b.Property<int>("DepartmentId").HasColumnType("int");
+			b.Property<string>("Description").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<DateTime>("EndDate").HasColumnType("datetime2");
+			b.Property<int>("InstructorId").HasColumnType("int");
+			b.Property<DateTime>("StartDate").HasColumnType("datetime2");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<string>("Title").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("Code").IsUnique();
+			b.HasIndex("DepartmentId");
+			b.HasIndex("InstructorId");
+			b.ToTable("Courses");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.CourseAssessment", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<int>("CourseId").HasColumnType("int");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<string>("Name").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<int?>("Semester").HasColumnType("int");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.Property<decimal>("Weight").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+			b.HasKey("Id");
+			b.HasIndex("CourseId");
+			b.ToTable("CourseAssessments");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.CourseResult", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<int>("CourseId").HasColumnType("int");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<decimal>("GradePoint").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+			b.Property<bool>("IsPublished").HasColumnType("bit");
+			b.Property<string>("LetterGrade").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<DateTime?>("PublishedAt").HasColumnType("datetime2");
+			b.Property<string>("Remarks").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<int?>("Semester").HasColumnType("int");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<int>("StudentId").HasColumnType("int");
+			b.Property<decimal>("TotalMark").HasPrecision(18, 2).HasColumnType("decimal(18,2)");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("StudentId");
+			b.HasIndex("CourseId", "StudentId", "Semester").IsUnique().HasFilter("[Semester] IS NOT NULL");
+			b.ToTable("CourseResults");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.CourseSchedule", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<int>("CourseId").HasColumnType("int");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<int>("DayOfWeek").HasColumnType("int");
+			b.Property<TimeSpan>("EndTime").HasColumnType("time");
+			b.Property<bool>("IsActive").HasColumnType("bit");
+			b.Property<string>("Room").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<TimeSpan>("StartTime").HasColumnType("time");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("CourseId");
+			b.ToTable("CourseSchedules");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Department", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<string>("Code").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<string>("Description").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<string>("Name").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.ToTable("Departments");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Enrollment", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<DateTime?>("ApprovalDate").HasColumnType("datetime2");
+			b.Property<int>("CourseId").HasColumnType("int");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<DateTime>("EnrollmentDate").HasColumnType("datetime2");
+			b.Property<string>("RejectionReason").HasColumnType("nvarchar(max)");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<int>("StudentId").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("CourseId");
+			b.HasIndex("StudentId");
+			b.ToTable("Enrollments");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Exam", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<string>("AttachmentPath").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<int>("CourseId").HasColumnType("int");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<string>("Description").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<int>("DurationMinutes").HasColumnType("int");
+			b.Property<DateTime>("EndDateTime").HasColumnType("datetime2");
+			b.Property<string>("Instructions").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<int>("InstructorId").HasColumnType("int");
+			b.Property<bool>("IsPublished").HasColumnType("bit");
+			b.Property<bool>("IsRandomized").HasColumnType("bit");
+			b.Property<int>("PassingMarks").HasColumnType("int");
+			b.Property<DateTime>("StartDateTime").HasColumnType("datetime2");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<string>("Title").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<int>("TotalMarks").HasColumnType("int");
+			b.Property<int>("Type").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("CourseId");
+			b.HasIndex("InstructorId");
+			b.ToTable("Exams");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.ExamResult", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<int>("ExamId").HasColumnType("int");
+			b.Property<string>("Grade").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<bool>("IsPass").HasColumnType("bit");
+			b.Property<string>("Remarks").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<int>("StudentId").HasColumnType("int");
+			b.Property<int>("TotalScore").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("ExamId");
+			b.HasIndex("StudentId");
+			b.ToTable("ExamResults");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Grade", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<int?>("AssignmentId").HasColumnType("int");
+			b.Property<int>("CourseId").HasColumnType("int");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<int?>("ExamId").HasColumnType("int");
+			b.Property<string>("LetterGrade").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<decimal>("MaxScore").HasColumnType("decimal(18,2)");
+			b.Property<string>("Remarks").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<decimal>("Score").HasColumnType("decimal(18,2)");
+			b.Property<int?>("Semester").HasColumnType("int");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<int>("StudentId").HasColumnType("int");
+			b.Property<int?>("SubmissionId").HasColumnType("int");
+			b.Property<int>("Type").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("AssignmentId");
+			b.HasIndex("CourseId");
+			b.HasIndex("ExamId");
+			b.HasIndex("StudentId");
+			b.HasIndex("SubmissionId");
+			b.ToTable("Grades");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Instructor", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<string>("ApplicationUserId").IsRequired().HasColumnType("nvarchar(450)");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<int>("DepartmentId").HasColumnType("int");
+			b.Property<string>("Email").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<string>("FirstName").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<DateTime>("HireDate").HasColumnType("datetime2");
+			b.Property<string>("LastName").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<string>("Phone").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<string>("Qualification").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("ApplicationUserId").IsUnique();
+			b.HasIndex("DepartmentId");
+			b.ToTable("Instructors");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Kebele", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("KebeleId").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("KebeleId").UseIdentityColumn(1L);
+			b.Property<string>("Name").IsRequired().HasMaxLength(100)
+				.HasColumnType("nvarchar(100)");
+			b.Property<int>("WoredaId").HasColumnType("int");
+			b.HasKey("KebeleId");
+			b.HasIndex("WoredaId");
+			b.ToTable("Kebeles");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Notification", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<bool>("IsRead").HasColumnType("bit");
+			b.Property<string>("LinkUrl").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<string>("Message").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<DateTime?>("ReadAt").HasColumnType("datetime2");
+			b.Property<string>("RelatedId").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<string>("Title").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<string>("Type").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.Property<string>("UserId").IsRequired().HasColumnType("nvarchar(450)");
+			b.HasKey("Id");
+			b.HasIndex("UserId");
+			b.ToTable("Notifications");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Question", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<string>("CorrectAnswer").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<string>("DifficultyLevel").HasColumnType("nvarchar(max)");
+			b.Property<int>("ExamId").HasColumnType("int");
+			b.Property<string>("Explanation").HasColumnType("nvarchar(max)");
+			b.Property<int>("Marks").HasColumnType("int");
+			b.Property<string>("QuestionText").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<int>("Type").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("ExamId");
+			b.ToTable("Questions");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.QuestionOption", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<bool>("IsCorrect").HasColumnType("bit");
+			b.Property<string>("OptionText").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<int>("QuestionId").HasColumnType("int");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("QuestionId");
+			b.ToTable("QuestionOptions");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Region", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("RegionId").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("RegionId").UseIdentityColumn(1L);
+			b.Property<string>("Name").IsRequired().HasMaxLength(100)
+				.HasColumnType("nvarchar(100)");
+			b.HasKey("RegionId");
+			b.ToTable("Regions");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Student", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<string>("ApplicationUserId").IsRequired().HasColumnType("nvarchar(450)");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<int>("DepartmentId").HasColumnType("int");
+			b.Property<string>("Email").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<DateTime>("EnrollmentDate").HasColumnType("datetime2");
+			b.Property<string>("FirstName").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<string>("LastName").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<string>("Phone").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<string>("StudentId").IsRequired().HasColumnType("nvarchar(450)");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("ApplicationUserId").IsUnique();
+			b.HasIndex("DepartmentId");
+			b.HasIndex("StudentId").IsUnique();
+			b.ToTable("Students");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.StudentAnswer", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<string>("AnswerText").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<bool>("IsCorrect").HasColumnType("bit");
+			b.Property<int>("QuestionId").HasColumnType("int");
+			b.Property<int?>("Score").HasColumnType("int");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<int>("StudentId").HasColumnType("int");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("QuestionId");
+			b.HasIndex("StudentId");
+			b.ToTable("StudentAnswers");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Submission", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<int>("AssignmentId").HasColumnType("int");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<string>("Feedback").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<string>("FilePath").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<int?>("Grade").HasColumnType("int");
+			b.Property<bool>("IsGraded").HasColumnType("bit");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<int>("StudentId").HasColumnType("int");
+			b.Property<DateTime>("SubmittedAt").HasColumnType("datetime2");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("AssignmentId");
+			b.HasIndex("StudentId");
+			b.ToTable("Submissions");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.UniversityEvent", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("Id").UseIdentityColumn(1L);
+			b.Property<string>("Color").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+			b.Property<string>("Description").ValueGeneratedOnAdd().HasColumnType("nvarchar(max)")
+				.HasDefaultValue("");
+			b.Property<DateTime>("EndDateTime").HasColumnType("datetime2");
+			b.Property<string>("EventType").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<bool>("IsPublic").HasColumnType("bit");
+			b.Property<string>("Location").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<DateTime>("StartDateTime").HasColumnType("datetime2");
+			b.Property<int>("Status").HasColumnType("int");
+			b.Property<string>("Title").IsRequired().HasColumnType("nvarchar(max)");
+			b.Property<DateTime?>("UpdatedAt").HasColumnType("datetime2");
+			b.HasKey("Id");
+			b.HasIndex("StartDateTime");
+			b.ToTable("UniversityEvents");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Woreda", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("WoredaId").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("WoredaId").UseIdentityColumn(1L);
+			b.Property<string>("Name").IsRequired().HasMaxLength(100)
+				.HasColumnType("nvarchar(100)");
+			b.Property<int>("ZoneId").HasColumnType("int");
+			b.HasKey("WoredaId");
+			b.HasIndex("ZoneId");
+			b.ToTable("Woredas");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Zone", (EntityTypeBuilder b) =>
+		{
+			b.Property<int>("ZoneId").ValueGeneratedOnAdd().HasColumnType("int");
+			b.Property<int>("ZoneId").UseIdentityColumn(1L);
+			b.Property<string>("Name").IsRequired().HasMaxLength(100)
+				.HasColumnType("nvarchar(100)");
+			b.Property<int>("RegionId").HasColumnType("int");
+			b.HasKey("ZoneId");
+			b.HasIndex("RegionId");
+			b.ToTable("Zones");
+		});
+		modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null).WithMany().HasForeignKey("RoleId")
+				.OnDelete(DeleteBehavior.Cascade)
+				.IsRequired();
+		});
+		modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.ApplicationUser", null).WithMany().HasForeignKey("UserId")
+				.OnDelete(DeleteBehavior.Cascade)
+				.IsRequired();
+		});
+		modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.ApplicationUser", null).WithMany().HasForeignKey("UserId")
+				.OnDelete(DeleteBehavior.Cascade)
+				.IsRequired();
+		});
+		modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null).WithMany().HasForeignKey("RoleId")
+				.OnDelete(DeleteBehavior.Cascade)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.ApplicationUser", null).WithMany().HasForeignKey("UserId")
+				.OnDelete(DeleteBehavior.Cascade)
+				.IsRequired();
+		});
+		modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.ApplicationUser", null).WithMany().HasForeignKey("UserId")
+				.OnDelete(DeleteBehavior.Cascade)
+				.IsRequired();
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.AssessmentMark", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.CourseAssessment", "CourseAssessment").WithMany("Marks").HasForeignKey("CourseAssessmentId")
+				.OnDelete(DeleteBehavior.Cascade)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Student", "Student").WithMany().HasForeignKey("StudentId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("CourseAssessment");
+			b.Navigation("Student");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Assignment", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Course", "Course").WithMany().HasForeignKey("CourseId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Instructor", "Instructor").WithMany().HasForeignKey("InstructorId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("Course");
+			b.Navigation("Instructor");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.AssignmentAnswer", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.AssignmentQuestion", "AssignmentQuestion").WithMany().HasForeignKey("AssignmentQuestionId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Student", "Student").WithMany().HasForeignKey("StudentId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("AssignmentQuestion");
+			b.Navigation("Student");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.AssignmentQuestion", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Assignment", "Assignment").WithMany("AssignmentQuestions").HasForeignKey("AssignmentId")
+				.OnDelete(DeleteBehavior.Cascade)
+				.IsRequired();
+			b.Navigation("Assignment");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.AssignmentQuestionOption", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.AssignmentQuestion", "AssignmentQuestion").WithMany("Options").HasForeignKey("AssignmentQuestionId")
+				.OnDelete(DeleteBehavior.Cascade)
+				.IsRequired();
+			b.Navigation("AssignmentQuestion");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.AssignmentResult", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Assignment", "Assignment").WithMany().HasForeignKey("AssignmentId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Student", "Student").WithMany().HasForeignKey("StudentId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("Assignment");
+			b.Navigation("Student");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Attendance", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Course", "Course").WithMany().HasForeignKey("CourseId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Instructor", "Instructor").WithMany().HasForeignKey("InstructorId")
+				.OnDelete(DeleteBehavior.Restrict);
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Student", "Student").WithMany().HasForeignKey("StudentId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("Course");
+			b.Navigation("Instructor");
+			b.Navigation("Student");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.AuditLog", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.ApplicationUser", "User").WithMany().HasForeignKey("UserId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("User");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.ChatConversation", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.ApplicationUser", "User1").WithMany().HasForeignKey("User1Id")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.ApplicationUser", "User2").WithMany().HasForeignKey("User2Id")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("User1");
+			b.Navigation("User2");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.ChatMessage", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.ChatConversation", "Conversation").WithMany("Messages").HasForeignKey("ConversationId")
+				.OnDelete(DeleteBehavior.Cascade)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.ApplicationUser", "Sender").WithMany().HasForeignKey("SenderId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("Conversation");
+			b.Navigation("Sender");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Course", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Department", "Department").WithMany("Courses").HasForeignKey("DepartmentId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Instructor", "Instructor").WithMany("Courses").HasForeignKey("InstructorId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("Department");
+			b.Navigation("Instructor");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.CourseAssessment", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Course", "Course").WithMany().HasForeignKey("CourseId")
+				.OnDelete(DeleteBehavior.Cascade)
+				.IsRequired();
+			b.Navigation("Course");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.CourseResult", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Course", "Course").WithMany().HasForeignKey("CourseId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Student", "Student").WithMany().HasForeignKey("StudentId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("Course");
+			b.Navigation("Student");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.CourseSchedule", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Course", "Course").WithMany().HasForeignKey("CourseId")
+				.OnDelete(DeleteBehavior.Cascade)
+				.IsRequired();
+			b.Navigation("Course");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Enrollment", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Course", "Course").WithMany("Enrollments").HasForeignKey("CourseId")
+				.OnDelete(DeleteBehavior.Cascade)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Student", "Student").WithMany("Enrollments").HasForeignKey("StudentId")
+				.OnDelete(DeleteBehavior.Cascade)
+				.IsRequired();
+			b.Navigation("Course");
+			b.Navigation("Student");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Exam", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Course", "Course").WithMany().HasForeignKey("CourseId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Instructor", "Instructor").WithMany().HasForeignKey("InstructorId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("Course");
+			b.Navigation("Instructor");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.ExamResult", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Exam", "Exam").WithMany().HasForeignKey("ExamId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Student", "Student").WithMany().HasForeignKey("StudentId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("Exam");
+			b.Navigation("Student");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Grade", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Assignment", "Assignment").WithMany().HasForeignKey("AssignmentId");
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Course", "Course").WithMany().HasForeignKey("CourseId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Exam", "Exam").WithMany().HasForeignKey("ExamId");
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Student", "Student").WithMany().HasForeignKey("StudentId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Submission", "Submission").WithMany().HasForeignKey("SubmissionId");
+			b.Navigation("Assignment");
+			b.Navigation("Course");
+			b.Navigation("Exam");
+			b.Navigation("Student");
+			b.Navigation("Submission");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Instructor", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.ApplicationUser", "ApplicationUser").WithOne("Instructor").HasForeignKey("UniversityManagementSystem.Domain.Entities.Instructor", "ApplicationUserId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Department", "Department").WithMany("Instructors").HasForeignKey("DepartmentId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("ApplicationUser");
+			b.Navigation("Department");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Kebele", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Woreda", "Woreda").WithMany("Kebeles").HasForeignKey("WoredaId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("Woreda");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Notification", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.ApplicationUser", "User").WithMany().HasForeignKey("UserId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("User");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Question", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Exam", "Exam").WithMany("Questions").HasForeignKey("ExamId")
+				.OnDelete(DeleteBehavior.Cascade)
+				.IsRequired();
+			b.Navigation("Exam");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.QuestionOption", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Question", "Question").WithMany("Options").HasForeignKey("QuestionId")
+				.OnDelete(DeleteBehavior.Cascade)
+				.IsRequired();
+			b.Navigation("Question");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Student", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.ApplicationUser", "ApplicationUser").WithOne("Student").HasForeignKey("UniversityManagementSystem.Domain.Entities.Student", "ApplicationUserId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Department", "Department").WithMany("Students").HasForeignKey("DepartmentId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("ApplicationUser");
+			b.Navigation("Department");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.StudentAnswer", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Question", "Question").WithMany().HasForeignKey("QuestionId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Student", "Student").WithMany().HasForeignKey("StudentId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("Question");
+			b.Navigation("Student");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Submission", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Assignment", "Assignment").WithMany("Submissions").HasForeignKey("AssignmentId")
+				.OnDelete(DeleteBehavior.Cascade)
+				.IsRequired();
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Student", "Student").WithMany().HasForeignKey("StudentId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("Assignment");
+			b.Navigation("Student");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Woreda", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Zone", "Zone").WithMany("Woredas").HasForeignKey("ZoneId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("Zone");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Zone", (EntityTypeBuilder b) =>
+		{
+			b.HasOne("UniversityManagementSystem.Domain.Entities.Region", "Region").WithMany("Zones").HasForeignKey("RegionId")
+				.OnDelete(DeleteBehavior.Restrict)
+				.IsRequired();
+			b.Navigation("Region");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.ApplicationUser", (EntityTypeBuilder b) =>
+		{
+			b.Navigation("Instructor");
+			b.Navigation("Student");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Assignment", (EntityTypeBuilder b) =>
+		{
+			b.Navigation("AssignmentQuestions");
+			b.Navigation("Submissions");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.AssignmentQuestion", (EntityTypeBuilder b) =>
+		{
+			b.Navigation("Options");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.ChatConversation", (EntityTypeBuilder b) =>
+		{
+			b.Navigation("Messages");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Course", (EntityTypeBuilder b) =>
+		{
+			b.Navigation("Enrollments");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.CourseAssessment", (EntityTypeBuilder b) =>
+		{
+			b.Navigation("Marks");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Department", (EntityTypeBuilder b) =>
+		{
+			b.Navigation("Courses");
+			b.Navigation("Instructors");
+			b.Navigation("Students");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Exam", (EntityTypeBuilder b) =>
+		{
+			b.Navigation("Questions");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Instructor", (EntityTypeBuilder b) =>
+		{
+			b.Navigation("Courses");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Question", (EntityTypeBuilder b) =>
+		{
+			b.Navigation("Options");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Region", (EntityTypeBuilder b) =>
+		{
+			b.Navigation("Zones");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Student", (EntityTypeBuilder b) =>
+		{
+			b.Navigation("Enrollments");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Woreda", (EntityTypeBuilder b) =>
+		{
+			b.Navigation("Kebeles");
+		});
+		modelBuilder.Entity("UniversityManagementSystem.Domain.Entities.Zone", (EntityTypeBuilder b) =>
+		{
+			b.Navigation("Woredas");
+		});
+	}
+}

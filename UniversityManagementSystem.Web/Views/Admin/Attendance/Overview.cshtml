@@ -1,0 +1,54 @@
+@model AttendanceStatsDto
+@{
+    ViewData["Title"] = "Attendance Overview";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-calendar-check me-2 text-success"></i> Attendance Overview</h1>
+    <div>
+        <a asp-action="AttendanceReports" class="btn btn-outline-info me-2"><i class="fas fa-file-alt me-1"></i> View Reports</a>
+        <a asp-action="Dashboard" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+    </div>
+</div>
+
+@if (Model.DailyLabels != null && Model.DailyPresent != null && Model.DailyLabels.Count > 0)
+{
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-success text-white">
+            <h6 class="m-0 font-weight-bold"><i class="fas fa-chart-bar me-2"></i> Daily Attendance Trend</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            @foreach (var label in Model.DailyLabels)
+                            {
+                                <th>@label</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Present</strong></td>
+                            @foreach (var count in Model.DailyPresent)
+                            {
+                                <td>@count</td>
+                            }
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card shadow mb-4">
+        <div class="card-body text-center text-muted py-5">
+            <i class="fas fa-chart-bar fa-4x mb-3"></i>
+            <p>No attendance trend data available yet.</p>
+        </div>
+    </div>
+}

@@ -1,0 +1,257 @@
+@model UniversityManagementSystem.Web.Models.ViewModels.CreateAcademicYearViewModel
+@{
+    ViewData["Title"] = "Create Academic Year";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .cay-page { padding: 10px 0 40px; max-width: 820px; }
+
+    .cay-header {
+        background: linear-gradient(135deg, var(--btn-sky), var(--btn-sky-hover));
+        color: white;
+        border-radius: 14px 14px 0 0;
+        padding: 22px 28px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .cay-header i { font-size: 1.2rem; }
+    .cay-header h3 { font-weight: 700; margin: 0; font-size: 1.15rem; }
+
+    .cay-body {
+        background: white;
+        border: 1px solid #e8eef3;
+        border-top: 0;
+        border-radius: 0 0 14px 14px;
+        padding: 28px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    }
+
+    .cay-section {
+        border: 1px solid #e8eef3;
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin-bottom: 20px;
+    }
+    .cay-section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .cay-section-title .cay-num {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--btn-sky);
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .78rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    .cay-section-title i { color: var(--btn-sky); }
+
+    .cay-fields {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+    .cay-fields.cols-2 {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .cay-field label {
+        display: block;
+        font-size: .82rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 6px;
+    }
+    .cay-field input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #d1d9e0;
+        border-radius: 8px;
+        font-size: .88rem;
+        color: #334155;
+        background: white;
+    }
+    .cay-field input:focus {
+        border-color: var(--btn-sky);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(74,144,226,.12);
+    }
+    .cay-field .text-danger {
+        font-size: .75rem;
+        margin-top: 4px;
+    }
+
+    .cay-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 6px;
+    }
+    .cay-check input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        accent-color: var(--btn-sky);
+        flex-shrink: 0;
+    }
+    .cay-check-label {
+        font-weight: 600;
+        color: #1e293b;
+        font-size: .9rem;
+    }
+    .cay-check-hint {
+        font-size: .78rem;
+        color: #94a3b8;
+        margin-left: 28px;
+        margin-bottom: 20px;
+    }
+
+    .cay-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+    }
+    .btn-save-year {
+        background: linear-gradient(135deg, var(--btn-sky), var(--btn-sky-hover));
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 24px;
+        font-weight: 700;
+        font-size: .9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all .2s ease;
+        box-shadow: 0 4px 12px rgba(74,144,226,.3);
+    }
+    .btn-save-year:hover {
+        background: linear-gradient(135deg, var(--btn-sky-hover), var(--btn-sky-deep));
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    @@media (max-width: 768px) {
+        .cay-fields { grid-template-columns: 1fr; }
+        .cay-body { padding: 18px 14px; }
+    }
+</style>
+
+<div class="cay-page">
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Header -->
+    <div class="cay-header">
+        <i class="fas fa-calendar-alt"></i>
+        <h3>Create Academic Year</h3>
+    </div>
+
+    <div class="cay-body">
+        <form asp-action="CreateAcademicYear" asp-controller="Timetable" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <!-- Academic Year Section -->
+            <div class="cay-section">
+                <div class="cay-section-title">
+                    <i class="fas fa-calendar"></i> Academic Year
+                </div>
+                <div class="cay-fields">
+                    <div class="cay-field">
+                        <label asp-for="YearName">Academic Year</label>
+                        <input asp-for="YearName" placeholder="Example: 2026/2027" />
+                        <span asp-validation-for="YearName" class="text-danger"></span>
+                    </div>
+                    <div class="cay-field">
+                        <label asp-for="YearStartDate">Academic Year Start Date</label>
+                        <input asp-for="YearStartDate" type="date" />
+                        <span asp-validation-for="YearStartDate" class="text-danger"></span>
+                    </div>
+                    <div class="cay-field">
+                        <label asp-for="YearEndDate">Academic Year End Date</label>
+                        <input asp-for="YearEndDate" type="date" />
+                        <span asp-validation-for="YearEndDate" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Semester 1 Section -->
+            <div class="cay-section">
+                <div class="cay-section-title">
+                    <span class="cay-num">1</span> Semester 1
+                </div>
+                <div class="cay-fields cols-2">
+                    <div class="cay-field">
+                        <label asp-for="Semester1StartDate">Semester 1 Start Date</label>
+                        <input asp-for="Semester1StartDate" type="date" />
+                        <span asp-validation-for="Semester1StartDate" class="text-danger"></span>
+                    </div>
+                    <div class="cay-field">
+                        <label asp-for="Semester1EndDate">Semester 1 End Date</label>
+                        <input asp-for="Semester1EndDate" type="date" />
+                        <span asp-validation-for="Semester1EndDate" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Semester 2 Section -->
+            <div class="cay-section">
+                <div class="cay-section-title">
+                    <span class="cay-num">2</span> Semester 2
+                </div>
+                <div class="cay-fields cols-2">
+                    <div class="cay-field">
+                        <label asp-for="Semester2StartDate">Semester 2 Start Date</label>
+                        <input asp-for="Semester2StartDate" type="date" />
+                        <span asp-validation-for="Semester2StartDate" class="text-danger"></span>
+                    </div>
+                    <div class="cay-field">
+                        <label asp-for="Semester2EndDate">Semester 2 End Date</label>
+                        <input asp-for="Semester2EndDate" type="date" />
+                        <span asp-validation-for="Semester2EndDate" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Year Checkbox -->
+            <div class="cay-check">
+                <input asp-for="IsCurrent" type="checkbox" />
+                <label asp-for="IsCurrent" class="cay-check-label">Current Academic Year</label>
+            </div>
+            <div class="cay-check-hint">Only one academic year can be current.</div>
+
+            <!-- Actions -->
+            <div class="cay-actions">
+                <button type="submit" class="btn-save-year">
+                    <i class="fas fa-save"></i> Save Academic Year
+                </button>
+                <a asp-action="ManageYears" asp-controller="Timetable" class="btn-back-pill">
+                    <i class="fas fa-chevron-left"></i> Back
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

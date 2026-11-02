@@ -1,0 +1,423 @@
+@model dynamic
+@{
+    ViewData["Title"] = "University Timetable";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var academicYears = ViewBag.AcademicYears as List<UniversityManagementSystem.Domain.Entities.AcademicYear>;
+    var grades = ViewBag.Grades as List<UniversityManagementSystem.Domain.Entities.AcademicGrade>;
+}
+
+<style>
+    .st-page { padding: 10px 0 40px; max-width: 1200px; }
+
+    .st-header {
+        background: linear-gradient(135deg, var(--btn-sky), var(--btn-sky-hover));
+        color: white;
+        border-radius: 14px 14px 0 0;
+        padding: 22px 28px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .st-header i { font-size: 1.2rem; }
+    .st-header h3 { font-weight: 700; margin: 0; font-size: 1.15rem; }
+
+    .st-body {
+        background: white;
+        border: 1px solid #e8eef3;
+        border-top: 0;
+        border-radius: 0 0 14px 14px;
+        padding: 24px 28px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    }
+
+    .st-filters {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr auto;
+        gap: 14px;
+        align-items: end;
+        margin-bottom: 0;
+    }
+    .st-filters label {
+        font-size: .82rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 6px;
+        display: block;
+    }
+    .st-filters select {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #d1d9e0;
+        border-radius: 8px;
+        font-size: .88rem;
+        color: #334155;
+        background: white;
+        appearance: auto;
+    }
+    .st-filters select:focus {
+        border-color: var(--btn-sky);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(74,144,226,.12);
+    }
+    .btn-go {
+        background: linear-gradient(135deg, var(--btn-sky), var(--btn-sky-hover));
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 28px;
+        font-weight: 700;
+        font-size: .9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all .2s ease;
+        white-space: nowrap;
+        height: 42px;
+        box-shadow: 0 4px 12px rgba(74,144,226,.3);
+    }
+    .btn-go:hover {
+        background: linear-gradient(135deg, var(--btn-sky-hover), var(--btn-sky-deep));
+        color: white;
+        transform: translateY(-1px);
+    }
+    .btn-go:disabled {
+        opacity: .5;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .st-info {
+        background: #eef8ff;
+        border: 1px solid #d0ebff;
+        border-radius: 10px;
+        padding: 14px 20px;
+        margin-top: 20px;
+        font-size: .88rem;
+        color: #1a5276;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .st-info i { color: var(--btn-sky); font-size: 1rem; }
+
+    .st-grid-wrap {
+        overflow-x: auto;
+        margin-top: 20px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+    }
+    .st-grid {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 700px;
+    }
+    .st-grid thead th {
+        background: #1e293b;
+        color: white;
+        font-weight: 700;
+        font-size: .82rem;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        padding: 14px 12px;
+        text-align: center;
+        white-space: nowrap;
+    }
+    .st-grid thead th:first-child {
+        min-width: 120px;
+        text-align: left;
+    }
+    .st-grid tbody td {
+        padding: 12px;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: top;
+    }
+    .st-grid tbody td:first-child {
+        background: #f8fafc;
+        font-weight: 700;
+        color: #1e293b;
+        text-align: center;
+        vertical-align: middle;
+    }
+    .st-grid tbody tr:last-child td { border-bottom: none; }
+    .st-grid tbody tr:hover td { background: #f8fbfe; }
+    .st-grid tbody tr:hover td:first-child { background: #eef4fb; }
+
+    .slot-card {
+        background: linear-gradient(135deg, #edf7ff, #f0f8ff);
+        border: 1px solid #d0e6f5;
+        border-left: 3px solid var(--btn-sky);
+        border-radius: 8px;
+        padding: 8px 10px;
+    }
+    .slot-subject {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: .88rem;
+        margin-bottom: 3px;
+    }
+    .slot-detail {
+        font-size: .76rem;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .slot-detail i { color: var(--btn-sky); font-size: .72rem; width: 14px; text-align: center; }
+
+    .slot-actions {
+        display: flex;
+        gap: 4px;
+        margin-top: 6px;
+    }
+    .slot-actions .btn {
+        padding: 2px 8px;
+        font-size: .72rem;
+    }
+    .empty-cell { color: #cbd5e1; text-align: center; padding: 16px 0; }
+
+    .st-empty {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    .st-empty i { font-size: 40px; color: #d0dce4; margin-bottom: 12px; }
+    .st-empty h5 { color: #1e293b; font-weight: 700; }
+    .st-empty p { color: #64748b; max-width: 380px; margin: 6px auto 0; }
+
+    .st-loading {
+        text-align: center;
+        padding: 40px;
+    }
+    .st-loading .spinner-border { width: 2.5rem; height: 2.5rem; }
+
+    @@media (max-width: 768px) {
+        .st-filters { grid-template-columns: 1fr 1fr; }
+        .st-body { padding: 18px 14px; }
+        .btn-go { width: 100%; justify-content: center; }
+    }
+</style>
+
+<div class="st-page">
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Header -->
+    <div class="st-header">
+        <i class="fas fa-table"></i>
+        <h3>University Timetable</h3>
+    </div>
+
+    <div class="st-body">
+
+        <!-- Filters -->
+        <div class="st-filters">
+            <div>
+                <label>Academic Year</label>
+                <select id="academicYear">
+                    <option value="">Select Academic Year</option>
+                    @if (academicYears != null)
+                    {
+                        @foreach (var year in academicYears)
+                        {
+                            <option value="@year.Id">@year.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div>
+                <label>Semester</label>
+                <select id="semester" disabled>
+                    <option value="">Select Semester</option>
+                </select>
+            </div>
+            <div>
+                <label>Year</label>
+                <select id="grade">
+                    <option value="">Select Year</option>
+                    @if (grades != null)
+                    {
+                        @foreach (var grade in grades)
+                        {
+                            <option value="@grade.Id">@grade.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div>
+                <label>Section</label>
+                <select id="section" disabled>
+                    <option value="">Select Section</option>
+                </select>
+            </div>
+            <div>
+                <button id="goBtn" class="btn-go" disabled>
+                    <i class="fas fa-search"></i> Go
+                </button>
+            </div>
+        </div>
+
+        @Html.AntiForgeryToken()
+
+        <!-- Timetable Container -->
+        <div id="timetableContainer">
+            <div class="st-info">
+                <i class="fas fa-info-circle"></i>
+                <span>Please select Academic Year, Semester, Year and Section.</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Academic Year -> Semester cascade
+            $('#academicYear').on('change', function () {
+                var yearId = $(this).val();
+                var $semester = $('#semester');
+                $semester.html('<option value="">Select Semester</option>').prop('disabled', true);
+                $('#goBtn').prop('disabled', true);
+
+                if (yearId) {
+                    $.get('/Timetable/GetSemesters', { academicYearId: yearId }, function (data) {
+                        $.each(data, function (i, item) {
+                            $semester.append('<option value="' + item.id + '">' + item.name + '</option>');
+                        });
+                        $semester.prop('disabled', false);
+                    });
+                }
+                validateGo();
+            });
+
+            $('#semester').on('change', function () { validateGo(); });
+
+            // Grade -> Section cascade
+            $('#grade').on('change', function () {
+                var gradeId = $(this).val();
+                var $section = $('#section');
+                $section.html('<option value="">Select Section</option>').prop('disabled', true);
+                $('#goBtn').prop('disabled', true);
+
+                if (gradeId) {
+                    $.get('/Timetable/GetSections', { gradeId: gradeId }, function (data) {
+                        $.each(data, function (i, item) {
+                            $section.append('<option value="' + item.id + '">' + item.name + '</option>');
+                        });
+                        $section.prop('disabled', false);
+                    });
+                }
+                validateGo();
+            });
+
+            $('#section').on('change', function () { validateGo(); });
+
+            function validateGo() {
+                var allSelected = $('#academicYear').val() && $('#semester').val() && $('#grade').val() && $('#section').val();
+                $('#goBtn').prop('disabled', !allSelected);
+            }
+
+            // Go button - load timetable
+            $('#goBtn').on('click', function () {
+                var params = {
+                    academicYearId: $('#academicYear').val(),
+                    semesterId: $('#semester').val(),
+                    gradeId: $('#grade').val(),
+                    sectionId: $('#section').val()
+                };
+
+                $('#timetableContainer').html(
+                    '<div class="st-loading">' +
+                    '<div class="spinner-border text-primary" role="status"></div>' +
+                    '<p class="mt-2 text-muted">Loading timetable...</p>' +
+                    '</div>'
+                );
+
+                $.get('/Timetable/GetTimetable', params, function (data) {
+                    renderTimetable(data);
+                }).fail(function () {
+                    $('#timetableContainer').html(
+                        '<div class="st-empty">' +
+                        '<i class="fas fa-exclamation-triangle"></i>' +
+                        '<h5>Error Loading Timetable</h5>' +
+                        '<p>Something went wrong. Please try again.</p>' +
+                        '</div>'
+                    );
+                });
+            });
+
+            function renderTimetable(entries) {
+                if (!entries || entries.length === 0) {
+                    $('#timetableContainer').html(
+                        '<div class="st-empty">' +
+                        '<i class="fas fa-calendar-xmark"></i>' +
+                        '<h5>No Entries Found</h5>' +
+                        '<p>No timetable entries found for the selected filters.</p>' +
+                        '</div>'
+                    );
+                    return;
+                }
+
+                var days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                var periods = [];
+                var grid = {};
+
+                entries.forEach(function (e) {
+                    if (periods.indexOf(e.periodName) === -1) {
+                        periods.push(e.periodName);
+                    }
+                    var key = e.day + '||' + e.periodName;
+                    grid[key] = e;
+                });
+
+                periods.sort();
+
+                var html = '<div class="st-grid-wrap"><table class="st-grid">';
+                html += '<thead><tr><th>Period</th>';
+                days.forEach(function (d) {
+                    html += '<th>' + d + '</th>';
+                });
+                html += '</tr></thead><tbody>';
+
+                periods.forEach(function (p) {
+                    html += '<tr><td>' + p + '</td>';
+                    days.forEach(function (d) {
+                        var key = d + '||' + p;
+                        var entry = grid[key];
+                        if (entry) {
+                            html += '<td>';
+                            html += '<div class="slot-card">';
+                            html += '<div class="slot-subject">' + entry.subject + '</div>';
+                            if (entry.instructor) html += '<div class="slot-detail"><i class="fas fa-user"></i>' + entry.instructor + '</div>';
+                            if (entry.room) html += '<div class="slot-detail"><i class="fas fa-door-open"></i>' + entry.room + '</div>';
+                            html += '<div class="slot-actions">';
+                            html += '<a href="/Timetable/EditEntry?id=' + entry.id + '" class="btn btn-outline-primary btn-sm" title="Edit"><i class="fas fa-edit"></i></a>';
+                            html += '<form method="post" action="/Timetable/DeleteEntry" style="display:inline;" data-confirm-title="Delete timetable entry?" data-confirm-message="Are you sure you want to delete this timetable entry? This action cannot be undone.">';
+                            html += '<input type="hidden" name="id" value="' + entry.id + '" />';
+                            html += '<input type="hidden" name="academicYearId" value="' + $('#academicYear').val() + '" />';
+                            html += '<input type="hidden" name="semesterId" value="' + $('#semester').val() + '" />';
+                            html += '<input type="hidden" name="gradeId" value="' + $('#grade').val() + '" />';
+                            html += '<input type="hidden" name="sectionId" value="' + $('#section').val() + '" />';
+                            html += '<input type="hidden" name="__RequestVerificationToken" value="' + $('input[name=__RequestVerificationToken]').val() + '" />';
+                            html += '<button type="submit" class="btn btn-outline-danger btn-sm" title="Delete"><i class="fas fa-trash"></i></button>';
+                            html += '</form>';
+                            html += '</div></div></td>';
+                        } else {
+                            html += '<td><div class="empty-cell">—</div></td>';
+                        }
+                    });
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table></div>';
+                $('#timetableContainer').html(html);
+            }
+        });
+    </script>
+}

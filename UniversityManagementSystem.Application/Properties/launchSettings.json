@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "UniversityManagementSystem.Application": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\Users\\yared\\UniversityManagementSystem\\UniversityManagementSystem.Web"
+    }
+  }
+}

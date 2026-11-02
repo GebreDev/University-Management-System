@@ -1,0 +1,229 @@
+@model IEnumerable<StudentAnswerGradingDto>
+@using UniversityManagementSystem.Application.DTOs.Exams
+@using UniversityManagementSystem.Domain.Enums
+@{
+    ViewData["Title"] = "Grade Essay Questions";
+    var exam = ViewBag.Exam as ExamDto;
+    var result = ViewBag.Result as ExamResultDto;
+    var allAnswers = Model?.ToList() ?? new List<StudentAnswerGradingDto>();
+    var essayAnswers = allAnswers.Where(a => a.QuestionType == ExamType.Essay).ToList();
+    var shortAnswerAnswers = allAnswers.Where(a => a.QuestionType == ExamType.ShortAnswer).ToList();
+    var autoGradedAnswers = allAnswers.Where(a => a.QuestionType == ExamType.MCQ || a.QuestionType == ExamType.TrueFalse).ToList();
+    var needsManualGrading = essayAnswers.Concat(shortAnswerAnswers.Where(a => a.Score == null)).ToList();
+    var hasAutoGradedShortAnswer = shortAnswerAnswers.Any(a => a.Score != null);
+}
+
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h2 class="fw-bold"><i class="fas fa-check-double me-2 text-warning"></i> Manual Essay Grading</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-action="Dashboard">Dashboard</a></li>
+                <li class="breadcrumb-item"><a asp-action="Exams">Exams</a></li>
+                <li class="breadcrumb-item"><a asp-action="GradeExam" asp-route-examId="@exam?.Id">Grade Exam</a></li>
+                <li class="breadcrumb-item active">Essay Grading</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+@if (exam != null)
+{
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-file-alt me-2 text-primary"></i> @exam.Title</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-primary bg-opacity-10 rounded-3">
+                                <small class="text-muted d-block">Current Score</small>
+                                <strong>@result?.TotalScore / @exam.TotalMarks</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 @(result?.IsPass == true ? "bg-success" : "bg-danger") bg-opacity-10 rounded-3">
+                                <small class="text-muted d-block">Result</small>
+                                <strong>@(result?.IsPass == true ? "PASS" : "FAIL")</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-info bg-opacity-10 rounded-3">
+                                <small class="text-muted d-block">Auto-Graded Score</small>
+                                <strong>@autoGradedAnswers.Where(a => a.IsCorrect).Sum(a => a.QuestionMarks)</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-warning bg-opacity-10 rounded-3">
+                                <small class="text-muted d-block">Manual Review</small>
+                                <strong>@needsManualGrading.Count</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (!needsManualGrading.Any())
+{
+    <div class="alert alert-info shadow-sm rounded-3">
+        <i class="fas fa-info-circle me-2"></i> No manual grading needed for this submission. All questions were auto-graded.
+    </div>
+}
+
+@if (needsManualGrading.Any())
+{
+    <form asp-action="GradeEssays" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="examId" value="@(exam?.Id ?? 0)" />
+        <input type="hidden" name="studentId" value="@(Model?.FirstOrDefault()?.StudentId ?? 0)" />
+
+        <div class="card shadow-sm border-0 rounded-4 mb-4">
+            <div class="card-header bg-white border-0 pt-4 px-4">                        <h5 class="fw-bold mb-0"><i class="fas fa-pen-fancy me-2 text-warning"></i> Questions Requiring Manual Grading</h5>
+                            </div>
+                            <div class="card-body px-4 pb-4">
+                                @foreach (var answer in needsManualGrading)
+                                {
+                                    var badgeClass = answer.QuestionType == ExamType.Essay ? "bg-warning" : "bg-purple";
+                                    var typeLabel = answer.QuestionType == ExamType.Essay ? "Essay" : "Short Answer";
+                                    <div class="card border-0 shadow-sm rounded-3 mb-3">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="fw-bold mb-0">
+                                                    <span class="badge @badgeClass me-2" style="@(answer.QuestionType == ExamType.ShortAnswer ? "background:#4a90e2;" : "")">@typeLabel</span>
+                                                    @answer.QuestionText
+                                                </h6>
+                                                <span class="badge bg-info rounded-pill">Max: @answer.QuestionMarks pts</span>
+                                            </div>
+                                            <div class="mb-3 p-3 bg-light rounded-3">
+                                                <strong class="small text-muted">Student's Answer:</strong>
+                                                <p class="mb-0 mt-1">@(string.IsNullOrEmpty(answer.AnswerText) ? Html.Raw("<em>No answer provided</em>") : answer.AnswerText)</p>
+                                            </div>
+                                            <div class="row align-items-center">
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-semibold small">Score (0 to @answer.QuestionMarks):</label>
+                                                    <div class="input-group">
+                                                        <input type="number" name="scores[@answer.QuestionId]"
+                                                               class="form-control" min="0" max="@answer.QuestionMarks"
+                                                               value="@(answer.Score ?? 0)" required />
+                                                        <span class="input-group-text">/ @answer.QuestionMarks</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-check">
+                                                        <input type="checkbox" class="form-check-input" id="correct_@answer.Id"
+                                                               @(answer.IsCorrect ? "checked" : "") disabled />
+                                                        <label class="form-check-label text-muted small" for="correct_@answer.Id">
+                                                            Marked Correct
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+        <!-- Auto-Graded Summary -->
+        @if (autoGradedAnswers.Any())
+        {
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-check-circle me-2 text-success"></i> Auto-Graded Answers</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Question</th>
+                                    <th>Answer</th>
+                                    <th>Correct</th>
+                                    <th>Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var answer in autoGradedAnswers)
+                                {
+                                    var typeBadge = answer.QuestionType == ExamType.MCQ ? "bg-success" : "bg-info";
+                                    var typeLabel = answer.QuestionType == ExamType.MCQ ? "MCQ" : "T/F";
+                                    <tr>
+                                        <td><span class="badge @typeBadge">@typeLabel</span></td>
+                                        <td>@answer.QuestionText</td>
+                                        <td>@answer.AnswerText</td>
+                                        <td>
+                                            <span class="badge @(answer.IsCorrect ? "bg-success" : "bg-danger")">
+                                                @(answer.IsCorrect ? "Correct" : "Wrong")
+                                            </span>
+                                        </td>
+                                        <td>@(answer.IsCorrect ? answer.QuestionMarks : 0) / @answer.QuestionMarks</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (hasAutoGradedShortAnswer)
+        {
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-check-circle me-2 text-info"></i> Auto-Graded Short Answers</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Question</th>
+                                    <th>Answer</th>
+                                    <th>Correct</th>
+                                    <th>Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var answer in shortAnswerAnswers.Where(a => a.Score != null))
+                                {
+                                    <tr>
+                                        <td>@answer.QuestionText</td>
+                                        <td>@answer.AnswerText</td>
+                                        <td>
+                                            <span class="badge @(answer.IsCorrect ? "bg-success" : "bg-danger")">
+                                                @(answer.IsCorrect ? "Correct" : "Wrong")
+                                            </span>
+                                        </td>
+                                        <td>@(answer.IsCorrect ? answer.QuestionMarks : 0) / @answer.QuestionMarks</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="d-flex gap-2">             <button type="submit" class="btn btn-success btn-lg px-5">
+                <i class="fas fa-save me-2"></i> Save Grades
+            </button>             <a asp-action="GradeExam" asp-route-examId="@exam?.Id" class="btn-back-pill btn-lg px-4">
+                <i class="fas fa-chevron-left"></i> Back
+            </a>
+        </div>
+    </form>
+}
+
+<style>
+    .btn {
+        transition: all 0.2s ease;
+    }
+    .card {
+        transition: box-shadow 0.2s ease;
+    }
+</style>

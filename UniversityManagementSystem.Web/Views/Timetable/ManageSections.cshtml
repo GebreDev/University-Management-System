@@ -1,0 +1,41 @@
+@model IEnumerable<AcademicSection>
+@{
+    ViewData["Title"] = "Manage Sections";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0"><i class="fas fa-puzzle-piece me-2 text-primary"></i>Sections — @ViewBag.GradeName</h2>
+    <a asp-action="CreateSection" asp-route-gradeId="@ViewBag.GradeId" class="btn btn-primary"><i class="fas fa-plus me-1"></i> Add Section</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{ var idx = 0; }
+            @foreach (var item in Model)
+            {
+                idx++;
+                <tr>
+                    <td>@idx</td>
+                    <td><strong>@item.Name</strong></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<a asp-action="ManageGrades" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>

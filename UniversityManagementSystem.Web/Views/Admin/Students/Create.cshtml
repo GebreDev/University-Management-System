@@ -1,0 +1,444 @@
+@model StudentCreateViewModel
+@{
+    ViewData["Title"] = "Student Bio";
+    var regions = ViewBag.Regions as SelectList;
+    var academicGrades = ViewBag.AcademicGrades as SelectList;
+    var economicStatuses = new List<string> { "Low Income", "Middle Income", "High Income", "Self-Employed", "Government Employee", "Private Sector", "Retired", "Other" };
+}
+
+@section Styles {
+    <style>
+        .student-bio-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+        .student-bio-title h2 { font-weight: 700; color: #1e293b; margin-bottom: 0.25rem; }
+        .student-bio-title p { color: #64748b; font-size: 0.9rem; margin: 0; }
+        .student-bio-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .section-card { border: none; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 1rem; overflow: hidden; }
+        .section-header { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: linear-gradient(135deg, #4a90e2, #2c6fbf); color: white; font-weight: 600; font-size: 0.95rem; border-left: 4px solid #1e5aa8; }
+        .section-header.green { background: linear-gradient(135deg, #28a745, #1e7e34); border-left-color: #155724; }
+        .section-header i { font-size: 1rem; }
+        .section-body { padding: 1rem 1.25rem; background: #fff; }
+        .section-body .row > [class*="col-"] { margin-bottom: 0.75rem; }
+        .parent-section .btn-parent { border: 2px dashed #28a745; color: #28a745; background: transparent; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem; transition: all 0.2s ease; }
+        .parent-section .btn-parent:hover { background: #28a745; color: white; }
+        .bottom-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e9ecef; }
+        .file-input-label { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border: 1px solid #dee2e6; border-radius: 6px; background: #f8f9fa; cursor: pointer; font-size: 0.85rem; color: #495057; transition: border-color 0.2s ease; }
+        .file-input-label:hover { border-color: #4a90e2; }
+        .file-input-label i { color: #4a90e2; }
+        .file-input-wrapper { position: relative; overflow: hidden; }
+        .file-input-wrapper input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+        #parentRegistrationForm { display: none; }
+        #parentRegistrationForm.show { display: block; }
+        .parent-form-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+        .parent-form-header .btn-toggle-parent { border: 2px solid #28a745; color: #28a745; background: transparent; padding: 0.4rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease; }
+        .parent-form-header .btn-toggle-parent:hover { background: #28a745; color: white; }
+        .parent-info-alert { background: #e8f8f0; border: 1px solid #b2dfbc; border-radius: 6px; padding: 0.75rem 1rem; color: #155724; font-size: 0.9rem; margin-bottom: 1rem; }
+    </style>
+}
+
+<div class="student-bio-header">
+    <div class="student-bio-title">
+        <h2><i class="fas fa-user-graduate me-2 text-primary"></i>Student Bio</h2>
+        <p>Create a new student account and optionally register a parent account.</p>
+    </div>
+    <div class="student-bio-actions">
+        <a href="#" class="btn btn-outline-secondary btn-sm"><i class="fas fa-file-excel me-1"></i> Import from Excel</a>
+        <a asp-action="Students" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+    </div>
+</div>
+
+<form asp-action="CreateStudent" method="post" enctype="multipart/form-data">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+    <!-- Student Information -->
+    <div class="section-card">
+        <div class="section-header"><i class="fas fa-user"></i> Student Information</div>
+        <div class="section-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <label asp-for="StudentId" class="form-label">Student UGR</label>
+                    <input asp-for="StudentId" class="form-control" placeholder="Enter student UGR" />
+                    <span asp-validation-for="StudentId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="FirstName" class="form-label">First Name</label>
+                    <input asp-for="FirstName" class="form-control" placeholder="Enter first name" />
+                    <span asp-validation-for="FirstName" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label asp-for="MiddleName" class="form-label">Middle Name</label>
+                    <input asp-for="MiddleName" class="form-control" placeholder="Enter middle name" />
+                    <span asp-validation-for="MiddleName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="LastName" class="form-label">Last Name</label>
+                    <input asp-for="LastName" class="form-control" placeholder="Enter last name" />
+                    <span asp-validation-for="LastName" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label asp-for="Gender" class="form-label">Gender</label>
+                    <select asp-for="Gender" class="form-select">
+                        <option value="">- Select Gender -</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                    <span asp-validation-for="Gender" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Nationality" class="form-label">Nationality</label>
+                    <input asp-for="Nationality" class="form-control" placeholder="Enter nationality" />
+                    <span asp-validation-for="Nationality" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label asp-for="DateOfBirth" class="form-label">Date of Birth</label>
+                    <input asp-for="DateOfBirth" type="date" class="form-control" />
+                    <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" type="email" class="form-control" placeholder="student@example.com" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label asp-for="Phone" class="form-label">Phone</label>
+                    <input asp-for="Phone" class="form-control" placeholder="Enter phone number" />
+                    <span asp-validation-for="Phone" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Address Information -->
+    <div class="section-card">
+        <div class="section-header"><i class="fas fa-map-marker-alt"></i> Address Information</div>
+        <div class="section-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <label asp-for="RegionId" class="form-label">Region</label>
+                    <select asp-for="RegionId" class="form-select" id="RegionId">
+                        <option value="">-- Select Region --</option>
+                    </select>
+                    <span asp-validation-for="RegionId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="ZoneId" class="form-label">Zone</label>
+                    <select asp-for="ZoneId" class="form-select" id="ZoneId">
+                        <option value="">-- Select Zone --</option>
+                    </select>
+                    <span asp-validation-for="ZoneId" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label asp-for="WoredaId" class="form-label">Woreda</label>
+                    <select asp-for="WoredaId" class="form-select" id="WoredaId">
+                        <option value="">-- Select Woreda --</option>
+                    </select>
+                    <span asp-validation-for="WoredaId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="KebeleId" class="form-label">Kebele</label>
+                    <select asp-for="KebeleId" class="form-select" id="KebeleId">
+                        <option value="">-- Select Kebele --</option>
+                    </select>
+                    <span asp-validation-for="KebeleId" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Academic Information -->
+    <div class="section-card">
+        <div class="section-header"><i class="fas fa-graduation-cap"></i> Academic Information</div>
+        <div class="section-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <label asp-for="AcademicGradeId" class="form-label">Year</label>
+                    <select asp-for="AcademicGradeId" class="form-select" id="AcademicGradeId">
+                        <option value="">-- Select Year --</option>
+                    </select>
+                    <span asp-validation-for="AcademicGradeId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="AcademicSectionId" class="form-label">Class</label>
+                    <select asp-for="AcademicSectionId" class="form-select" id="AcademicSectionId">
+                        <option value="">-- Select Class --</option>
+                    </select>
+                    <span asp-validation-for="AcademicSectionId" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Documents -->
+    <div class="section-card">
+        <div class="section-header"><i class="fas fa-file-alt"></i> Student Documents</div>
+        <div class="section-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Profile Photo</label>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            <i class="fas fa-camera"></i>
+                            <span id="profilePhotoName">Choose File</span>
+                            <input type="file" asp-for="ProfilePhoto" accept="image/*" onchange="document.getElementById('profilePhotoName').textContent = this.files[0] ? this.files[0].name : 'Choose File'" />
+                        </label>
+                    </div>
+                    <span class="text-muted small">No file chosen</span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Student Document</label>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            <i class="fas fa-file-upload"></i>
+                            <span id="studentDocName">Choose File</span>
+                            <input type="file" asp-for="StudentDocument" onchange="document.getElementById('studentDocName').textContent = this.files[0] ? this.files[0].name : 'Choose File'" />
+                        </label>
+                    </div>
+                    <span class="text-muted small">No file chosen</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Login -->
+    <div class="section-card">
+        <div class="section-header"><i class="fas fa-key"></i> Student Login</div>
+        <div class="section-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <label asp-for="Password" class="form-label">Password</label>
+                    <input asp-for="Password" type="password" class="form-control" placeholder="Enter password" />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
+                    <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Confirm password" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Parent Registration -->
+    <div class="section-card parent-section">
+        <div class="section-header green"><i class="fas fa-users"></i> Parent Registration</div>
+        <div class="section-body">
+            <!-- Toggle Button -->
+            <div id="parentToggleSection">
+                <button type="button" class="btn btn-parent" id="btnShowParent" onclick="toggleParentForm(true)">
+                    <i class="fas fa-user-plus me-1"></i> Register Parent Account
+                </button>
+            </div>
+
+            <!-- Parent Registration Form (Hidden by default) -->
+            <div id="parentRegistrationForm">
+                <div class="parent-form-header">
+                    <button type="button" class="btn btn-toggle-parent" onclick="toggleParentForm(false)">
+                        <i class="fas fa-user-minus me-1"></i> Hide Parent Registration
+                    </button>
+                </div>
+
+                <div class="parent-info-alert">
+                    <i class="fas fa-info-circle me-2"></i>Registering a parent account will connect the parent to this student.
+                </div>
+
+                <input type="hidden" asp-for="RegisterParent" id="RegisterParent" value="false" />
+
+                <!-- Parent Name Row -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <label asp-for="ParentFirstName" class="form-label">Parent First Name</label>
+                        <input asp-for="ParentFirstName" class="form-control" placeholder="Parent first name" />
+                        <span asp-validation-for="ParentFirstName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="ParentMiddleName" class="form-label">Parent Middle Name</label>
+                        <input asp-for="ParentMiddleName" class="form-control" placeholder="Parent middle name" />
+                        <span asp-validation-for="ParentMiddleName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="ParentLastName" class="form-label">Parent Last Name</label>
+                        <input asp-for="ParentLastName" class="form-control" placeholder="Parent last name" />
+                        <span asp-validation-for="ParentLastName" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- Parent Username & Email -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <label asp-for="ParentUsername" class="form-label">Parent Username</label>
+                        <input asp-for="ParentUsername" class="form-control" placeholder="Parent username" />
+                        <span asp-validation-for="ParentUsername" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ParentEmail" class="form-label">Parent Email</label>
+                        <input asp-for="ParentEmail" type="email" class="form-control" placeholder="parent@example.com" />
+                        <span asp-validation-for="ParentEmail" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- Parent Phone & Nationality -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <label asp-for="ParentPhone" class="form-label">Parent Phone</label>
+                        <input asp-for="ParentPhone" class="form-control" placeholder="Parent phone number" />
+                        <span asp-validation-for="ParentPhone" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ParentNationality" class="form-label">Parent Nationality</label>
+                        <input asp-for="ParentNationality" class="form-control" placeholder="Enter parent nationality" />
+                        <span asp-validation-for="ParentNationality" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- Economic Status & Profile Photo -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <label asp-for="EconomicStatus" class="form-label">Economic Status</label>
+                        <select asp-for="EconomicStatus" class="form-select">
+                            <option value="">-- Select Economic Status --</option>
+                            @foreach (var status in economicStatuses)
+                            {
+                                <option value="@status">@status</option>
+                            }
+                        </select>
+                        <span asp-validation-for="EconomicStatus" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Parent Profile Photo</label>
+                        <div class="file-input-wrapper">
+                            <label class="file-input-label">
+                                <i class="fas fa-camera"></i>
+                                <span id="parentPhotoName">Choose File</span>
+                                <input type="file" asp-for="ParentProfilePhoto" accept="image/*" onchange="document.getElementById('parentPhotoName').textContent = this.files[0] ? this.files[0].name : 'Choose File'" />
+                            </label>
+                        </div>
+                        <span class="text-muted small">No file chosen</span>
+                    </div>
+                </div>
+
+                <!-- Parent Password & Confirm -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <label asp-for="ParentPassword" class="form-label">Parent Password</label>
+                        <input asp-for="ParentPassword" type="password" class="form-control" placeholder="Parent password" />
+                        <span asp-validation-for="ParentPassword" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ConfirmParentPassword" class="form-label">Confirm Parent Password</label>
+                        <input asp-for="ConfirmParentPassword" type="password" class="form-control" placeholder="Confirm parent password" />
+                        <span asp-validation-for="ConfirmParentPassword" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Actions -->
+    <div class="bottom-actions">
+        <a asp-action="Students" class="btn btn-secondary"><i class="fas fa-times me-1"></i> Cancel</a>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus me-1"></i> Register Student</button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function toggleParentForm(show) {
+            var form = document.getElementById('parentRegistrationForm');
+            var toggleSection = document.getElementById('parentToggleSection');
+            var registerParentInput = document.getElementById('RegisterParent');
+
+            if (show) {
+                form.classList.add('show');
+                toggleSection.style.display = 'none';
+                registerParentInput.value = 'true';
+            } else {
+                form.classList.remove('show');
+                toggleSection.style.display = 'block';
+                registerParentInput.value = 'false';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var regionSelect = document.getElementById('RegionId');
+            var gradeSelect = document.getElementById('AcademicGradeId');
+
+            var regions = @Html.Raw(Json.Serialize(regions?.Select(r => new { value = r.Value, text = r.Text })));
+            if (regions) {
+                regions.forEach(function (item) {
+                    var opt = document.createElement('option');
+                    opt.value = item.value; opt.textContent = item.text;
+                    regionSelect.appendChild(opt);
+                });
+            }
+
+            var grades = @Html.Raw(Json.Serialize(academicGrades?.Select(g => new { value = g.Value, text = g.Text })));
+            if (grades) {
+                grades.forEach(function (item) {
+                    var opt = document.createElement('option');
+                    opt.value = item.value; opt.textContent = item.text;
+                    gradeSelect.appendChild(opt);
+                });
+            }
+
+            regionSelect.addEventListener('change', function () {
+                var regionId = this.value;
+                var zoneSelect = document.getElementById('ZoneId');
+                var woredaSelect = document.getElementById('WoredaId');
+                var kebeleSelect = document.getElementById('KebeleId');
+                zoneSelect.innerHTML = '<option value="">-- Select Zone --</option>';
+                woredaSelect.innerHTML = '<option value="">-- Select Woreda --</option>';
+                kebeleSelect.innerHTML = '<option value="">-- Select Kebele --</option>';
+                if (regionId) {
+                    fetch('/Admin/GetZones?regionId=' + regionId).then(function (r) { return r.json(); }).then(function (data) {
+                        data.forEach(function (item) { var o = document.createElement('option'); o.value = item.id; o.textContent = item.name; zoneSelect.appendChild(o); });
+                    });
+                }
+            });
+
+            document.getElementById('ZoneId').addEventListener('change', function () {
+                var zoneId = this.value;
+                var woredaSelect = document.getElementById('WoredaId');
+                var kebeleSelect = document.getElementById('KebeleId');
+                woredaSelect.innerHTML = '<option value="">-- Select Woreda --</option>';
+                kebeleSelect.innerHTML = '<option value="">-- Select Kebele --</option>';
+                if (zoneId) {
+                    fetch('/Admin/GetWoredas?zoneId=' + zoneId).then(function (r) { return r.json(); }).then(function (data) {
+                        data.forEach(function (item) { var o = document.createElement('option'); o.value = item.id; o.textContent = item.name; woredaSelect.appendChild(o); });
+                    });
+                }
+            });
+
+            document.getElementById('WoredaId').addEventListener('change', function () {
+                var woredaId = this.value;
+                var kebeleSelect = document.getElementById('KebeleId');
+                kebeleSelect.innerHTML = '<option value="">-- Select Kebele --</option>';
+                if (woredaId) {
+                    fetch('/Admin/GetKebeles?woredaId=' + woredaId).then(function (r) { return r.json(); }).then(function (data) {
+                        data.forEach(function (item) { var o = document.createElement('option'); o.value = item.id; o.textContent = item.name; kebeleSelect.appendChild(o); });
+                    });
+                }
+            });
+
+            gradeSelect.addEventListener('change', function () {
+                var gradeId = this.value;
+                var sectionSelect = document.getElementById('AcademicSectionId');
+                sectionSelect.innerHTML = '<option value="">-- Select Class --</option>';
+                if (gradeId) {
+                    fetch('/Admin/GetSections?gradeId=' + gradeId).then(function (r) { return r.json(); }).then(function (data) {
+                        data.forEach(function (item) { var o = document.createElement('option'); o.value = item.id; o.textContent = item.name; sectionSelect.appendChild(o); });
+                    });
+                }
+            });
+        });
+    </script>
+}

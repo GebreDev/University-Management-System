@@ -1,0 +1,206 @@
+@{
+    ViewData["Title"] = "Academic History";
+    var academicYears = ViewBag.AcademicYears as SelectList;
+    var academicGrades = ViewBag.AcademicGrades as SelectList;
+    var sections = ViewBag.Sections as SelectList;
+    var studentRecords = ViewBag.StudentRecords as List<StudentAcademicRecordDto>;
+
+    var selectedYearId = ViewBag.SelectedAcademicYearId as int?;
+    var selectedGradeId = ViewBag.SelectedGradeId as int?;
+    var selectedSectionId = ViewBag.SelectedSectionId as int?;
+}
+
+@section Styles {
+    <style>
+        .academic-history-header { margin-bottom: 1.5rem; }
+        .academic-history-header h2 { font-weight: 700; color: #1e293b; margin-bottom: 0.25rem; }
+        .academic-history-header p { color: #64748b; font-size: 0.95rem; margin: 0; }
+        .filter-card { border: none; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; }
+        .filter-card .card-body { padding: 1.5rem; background: #fff; }
+        .filter-row { display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }
+        .filter-group { flex: 1; min-width: 180px; }
+        .filter-group label { font-weight: 600; color: #334155; font-size: 0.9rem; margin-bottom: 0.4rem; display: block; }
+        .btn-view-history { background: linear-gradient(135deg, #5a9bd5, #3a7cc0); color: white; border: none; padding: 0.6rem 1.5rem; border-radius: 6px; font-weight: 600; white-space: nowrap; transition: all 0.2s ease; }
+        .btn-view-history:hover { background: linear-gradient(135deg, #4a8bc5, #2a6cb0); color: white; transform: translateY(-1px); }
+        .results-card { border: none; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-top: 1.5rem; overflow: hidden; }
+        .results-header { padding: 1rem 1.25rem; background: linear-gradient(135deg, #5a9bd5, #3a7cc0); color: white; font-weight: 600; font-size: 0.95rem; }
+        .no-results { text-align: center; padding: 3rem; color: #64748b; }
+        .no-results i { font-size: 3rem; margin-bottom: 1rem; display: block; color: #cbd5e1; }
+    </style>
+}
+
+<!-- Page Header -->
+<div class="academic-history-header">
+    <h2><i class="fas fa-history me-2 text-primary"></i>Academic History</h2>
+    <p>View students' academic records by academic year, year, and section.</p>
+</div>
+
+<!-- Filter Card -->
+<div class="filter-card card">
+    <div class="card-body">
+        <form asp-action="AcademicHistory" method="get">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>Academic Year</label>
+                    <select name="academicYearId" id="academicYearSelect" class="form-select">
+                        <option value="">-- Select Academic Year --</option>
+                        @if (academicYears != null)
+                        {
+                            foreach (var yr in academicYears)
+                            {
+                                if (selectedYearId.HasValue && selectedYearId.Value.ToString() == yr.Value)
+                                {
+                                    <option value="@yr.Value" selected>@yr.Text</option>
+                                }
+                                else
+                                {
+                                    <option value="@yr.Value">@yr.Text</option>
+                                }
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Year</label>
+                    <select name="gradeId" id="gradeSelect" class="form-select">
+                        <option value="">-- Select Year --</option>
+                        @if (academicGrades != null)
+                        {
+                            foreach (var grd in academicGrades)
+                            {
+                                if (selectedGradeId.HasValue && selectedGradeId.Value.ToString() == grd.Value)
+                                {
+                                    <option value="@grd.Value" selected>@grd.Text</option>
+                                }
+                                else
+                                {
+                                    <option value="@grd.Value">@grd.Text</option>
+                                }
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Section</label>
+                    <select name="sectionId" id="sectionSelect" class="form-select">
+                        <option value="">-- Select Section --</option>
+                        @if (sections != null)
+                        {
+                            foreach (var sec in sections)
+                            {
+                                if (selectedSectionId.HasValue && selectedSectionId.Value.ToString() == sec.Value)
+                                {
+                                    <option value="@sec.Value" selected>@sec.Text</option>
+                                }
+                                else
+                                {
+                                    <option value="@sec.Value">@sec.Text</option>
+                                }
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="filter-group" style="flex: 0;">
+                    <button type="submit" class="btn-view-history">
+                        <i class="fas fa-eye me-1"></i> View History
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Results -->
+@if (selectedYearId.HasValue && selectedGradeId.HasValue && selectedSectionId.HasValue)
+{
+    <div class="results-card card">
+        <div class="results-header">
+            <i class="fas fa-users me-2"></i>Student Records
+        </div>
+        <div class="card-body">
+            @if (studentRecords != null && studentRecords.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Student Name</th>
+                                <th>UGR</th>
+                                <th>Department</th>
+                                <th>Total Courses</th>
+                                <th>Approved</th>
+                                <th>Pending</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ var rowNum = 1; }
+                            @foreach (var student in studentRecords)
+                            {
+                                <tr>
+                                    <td>@rowNum</td>
+                                    <td>@student.StudentName</td>
+                                    <td><span class="badge bg-primary">@student.StudentUgr</span></td>
+                                    <td>@student.DepartmentName</td>
+                                    <td>@student.TotalCourses</td>
+                                    <td><span class="badge bg-success">@student.ApprovedEnrollments</span></td>
+                                    <td><span class="badge bg-warning">@student.PendingEnrollments</span></td>
+                                </tr>
+                                rowNum++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="no-results">
+                    <i class="fas fa-search"></i>
+                    <h5>No Records Found</h5>
+                    <p>No student records found for the selected filters. Try selecting different criteria.</p>
+                </div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="results-card card">
+        <div class="card-body">
+            <div class="no-results">
+                <i class="fas fa-filter"></i>
+                <h5>Select Filters</h5>
+                <p>Please select Academic Year, Year, and Section to view student academic records.</p>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var gradeSelect = document.getElementById('gradeSelect');
+            var sectionSelect = document.getElementById('sectionSelect');
+
+            gradeSelect.addEventListener('change', function () {
+                var gradeId = this.value;
+                sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
+                if (gradeId) {
+                    fetch('/Admin/GetSections?gradeId=' + gradeId)
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            data.forEach(function (item) {
+                                var o = document.createElement('option');
+                                o.value = item.id;
+                                o.textContent = item.name;
+                                sectionSelect.appendChild(o);
+                            });
+                        });
+                }
+            });
+        });
+    </script>
+}

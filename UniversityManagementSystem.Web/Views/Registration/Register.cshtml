@@ -1,0 +1,231 @@
+@model UniversityManagementSystem.Web.Views.Registration.RegisterViewModel
+@{
+    ViewData["Title"] = "Register Courses";
+}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0"><i class="fas fa-file-signature me-2 text-primary"></i>Register Courses</h2>
+            <small class="text-muted">@ViewBag.SemesterName</small>
+        </div>
+        <a asp-action="MyRegistrations" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-history me-1"></i>My Registrations
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Available Courses for This Semester</h5>
+        </div>
+        <div class="card-body p-0">
+            <form id="registrationForm" method="post" asp-action="SubmitRegistration">@Html.AntiForgeryToken()
+                <input type="hidden" name="semesterId" value="@Model.SemesterId" />
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:36px;">
+                                <input type="checkbox" id="selectAll" class="form-check-input" />
+                            </th>
+                            <th style="min-width:180px;">Course</th>
+                            <th class="text-nowrap">Department</th>
+                            <th class="text-nowrap" style="width:80px;">Credits</th>
+                            <th class="text-nowrap" style="width:120px;">Seats</th>
+                            <th style="width:120px;">Registered</th>
+                        </tr>
+                    </thead>
+                    <tbody id="offeringsBody">
+                        @foreach (var offering in Model.Offerings)
+                        {
+                            var seatsLeft = offering.Capacity - offering.RegisteredCount;
+                            var isFull = seatsLeft <= 0;
+                            var disabled = isFull ? "disabled" : "";
+                            <tr class="@(isFull ? "table-secondary" : "")">
+                                <td>
+                                    <input type="checkbox"
+                                           name="selectedOfferings"
+                                           value="@offering.Id"
+                                           class="form-check-input offering-checkbox"
+                                           @(offering.IsStudentRegistered || isFull ? "disabled" : "")
+                                           @(offering.IsStudentRegistered ? "checked" : "") />
+                                </td>
+                                <td>
+                                    <div class="fw-medium text-dark">@offering.CourseTitle</div>
+                                    <div class="text-muted small"><span class="badge bg-secondary">@offering.CourseCode</span></div>
+                                </td>
+                                <td class="text-muted text-nowrap">@offering.DepartmentName</td>
+                                <td class="text-nowrap">@offering.Credits</td>
+                                <td class="text-nowrap">
+                                    <span class="@(isFull ? "badge bg-danger" : "badge bg-success")">
+                                        @(isFull ? "Full" : $"{seatsLeft} left")
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge @(offering.IsStudentRegistered ? "bg-success" : "bg-light text-dark border")">
+                                        @(offering.IsStudentRegistered ? "Yes" : "No")
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div class="card border-0 shadow-none px-3 py-2">
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-6">
+                            <div class="small text-muted">
+                                Select the courses you want to register for this semester.
+                                Full courses cannot be selected.
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button type="button" id="btnSubmit" class="btn btn-primary" disabled>
+                                <i class="fas fa-check me-1"></i>Submit Registration
+                            </button>
+                        </div>
+                    </div>
+                    <div id="summaryArea" class="mt-3 small d-none">
+                        <span class="badge bg-info text-dark me-2">
+                            Selected: <strong id="selectedCount">0</strong>
+                        </span>
+                        <span class="badge bg-light text-dark border me-2">
+                            Credits: <strong id="selectedCredits">0</strong>
+                        </span>
+                        <span id="conflictWarning" class="text-danger d-none">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Review schedule conflicts before submitting.
+                        </span>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.ExistingRegistrations.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">My Registrations</h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Semester</th>
+                            <th>Courses</th>
+                            <th>Credits</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var reg in Model.ExistingRegistrations)
+                        {
+                            <tr>
+                                <td>@reg.SemesterName</td>
+                                <td>
+                                    <span class="badge bg-secondary">@reg.CourseCount</span>
+                                    course(s)
+                                </td>
+                                <td>@reg.TotalCredits</td>
+                                <td>
+                                    <span class="badge @(reg.Status == "Approved" ? "bg-success" : reg.Status == "Submitted" ? "bg-warning" : "bg-secondary")">
+                                        @reg.Status
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="RegistrationDetails" asp-route-id="@reg.Id" class="btn btn-sm btn-outline-primary">
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const semesterId = @Model.SemesterId;
+            const checkboxes = document.querySelectorAll('.offering-checkbox');
+            const selectAll = document.getElementById('selectAll');
+            const btnSubmit = document.getElementById('btnSubmit');
+            const summaryArea = document.getElementById('summaryArea');
+            const selectedCount = document.getElementById('selectedCount');
+            const selectedCredits = document.getElementById('selectedCredits');
+            const conflictWarning = document.getElementById('conflictWarning');
+
+            const offeringInfo = [];
+            @foreach (var offering in Model.Offerings)
+            {
+                <text>offeringInfo.push({ id: @offering.Id, credits: @offering.Credits });</text>
+            }
+
+            function updateSummary() {
+                const checked = Array.from(checkboxes).filter(cb => cb.checked && cb.disabled === false);
+                const count = checked.length;
+                const credits = checked.reduce((sum, cb) => {
+                    const id = parseInt(cb.value, 10);
+                    const info = offeringInfo.find(i => i.id === id);
+                    return sum + (info ? info.credits : 0);
+                }, 0);
+
+                selectedCount.textContent = count;
+                selectedCredits.textContent = credits;
+                summaryArea.classList.remove('d-none');
+
+                btnSubmit.disabled = count === 0;
+                conflictWarning.classList.remove('d-none');
+            }
+
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', () => {
+                    updateSummary();
+                });
+            });
+
+            selectAll.addEventListener('change', () => {
+                const selectable = Array.from(checkboxes).filter(cb => cb.disabled === false);
+                selectable.forEach(cb => cb.checked = selectAll.checked);
+                updateSummary();
+            });
+
+            btnSubmit.addEventListener('click', () => {
+                const selected = Array.from(checkboxes)
+                    .filter(cb => cb.checked && cb.disabled === false)
+                    .map(cb => cb.value);
+
+                if (selected.length === 0) {
+                    alert('Please select at least one course.');
+                    return;
+                }
+
+                // The checkboxes are named selectedOfferings and are inside the
+                // form, so a plain submit already posts each id as a separate
+                // value. Appending an extra comma-joined value here would break
+                // List<int> binding on the server.
+                const form = document.getElementById('registrationForm');
+                form.submit();
+            });
+        })();
+    </script>
+}

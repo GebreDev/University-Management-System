@@ -1,0 +1,203 @@
+@model UniversityManagementSystem.Application.DTOs.Results.StudentTranscriptDto
+@using UniversityManagementSystem.Application.Helpers
+@{
+    ViewData["Title"] = "Grades & Results";
+}
+
+<partial name="_PrintStyles" model='new PrintViewModel { Title = "Grades & Results", HideHeaders = new[] { "Actions" } }' />
+
+<div class="print-header print-only">
+    <h2>Academic Grade Report</h2>
+    <small>Generated: @DateTime.Now.ToString("MMMM dd, yyyy")</small>
+</div>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 fw-bold mb-1"><i class="fas fa-star me-2 text-warning"></i> Grades &amp; Results</h1>
+        <small class="text-muted">Academic Year : <strong>@Model.AcademicYear</strong>, @Model.YearLabel, Semester : <strong>@Model.SemesterLabel</strong></small>
+    </div>
+    <div class="d-flex gap-2">
+        <form method="get" asp-action="MyGrades" class="d-flex align-items-center gap-2">
+            <select name="semester" class="form-select form-select-sm" onchange="this.form.submit()" aria-label="Filter semester">
+                <option value="">All Semesters</option>
+                @{
+                    var semesterStr = Model.SelectedSemester?.ToString() ?? "";
+                    foreach (var code in Model.AvailableSemesters)
+                    {
+                        var isSelected = semesterStr == code.ToString();
+                        <option value="@code" selected="@isSelected">@GradeHelper.GetSemesterName(code)</option>
+                    }
+                }
+            </select>
+        </form>         <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()"><i class="fas fa-print me-1"></i> Print</button>
+    </div>
+</div>
+
+@if (!Model.Rows.Any())
+{
+    <div class="alert alert-info shadow-sm rounded-3">
+        <i class="fas fa-info-circle me-2"></i> No results have been published yet. Check back once your instructors send your results.
+    </div>
+}
+else
+{
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 55px;">No.</th>
+                            <th>Course Title</th>
+                            <th>Code</th>
+                            <th class="text-center">Credit Hours</th>
+                            <th class="text-center">ECTS</th>
+                            <th class="text-center" style="width: 110px;">Grade</th>
+                            <th class="text-center" style="width: 150px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ var no = 0; }
+                        @foreach (var item in Model.Rows)
+                        {
+                            no++;
+                            <tr>
+                                <td class="text-center text-muted">@no</td>
+                                <td><span class="fw-semibold">@item.CourseTitle</span></td>
+                                <td><span class="code-badge">@item.CourseCode</span></td>
+                                <td class="text-center">@item.Credits.ToString("F2")</td>
+                                <td class="text-center">@item.Ects.ToString("F2")</td>
+                                <td class="text-center">
+                                    <span class="status-indicator">
+                                        <span class="circle @GradeHelper.GradeBadgeClass(item.LetterGrade)" style="width:10px;height:10px;border-radius:50%;"></span>
+                                        @item.LetterGrade
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-primary btn-result-detail"
+                                            data-course-id="@item.CourseId">
+                                        <i class="fas fa-clipboard-list me-1"></i> Assessment
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 result-summary">
+        <div class="card-body">
+            <div class="row g-4 align-items-center">
+                <div class="col-md-3 col-6">
+                    <div class="summary-metric">
+                        <small class="text-muted">SGP</small>
+                        <h4 class="fw-bold mb-0">@Model.Sgp.ToString("F2")</h4>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="summary-metric">
+                        <small class="text-muted">CGP</small>
+                        <h4 class="fw-bold mb-0">@Model.Cgp.ToString("F2")</h4>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="summary-metric">
+                        <small class="text-muted">SGPA</small>
+                        <h4 class="fw-bold mb-0">@Model.Sgpa.ToString("F2")</h4>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="summary-metric">
+                        <small class="text-muted">CGPA</small>
+                        <h4 class="fw-bold mb-0">@Model.Cgpa.ToString("F2")</h4>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <hr class="my-1" />
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted">Academic Status :</span>
+                        <span class="badge @(Model.AcademicStatus == "Promoted" ? "bg-success" : Model.AcademicStatus == "Academic Probation" ? "bg-warning text-dark" : "bg-danger") rounded-pill px-3 py-2 fs-6">
+                            @Model.AcademicStatus
+                        </span>
+                        <small class="text-muted ms-auto">@Model.StudentName &middot; @Model.StudentNumber @(string.IsNullOrEmpty(Model.DepartmentName) ? "" : "&middot; " + Model.DepartmentName)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Assessment Result Modal -->
+<div class="modal fade" id="assessmentModal" tabindex="-1" aria-labelledby="assessmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="assessmentModalLabel">Assessment Result</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="assessmentModalBody">
+                <div class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Loading...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3 d-flex gap-2">     <a asp-action="Dashboard" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+</div>
+
+<div class="print-footer print-only">
+    <small>University Management System - Official Grade Report</small>
+</div>
+
+@section Scripts {
+<script>
+    $(document).on('click', '.btn-result-detail', function () {
+        var courseId = $(this).data('course-id');
+        $('#assessmentModalBody').html('<div class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Loading...</div>');
+        $('#assessmentModal').modal('show');
+
+        $.getJSON('/Student/CourseResultDetail?courseId=' + courseId, function (data) {
+            if (!data) {
+                $('#assessmentModalBody').html('<div class="alert alert-info mb-0"><i class="fas fa-info-circle me-2"></i>Result details are not available.</div>');
+                return;
+            }
+
+            var rows = '';
+            if (data.assessments && data.assessments.length) {
+                data.assessments.forEach(function (a, i) {
+                    rows += '<tr>' +
+                        '<td class="text-center">' + (i + 1) + '</td>' +
+                        '<td>' + a.name + ' ( ' + a.weight + '% )</td>' +
+                        '<td class="text-center fw-semibold">' + a.score + '</td>' +
+                        '</tr>';
+                });
+            } else {
+                rows = '<tr><td colspan="3" class="text-center text-muted">No assessment components recorded.</td></tr>';
+            }
+
+            $('#assessmentModalBody').html(
+                '<p class="mb-3 fw-bold text-primary">Course : ' + data.courseTitle + '</p>' +
+                '<div class="table-responsive">' +
+                    '<table class="table table-bordered align-middle mb-0 assessment-detail-table">' +
+                        '<thead class="table-light"><tr>' +
+                            '<th style="width:15%;">S.No.</th><th style="width:65%;">Assessment</th><th style="width:20%;">Result</th>' +
+                        '</tr></thead>' +
+                        '<tbody>' + rows + '</tbody>' +
+                        '<tfoot><tr>' +
+                            '<td colspan="2" class="text-end fw-bold">Total Mark :</td>' +
+                            '<td class="text-center fw-bold">' + data.totalMark + ' / 100</td>' +
+                        '</tr></tfoot>' +
+                    '</table>' +
+                '</div>' +
+                '<div class="d-flex align-items-center justify-content-between mt-3">' +
+                    '<span class="badge bg-success rounded-pill px-3 py-2 fs-6">Grade : ' + data.letterGrade + '</span>' +                     '<button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal">Close</button>' +
+                '</div>'
+            );
+        }).fail(function () {
+            $('#assessmentModalBody').html('<div class="alert alert-danger mb-0"><i class="fas fa-circle-exclamation me-2"></i>Could not load the result details.</div>');
+        });
+    });
+</script>
+}

@@ -1,0 +1,224 @@
+@model IEnumerable<ConversationDto>
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Messages";
+    var currentUserId = ViewBag.CurrentUserId as string;
+    var currentUserRole = ViewBag.CurrentUserRole as string;
+    var availableUsers = (ViewBag.AvailableUsers as List<SelectListItem> ?? new List<SelectListItem>())
+        .Select(u => new { u.Value, u.Text }).ToList();
+
+    string RoleColor(string role) => role switch
+    {
+        "Student" => "#f06292",
+        "Instructor" => "#4a90e2",
+        "Admin" => "#26a69a",
+        _ => "#7e57c2"
+    };
+
+    string Initials(string name)
+    {
+        var parts = (name ?? "").Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return "?";
+        if (parts.Length == 1) return parts[0].Substring(0, Math.Min(2, parts[0].Length)).ToUpper();
+        return (parts[0][0].ToString() + parts[^1][0]).ToUpper();
+    }
+
+    string RoleBadge(string role) => role switch
+    {
+        "Instructor" => "Faculty",
+        "Student" => "Student",
+        "Admin" => "Admin",
+        _ => role ?? ""
+    };
+
+    string ListTime(DateTime? t)
+    {
+        if (!t.HasValue) return "";
+        var local = t.Value.ToLocalTime();
+        var today = DateTime.Today;
+        if (local.Date == today) return local.ToString("h:mm tt");
+        if (local.Date == today.AddDays(-1)) return "Yesterday";
+        if ((today - local.Date).TotalDays < 7) return local.ToString("ddd");
+        return local.ToString("MMM d");
+    }
+}
+
+<div class="chat-app" id="chatApp">
+    <!-- ===================== Conversations Panel ===================== -->
+    <aside class="chat-convs" id="chatConvs">
+        <div class="chat-convs-header">
+            <h2 class="chat-convs-title">Messages</h2>
+            <button type="button" class="chat-compose-btn" data-bs-toggle="modal" data-bs-target="#newConversationModal" title="New message">
+                <i class="fa-solid fa-pen"></i>
+            </button>
+        </div>
+
+        <div class="chat-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="chatSearch" placeholder="Search conversations" autocomplete="off" />
+        </div>
+
+        <div class="chat-filters" id="chatFilters">
+            <button type="button" class="chat-pill active" data-role="">All</button>
+            <button type="button" class="chat-pill" data-role="Admin">Admin</button>
+            <button type="button" class="chat-pill" data-role="Instructor">Instructor</button>
+            <button type="button" class="chat-pill" data-role="Student">Students</button>
+        </div>
+
+        <div class="chat-convs-list" id="conversationsList">
+            @{
+                var contacts = (ViewBag.Contacts as List<UniversityManagementSystem.Web.Controllers.ChatController.ChatContactDto> ?? new List<UniversityManagementSystem.Web.Controllers.ChatController.ChatContactDto>());
+            }
+            @if (contacts.Any())
+            {
+                @foreach (var contact in contacts)
+                {
+                    <div class="chat-conv-item" role="button" tabindex="0"
+                         data-conversation-id="@(contact.ConversationId?.ToString() ?? "")"
+                         data-other-user-id="@contact.UserId"
+                         data-name="@contact.FullName"
+                         data-role="@contact.Role"
+                         data-pic="@contact.ProfilePictureUrl"
+                         data-search="@($"{contact.FullName} {contact.Role} {contact.LastMessage}")">
+                        <div class="chat-avatar" style="background:@RoleColor(contact.Role)">
+                            @if (!string.IsNullOrEmpty(contact.ProfilePictureUrl))
+                            {
+                                <img src="@contact.ProfilePictureUrl" alt="@contact.FullName" />
+                            }
+                            else
+                            {
+                                <span>@Initials(contact.FullName)</span>
+                            }
+                            <span class="chat-status-dot" data-dot="off"></span>
+                        </div>
+                        <div class="chat-conv-info">
+                            <div class="chat-conv-top">
+                                <span class="chat-conv-name">@contact.FullName</span>
+                                <span class="chat-conv-time">@ListTime(contact.LastMessageTime)</span>
+                            </div>
+                            <div class="chat-conv-bottom">
+                                <span class="chat-role-badge" style="color:@RoleColor(contact.Role)">@RoleBadge(contact.Role)</span>
+                                <span class="chat-conv-preview">@(string.IsNullOrEmpty(contact.LastMessage) ? "No messages yet" : contact.LastMessage)</span>
+                            </div>
+                        </div>
+                        @if (contact.UnreadCount > 0)
+                        {
+                            <span class="chat-unread" data-unread="@contact.UnreadCount">@contact.UnreadCount</span>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="chat-empty-state" id="emptyConvs">
+                    <i class="fa-regular fa-message"></i>
+                    <h6>No conversations yet</h6>
+                    <p>Start a new message to connect with someone.</p>                     <button type="button" class="btn btn-primary btn-sm px-4" data-bs-toggle="modal" data-bs-target="#newConversationModal">
+                        <i class="fa-solid fa-pen me-1"></i> New Message
+                    </button>
+                </div>
+            }
+            <div class="chat-empty-state" id="filterEmpty" style="display:none;">
+                <i class="fa-regular fa-magnifying-glass"></i>
+                <h6>No results found</h6>
+                <p>Try a different search or filter.</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ===================== Chat Thread Panel ===================== -->
+    <section class="chat-thread" id="chatThread">
+        <header class="chat-thread-header">
+            <button type="button" class="chat-back-btn chat-icon-btn" id="chatBackBtn" title="Back">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div class="chat-avatar chat-thread-avatar" id="threadAvatar" style="background:#cbd5e1">
+                <span>?</span>
+                <span class="chat-status-dot" data-dot="off"></span>
+            </div>
+            <div class="chat-thread-meta">
+                <div class="chat-thread-name" id="threadName">Select a conversation</div>
+                <div class="chat-thread-status" id="threadStatus">
+                    <span class="dot"></span>
+                    <span id="threadStatusText">Choose a chat to start messaging</span>
+                </div>
+            </div>
+            <div class="chat-thread-actions">
+                <button type="button" class="chat-icon-btn" title="Call"><i class="fa-solid fa-phone"></i></button>
+                <button type="button" class="chat-icon-btn" title="Video call"><i class="fa-solid fa-video"></i></button>
+                <button type="button" class="chat-icon-btn" title="Details"><i class="fa-solid fa-circle-info"></i></button>
+            </div>
+        </header>
+
+        <div class="chat-messages" id="chatBody">
+            <div class="chat-empty-state">
+                <i class="fa-regular fa-comments"></i>
+                <h6>Welcome to Messages</h6>
+                <p>Select a conversation on the left to start chatting.</p>
+            </div>
+        </div>
+
+        <div class="chat-composer" id="chatComposer" style="display:none;">
+            <div class="chat-attach-chip" id="attachChip" style="display:none;">
+                <i class="fa-solid fa-paperclip"></i>
+                <span id="attachChipName"></span>
+                <button type="button" id="attachChipRemove" title="Remove attachment"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <input type="file" id="chatAttachInput" hidden />
+            <button type="button" class="chat-attach-btn" id="chatAttachBtn" title="Attach a file">
+                <i class="fa-solid fa-paperclip"></i>
+            </button>
+            <div class="chat-input-wrap">
+                <textarea id="messageInput" rows="1" placeholder="Type your message..."></textarea>
+                <button type="button" class="chat-emoji-btn" id="emojiBtn" title="Emoji">
+                    <i class="fa-regular fa-face-smile"></i>
+                </button>
+                <div class="chat-emoji-picker" id="emojiPicker"></div>
+            </div>
+            <button type="button" class="chat-send-btn" id="sendButton" title="Send">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </section>
+</div>
+
+<!-- ===================== New Conversation Modal ===================== -->
+<div class="modal fade" id="newConversationModal" tabindex="-1" aria-labelledby="newConversationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow-lg border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="newConversationModalLabel">New Message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small text-muted"><i class="fa-solid fa-user me-1"></i> Select Recipient</label>
+                    <input type="text" id="userSearch" class="form-control mb-2" placeholder="Search users..." autocomplete="off" />
+                    <select id="newConversationRecipient" class="form-select" size="6">
+                        <option value="">-- Select a user --</option>
+                        @foreach (var u in availableUsers)
+                        {
+                            <option value="@u.Value">@u.Text</option>
+                        }
+                    </select>
+                    <div class="mt-2 text-center small text-muted" id="noUsersMatch" style="display:none;"><i class="fa-regular fa-face-frown me-1"></i>No users match your search.</div>
+                </div>
+                <div class="mb-1">
+                    <label class="form-label fw-semibold small text-muted"><i class="fa-solid fa-pen me-1"></i> Message</label>
+                    <textarea id="newConversationMessage" class="form-control" rows="3" placeholder="Type your message..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">                     <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>                 <button type="button" class="btn btn-primary px-4" id="startConversationBtn">
+                    <i class="fa-solid fa-paper-plane me-1"></i> Send
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="conversationId" value="" />
+<input type="hidden" id="currentRecipientId" value="" />
+
+@section Scripts {
+    <script src="~/js/chat.js" asp-append-version="true"></script>
+}

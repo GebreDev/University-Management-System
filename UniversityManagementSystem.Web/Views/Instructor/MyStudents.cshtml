@@ -1,0 +1,153 @@
+@model IEnumerable<UniversityManagementSystem.Application.DTOs.Enrollment.EnrollmentListDto>
+@{
+    ViewData["Title"] = "My Students";
+    var courses = ViewBag.Courses as IEnumerable<UniversityManagementSystem.Application.DTOs.Course.CourseListDto> ?? Enumerable.Empty<UniversityManagementSystem.Application.DTOs.Course.CourseListDto>();
+    var selectedCourseId = ViewBag.SelectedCourseId as int? ?? 0;
+    var totalStudents = ViewBag.TotalStudents as int? ?? 0;
+    var courseCount = ViewBag.CourseCount as int? ?? 0;
+    var items = Model.ToList();
+}
+
+<div class="dash-page">
+
+    <!-- Header -->
+    <div class="dash-head">
+        <div>
+            <h1 class="dash-greeting"><i class="fas fa-user-graduate me-2 text-primary"></i>My Students</h1>
+            <p class="dash-subtitle">Every approved student enrolled in the courses you teach.</p>
+        </div>
+        <div class="dash-date">
+            <strong>@totalStudents students</strong>
+            <span>across @courseCount course(s)</span>
+        </div>
+    </div>
+
+    <!-- Metric cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-4">
+            <div class="metric-card">
+                <div class="metric-icon stat-grad-a"><i class="fas fa-user-graduate"></i></div>
+                <div class="metric-body">
+                    <div class="metric-label">Students</div>
+                    <span class="metric-value">@totalStudents</span>
+                    <div class="metric-footer"><span class="metric-sub">unique students</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-4">
+            <div class="metric-card">
+                <div class="metric-icon stat-grad-c"><i class="fas fa-list-check"></i></div>
+                <div class="metric-body">
+                    <div class="metric-label">Enrollments</div>
+                    <span class="metric-value">@items.Count</span>
+                    <div class="metric-footer"><span class="metric-sub">approved seats</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-4">
+            <div class="metric-card">
+                <div class="metric-icon stat-grad-d"><i class="fas fa-book-open"></i></div>
+                <div class="metric-body">
+                    <div class="metric-label">Courses</div>
+                    <span class="metric-value">@courseCount</span>
+                    <div class="metric-footer"><span class="metric-sub">you teach</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course filter -->
+    <div class="list-card mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label fw-semibold"><i class="fas fa-book me-1 text-primary"></i> Filter by Course</label>
+                <select id="courseFilter" class="form-select">
+                    <option value="0" selected="@(selectedCourseId == 0)">All my courses</option>
+                    @foreach (var c in courses)
+                    {
+                        <option value="@c.Id" selected="@(c.Id == selectedCourseId)">@c.Code — @c.Title</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button id="applyFilter" class="btn btn-primary rounded-pill px-4">
+                    <i class="fas fa-filter me-1"></i> Apply
+                </button>
+                <button id="clearFilter" class="btn btn-outline-secondary rounded-pill px-4 ms-2">
+                    <i class="fas fa-undo me-1"></i> All
+                </button>
+            </div>
+            <div class="col-md-3 text-md-end">
+                <a asp-action="Attendance" class="btn btn-outline-primary rounded-pill px-4">
+                    <i class="fas fa-calendar-check me-1"></i> Attendance
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (!items.Any())
+    {
+        <div class="list-card text-center py-5">
+            <i class="fas fa-users fa-4x text-muted mb-3 opacity-50"></i>
+            <h5 class="text-muted">No Students Found</h5>
+            <p class="text-muted mb-0">No approved enrollments match this filter yet.</p>
+        </div>
+    }
+    else
+    {
+        <div class="data-table-wrapper">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Student ID</th>
+                            <th>Course</th>
+                            <th>Status</th>
+                            <th>Enrolled</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < items.Count; i++)
+                        {
+                            var item = items[i];
+                            <tr>
+                                <td><span class="fw-semibold">@item.StudentFullName</span></td>
+                                <td><span class="code-badge">@item.StudentId</span></td>
+                                <td>
+                                    <strong class="d-block">@item.CourseTitle</strong>
+                                    <small class="text-muted">@item.CourseCode</small>
+                                </td>
+                                <td>
+                                    <span class="status-indicator"><span class="circle success"></span>@item.Status</span>
+                                </td>
+                                <td><small class="text-muted">@item.EnrollmentDate.ToString("M/d/yyyy")</small></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-footer-count">
+                <span>@items.Count students</span>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#applyFilter').on('click', function () {
+                var courseId = $('#courseFilter').val();
+                window.location.href = '@Url.Action("MyStudents", "Instructor")?courseId=' + courseId;
+            });
+            $('#courseFilter').on('change', function () {
+                var courseId = $(this).val();
+                window.location.href = '@Url.Action("MyStudents", "Instructor")?courseId=' + courseId;
+            });
+            $('#clearFilter').on('click', function () {
+                window.location.href = '@Url.Action("MyStudents", "Instructor")';
+            });
+        });
+    </script>
+}

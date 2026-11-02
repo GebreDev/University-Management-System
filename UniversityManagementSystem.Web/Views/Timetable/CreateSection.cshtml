@@ -1,0 +1,22 @@
+@model AcademicSection
+@{
+    ViewData["Title"] = "Add Section";
+}
+
+<h2><i class="fas fa-puzzle-piece me-2 text-primary"></i>Add Section — @ViewBag.GradeName</h2>
+
+<div class="card border-0 shadow-sm mt-3">
+    <div class="card-body">
+        <form asp-action="CreateSection" method="post">
+            <input type="hidden" asp-for="GradeId" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label">Section Name</label>
+                <input asp-for="Name" class="form-control" placeholder="e.g. Section A, Section B" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Create</button>
+            <a asp-action="ManageSections" asp-route-gradeId="@Model.GradeId" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

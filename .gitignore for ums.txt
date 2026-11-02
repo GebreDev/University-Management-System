@@ -1,0 +1,21 @@
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.sln.docstates
+
+# .NET build files
+bin/
+obj/
+
+# Logs
+*.log
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# User-specific files
+*.userosscache

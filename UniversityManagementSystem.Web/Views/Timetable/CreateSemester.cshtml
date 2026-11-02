@@ -1,0 +1,27 @@
+@model Semester
+@{
+    ViewData["Title"] = "Add Semester";
+}
+
+<h2><i class="fas fa-clock me-2 text-primary"></i>Add Semester</h2>
+
+<div class="card border-0 shadow-sm mt-3">
+    <div class="card-body">
+        <form asp-action="CreateSemester" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="AcademicYearId" class="form-label">Academic Year</label>
+                <select asp-for="AcademicYearId" asp-items="ViewBag.AcademicYears" class="form-select">
+                    <option value="">-- Select Year --</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label">Semester</label>
+                <input asp-for="Name" class="form-control" placeholder="e.g. 1st Semester" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Create</button>
+            <a asp-action="ManageSemesters" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

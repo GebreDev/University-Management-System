@@ -1,0 +1,77 @@
+@model UniversityManagementSystem.Domain.Entities.Payment
+@{
+    ViewData["Title"] = "Test Checkout";
+    var isOwner = (bool)ViewBag.IsOwner;
+}
+
+<style>
+    .mock-checkout-wrap { max-width: 480px; margin: 2rem auto; }
+    .mock-checkout-brand {
+        background: #103d8f;
+        color: #fff;
+        padding: 1.25rem 1.5rem;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+    .mock-checkout-body { border: 1px solid #e3e6ea; border-top: none; border-radius: 0 0 12px 12px; background: #fff; }
+    .mock-pay-btn { background: #0ea54b; border: none; }
+    .mock-pay-btn:hover { background: #0c8f41; }
+</style>
+
+<div class="mock-checkout-wrap">
+    <div class="mock-checkout-brand">
+        <i class="fas fa-mobile-screen-button fa-2x"></i>
+        <div>
+            <h5 class="mb-0 fw-bold">Test Checkout <span class="badge bg-warning text-dark ms-1">MOCK</span></h5>
+            <small style="opacity:.85;">Simulated gateway (Telebirr / CBE Birr / card)</small>
+        </div>
+    </div>
+
+    <div class="mock-checkout-body p-4">
+        <div class="text-center mb-4">
+            <small class="text-muted text-uppercase fw-semibold">Amount Due</small>
+            <h2 class="fw-bold mb-0">@Model.Amount.ToString("N2") ETB</h2>
+            <small class="text-muted">Invoice @Model.Invoice?.InvoiceNumber</small>
+        </div>
+
+        <table class="table table-sm mb-4">
+            <tbody>
+                <tr><td class="text-muted">Reference</td><td class="text-end">@Model.Reference</td></tr>
+                <tr><td class="text-muted">Student</td><td class="text-end">@Model.Student?.FirstName @Model.Student?.LastName</td></tr>
+                <tr><td class="text-muted">Method</td><td class="text-end">Online (simulated)</td></tr>
+                <tr><td class="text-muted">Status</td><td class="text-end"><span class="badge bg-warning text-dark">@Model.Status</span></td></tr>
+            </tbody>
+        </table>
+
+        @if (!isOwner)
+        {
+            <div class="alert alert-warning mb-0">
+                <i class="fas fa-triangle-exclamation me-1"></i>
+                You are not signed in as this student, so you cannot confirm this test payment.
+                Log in as the student to complete it.
+            </div>
+        }
+        else
+        {
+            <form asp-controller="FinanceWebhook" asp-action="MockPay" method="post">
+                <input type="hidden" name="reference" value="@Model.Reference" />
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn mock-pay-btn btn-lg text-white">
+                        <i class="fas fa-check me-1"></i> Pay Now (Test)
+                    </button>
+                    <a asp-controller="FinanceWebhook" asp-action="MockCancel" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+
+            <p class="text-muted small text-center mt-3 mb-0">
+                <i class="fas fa-circle-info me-1"></i>
+                This is a simulated gateway for testing. Add CHAPA_SECRET_KEY and CHAPA_PUBLIC_KEY
+                environment variables to switch to the real Chapa checkout automatically.
+            </p>
+        }
+    </div>
+</div>

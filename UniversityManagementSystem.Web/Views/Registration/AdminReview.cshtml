@@ -1,0 +1,154 @@
+@model UniversityManagementSystem.Application.DTOs.Registration.RegistrationDetailDto
+@{
+    ViewData["Title"] = "Review Registration";
+}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="fas fa-eye me-2 text-primary"></i>Review Registration</h2>
+        <a asp-action="AdminSemesterRegistrations" asp-route-semesterId="@Model.SemesterId" class="btn-back-pill btn-sm">
+            <i class="fas fa-chevron-left"></i>Back
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="small text-muted">Student</div>
+                            <div class="fw-medium">@Model.StudentName</div>
+                            <div class="text-muted small">@Model.StudentNumber</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="small text-muted">Semester</div>
+                            <div class="fw-medium">@Model.SemesterName</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="small text-muted">Department</div>
+                            <div class="fw-medium">@Model.DepartmentName</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="small text-muted">Total Credits</div>
+                            <div class="fw-medium">@Model.TotalCredits</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="small text-muted">Current Status</div>
+                            <span class="badge bg-warning">@Model.Status</span>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="small text-muted">Submitted</div>
+                            <div>@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Selected Courses</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Course</th>
+                                <th class="text-nowrap">Code</th>
+                                <th class="text-nowrap" style="width:80px;">Credits</th>
+                                <th class="text-nowrap" style="width:120px;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td>@item.CourseTitle</td>
+                                    <td class="text-muted"><span class="badge bg-secondary">@item.CourseCode</span></td>
+                                    <td>@item.Credits</td>
+                                    <td>
+                                        <span class="badge @(item.Status == "Registered" ? "bg-success" : item.Status == "Waitlisted" ? "bg-warning" : "bg-secondary")">
+                                            @item.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Status History</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>From</th>
+                                <th>To</th>
+                                <th class="text-nowrap">Changed At</th>
+                                <th>By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var h in Model.StatusHistory)
+                            {
+                                <tr>
+                                    <td class="text-muted">@h.OldStatus</td>
+                                    <td><span class="badge bg-primary">@h.NewStatus</span></td>
+                                    <td class="text-muted text-nowrap">@h.ChangedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>@h.ChangedBy</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Take Action</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-action="AdminReview">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Registration ID</label>
+                            <input type="text" class="form-control" value="@Model.Id" disabled />
+                            <input type="hidden" name="Id" value="@Model.Id" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">New Status</label>
+                            <select name="NewStatus" class="form-select">
+                                <option value="Approved">Approved</option>
+                                <option value="Rejected">Rejected</option>
+                                <option value="Waitlisted">Waitlisted</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Reject Reason</label>
+                            <textarea name="RejectionReason" class="form-control" rows="3"
+                                      placeholder="Provide a reason if rejecting or waitlisting."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Reviewed By</label>
+                            <input type="text" name="ReviewedBy" class="form-control"
+                                   placeholder="Admin username or name" />
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Save Review</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

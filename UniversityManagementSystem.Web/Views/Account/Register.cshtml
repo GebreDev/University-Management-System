@@ -1,0 +1,194 @@
+@model RegisterDto
+@{
+    ViewData["Title"] = "Register";
+    Layout = "_AuthLayout";
+}
+
+<div class="auth-card auth-card-wide">
+    <div class="auth-card-head">
+        <span class="auth-card-logo"><i class="fas fa-user-plus"></i></span>
+        <h2>Create Account</h2>
+        <p>Join our university community today</p>
+    </div>
+
+    <form asp-action="Register" method="post" class="auth-form" novalidate>
+        <div asp-validation-summary="All" class="validation-summary-errors"></div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="FirstName" class="form-label">First Name</label>
+                <div class="input-icon">
+                    <i class="fas fa-user"></i>
+                    <input asp-for="FirstName" class="form-control" placeholder="First name" />
+                </div>
+                <span asp-validation-for="FirstName" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="LastName" class="form-label">Last Name</label>
+                <div class="input-icon">
+                    <i class="fas fa-user"></i>
+                    <input asp-for="LastName" class="form-control" placeholder="Last name" />
+                </div>
+                <span asp-validation-for="LastName" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <div class="row g-3 mt-0">
+            <div class="col-md-6">
+                <label asp-for="Email" class="form-label">Email Address</label>
+                <div class="input-icon">
+                    <i class="fas fa-envelope"></i>
+                    <input asp-for="Email" class="form-control" placeholder="you@example.com" />
+                </div>
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                <div class="input-icon">
+                    <i class="fas fa-phone"></i>
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="+251 9XX XXX XXX" />
+                </div>
+                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <div class="row g-3 mt-0">
+            <div class="col-md-6">
+                <label asp-for="DateOfBirth" class="form-label">Date of Birth</label>
+                <div class="input-icon">
+                    <i class="fas fa-cake-candles"></i>
+                    <input asp-for="DateOfBirth" type="date" class="form-control" />
+                </div>
+                <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Address" class="form-label">Address</label>
+                <div class="input-icon">
+                    <i class="fas fa-location-dot"></i>
+                    <input asp-for="Address" class="form-control" placeholder="City, street" />
+                </div>
+                <span asp-validation-for="Address" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Role" class="form-label">Register As</label>
+            <select asp-for="Role" class="form-select" id="RoleSelect">
+                <option value="">Select Role...</option>
+                <option value="Student">Student</option>
+                <option value="Instructor">Instructor</option>
+            </select>
+            <span asp-validation-for="Role" class="text-danger small"></span>
+        </div>
+
+        <!-- Student-specific fields -->
+        <div id="StudentFields" style="display:none;">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="StudentId" class="form-label">Student ID</label>
+                    <div class="input-icon">
+                        <i class="fas fa-id-card"></i>
+                        <input asp-for="StudentId" class="form-control" placeholder="e.g., STU001" />
+                    </div>
+                    <span asp-validation-for="StudentId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="EnrollmentDate" class="form-label">Enrollment Date</label>
+                    <div class="input-icon">
+                        <i class="fas fa-calendar-day"></i>
+                        <input asp-for="EnrollmentDate" type="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <span asp-validation-for="EnrollmentDate" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="mb-3 mt-3">
+                <label asp-for="DepartmentId" class="form-label">Department</label>
+                <select asp-for="DepartmentId" id="StudentDeptSelect" class="form-select" asp-items="ViewBag.Departments as SelectList">
+                    <option value="">Select Department...</option>
+                </select>
+                <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <!-- Instructor-specific fields -->
+        <div id="InstructorFields" style="display:none;">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Qualification" class="form-label">Qualification</label>
+                    <div class="input-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                        <input asp-for="Qualification" class="form-control" placeholder="e.g., PhD in Computer Science" />
+                    </div>
+                    <span asp-validation-for="Qualification" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="HireDate" class="form-label">Hire Date</label>
+                    <div class="input-icon">
+                        <i class="fas fa-calendar-day"></i>
+                        <input asp-for="HireDate" type="date" class="form-control" />
+                    </div>
+                    <span asp-validation-for="HireDate" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="mb-3 mt-3">
+                <label asp-for="DepartmentId" class="form-label">Department</label>
+                <select asp-for="DepartmentId" id="InstructorDeptSelect" class="form-select" asp-items="ViewBag.Departments as SelectList">
+                    <option value="">Select Department...</option>
+                </select>
+                <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <div class="row g-3 mt-0">
+            <div class="col-md-6">
+                <label asp-for="Password" class="form-label">Password</label>
+                <div class="input-icon">
+                    <i class="fas fa-lock"></i>
+                    <input asp-for="Password" class="form-control" placeholder="Create a password" autocomplete="new-password" />
+                    <button type="button" class="pw-toggle" tabindex="-1" aria-label="Show password" onclick="togglePassword(this)">
+                        <i class="far fa-eye"></i>
+                    </button>
+                </div>
+                <span asp-validation-for="Password" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
+                <div class="input-icon">
+                    <i class="fas fa-lock"></i>
+                    <input asp-for="ConfirmPassword" class="form-control" placeholder="Repeat password" autocomplete="new-password" />
+                    <button type="button" class="pw-toggle" tabindex="-1" aria-label="Show password" onclick="togglePassword(this)">
+                        <i class="far fa-eye"></i>
+                    </button>
+                </div>
+                <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-auth mt-2">
+            Create Account <i class="fas fa-arrow-right ms-2"></i>
+        </button>
+    </form>
+
+    <div class="auth-card-alt">
+        Already have an account? <a asp-action="Login">Login</a>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            $('#RoleSelect').change(function () {
+                var role = $(this).val();
+                var isStudent = role === 'Student';
+                var isInstructor = role === 'Instructor';
+                $('#StudentFields').toggle(isStudent);
+                $('#InstructorFields').toggle(isInstructor);
+                // Only the select of the active section should submit, otherwise the
+                // hidden (empty) select would overwrite the chosen department.
+                $('#StudentDeptSelect').prop('disabled', !isStudent);
+                $('#InstructorDeptSelect').prop('disabled', !isInstructor);
+            }).trigger('change');
+        });
+    </script>
+}

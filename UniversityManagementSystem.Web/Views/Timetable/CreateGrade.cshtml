@@ -1,0 +1,237 @@
+@model AcademicGrade
+@{
+    ViewData["Title"] = "Create Year";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var instructors = ViewBag.Instructors as List<UniversityManagementSystem.Domain.Entities.Instructor>;
+}
+
+<style>
+    .cy-page { padding: 10px 0 40px; max-width: 800px; }
+
+    .cy-header {
+        background: linear-gradient(135deg, var(--btn-sky), var(--btn-sky-hover));
+        color: white;
+        border-radius: 14px 14px 0 0;
+        padding: 22px 28px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .cy-header i { font-size: 1.2rem; }
+    .cy-header h3 { font-weight: 700; margin: 0; font-size: 1.15rem; }
+
+    .cy-body {
+        background: white;
+        border: 1px solid #e8eef3;
+        border-top: 0;
+        border-radius: 0 0 14px 14px;
+        padding: 28px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    }
+
+    .cy-field { margin-bottom: 18px; }
+    .cy-field label {
+        display: block;
+        font-size: .85rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 6px;
+    }
+    .cy-field input, .cy-field select {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #d1d9e0;
+        border-radius: 8px;
+        font-size: .88rem;
+        color: #334155;
+        background: white;
+    }
+    .cy-field input:focus, .cy-field select:focus {
+        border-color: var(--btn-sky);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(74,144,226,.12);
+    }
+    .cy-field .text-danger { font-size: .75rem; margin-top: 4px; }
+    .cy-hint {
+        font-size: .78rem;
+        color: #94a3b8;
+        margin-top: 4px;
+    }
+
+    .cy-section-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 24px 0 16px;
+        padding-top: 18px;
+        border-top: 1px solid #e8eef3;
+    }
+
+    .cy-section-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 14px;
+        padding: 14px 16px;
+        background: #f8fafc;
+        border: 1px solid #e8eef3;
+        border-radius: 10px;
+    }
+    .cy-section-row label {
+        font-size: .82rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 5px;
+        display: block;
+    }
+    .cy-section-row input, .cy-section-row select {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #d1d9e0;
+        border-radius: 8px;
+        font-size: .85rem;
+        color: #334155;
+        background: white;
+    }
+    .cy-section-row input:focus, .cy-section-row select:focus {
+        border-color: var(--btn-sky);
+        outline: none;
+    }
+
+    .btn-add-section {
+        background: #16a34a;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 700;
+        font-size: .85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 20px;
+    }
+    .btn-add-section:hover { background: #15803d; color: white; }
+
+    .cy-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+        padding-top: 18px;
+        border-top: 1px solid #e8eef3;
+    }
+    .btn-save-year {
+        background: linear-gradient(135deg, var(--btn-sky), var(--btn-sky-hover));
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 24px;
+        font-weight: 700;
+        font-size: .9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 12px rgba(74,144,226,.3);
+    }
+    .btn-save-year:hover { background: linear-gradient(135deg, var(--btn-sky-hover), var(--btn-sky-deep)); color: white; }
+</style>
+
+<div class="cy-page">
+
+    <!-- Header -->
+    <div class="cy-header">
+        <i class="fas fa-plus-circle"></i>
+        <h3>Create Year</h3>
+    </div>
+
+    <div class="cy-body">
+        <form asp-action="CreateGrade" method="post" id="createForm">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <!-- Year Name -->
+            <div class="cy-field">
+                <label asp-for="Name">Year Name</label>
+                <input asp-for="Name" placeholder="e.g. Year I, Year II..." />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <!-- Promotion Order -->
+            <div class="cy-field">
+                <label asp-for="PromotionOrder">Promotion Order</label>
+                <input asp-for="PromotionOrder" type="number" min="0" max="20" value="0" />
+                <span asp-validation-for="PromotionOrder" class="text-danger"></span>
+                <div class="cy-hint">
+                    Determines promotion order · e.g. Year I = 1, Year II = 2, Year III = 3, Year IV = 4, Year V = 5, Year VI = 6, Year VII = 7. The year with the highest number is where students graduate instead of promote.
+                </div>
+            </div>
+
+            <!-- Sections -->
+            <div class="cy-section-title">Sections</div>
+
+            <div id="sectionsContainer">
+                <div class="cy-section-row" data-index="0">
+                    <div>
+                        <label>Section 1</label>
+                        <input type="text" name="sectionNames" placeholder="Example: Section A" />
+                    </div>
+                    <div>
+                        <label>Homeroom Instructor</label>
+                        <select name="sectionInstructors">
+                            <option value="">-- Select Homeroom Instructor --</option>
+                            @if (instructors != null)
+                            {
+                                @foreach (var inst in instructors)
+                                {
+                                    <option value="@inst.Id">@inst.FirstName @inst.LastName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn-add-section" onclick="addSection()">
+                <i class="fas fa-plus"></i> Add Section
+            </button>
+
+            <!-- Actions -->
+            <div class="cy-actions">
+                <button type="submit" class="btn-save-year">
+                    <i class="fas fa-save"></i> Save
+                </button>
+                <a asp-action="ManageGrades" class="btn-back-pill">
+                    <i class="fas fa-chevron-left"></i> Back
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        var sectionCount = 1;
+        function addSection() {
+            sectionCount++;
+            var instructors = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                (ViewBag.Instructors as List<UniversityManagementSystem.Domain.Entities.Instructor>)?.Select(i => new { id = i.Id, name = i.FirstName + " " + i.LastName }).ToList() ?? new object()
+            ));
+
+            var options = '<option value="">-- Select Homeroom Instructor --</option>';
+            if (instructors) {
+                instructors.forEach(function (i) {
+                    options += '<option value="' + i.id + '">' + i.name + '</option>';
+                });
+            }
+
+            var html = '<div class="cy-section-row" data-index="' + (sectionCount - 1) + '">' +
+                '<div><label>Section ' + sectionCount + '</label>' +
+                '<input type="text" name="sectionNames" placeholder="Example: Section A" /></div>' +
+                '<div><label>Homeroom Instructor</label>' +
+                '<select name="sectionInstructors">' + options + '</select></div></div>';
+
+            document.getElementById('sectionsContainer').insertAdjacentHTML('beforeend', html);
+        }
+    </script>
+}

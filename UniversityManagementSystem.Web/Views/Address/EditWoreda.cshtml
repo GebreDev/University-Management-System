@@ -1,0 +1,29 @@
+@model Woreda
+@{
+    ViewData["Title"] = "Edit Woreda";
+}
+
+<h2><i class="fas fa-city me-2 text-warning"></i>Edit Woreda</h2>
+
+<div class="card border-0 shadow-sm mt-3">
+    <div class="card-body">
+        <form asp-action="EditWoreda" method="post">
+            <input type="hidden" asp-for="WoredaId" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="ZoneId" class="form-label">Zone</label>
+                <select asp-for="ZoneId" asp-items="ViewBag.Zones" class="form-select">
+                    <option value="">-- Select Zone --</option>
+                </select>
+                <span asp-validation-for="ZoneId" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-warning"><i class="fas fa-save me-1"></i> Save Changes</button>
+            <a asp-action="Woredas" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

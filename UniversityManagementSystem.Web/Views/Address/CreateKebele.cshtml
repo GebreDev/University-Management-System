@@ -1,0 +1,28 @@
+@model Kebele
+@{
+    ViewData["Title"] = "Create Kebele";
+}
+
+<h2><i class="fas fa-home me-2 text-danger"></i>Create Kebele</h2>
+
+<div class="card border-0 shadow-sm mt-3">
+    <div class="card-body">
+        <form asp-action="CreateKebele" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="WoredaId" class="form-label">Woreda</label>
+                <select asp-for="WoredaId" asp-items="ViewBag.Woredas" class="form-select">
+                    <option value="">-- Select Woreda --</option>
+                </select>
+                <span asp-validation-for="WoredaId" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" placeholder="Enter kebele name" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-danger"><i class="fas fa-save me-1"></i> Create</button>
+            <a asp-action="Kebeles" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

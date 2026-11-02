@@ -1,0 +1,137 @@
+@model UniversityManagementSystem.Application.DTOs.Finance.InvoiceDto
+@{
+    ViewData["Title"] = $"Invoice {Model.InvoiceNumber}";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 fw-bold mb-1"><i class="fas fa-file-invoice-dollar me-2 text-warning"></i> @Model.InvoiceNumber</h1>
+        <small class="text-muted">@Model.StudentName (@Model.StudentNumber) - @Model.SemesterName @Model.AcademicYearName</small>
+    </div>
+    <a asp-action="Invoices" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 rounded-4 mb-4">
+            <div class="card-header bg-white py-3 px-4"><h5 class="fw-bold mb-0">Charge Lines</h5></div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead><tr><th>Item</th><th class="text-end">Amount (ETB)</th></tr></thead>
+                    <tbody>
+                        @foreach (var line in Model.Lines)
+                        {
+                            <tr><td>@line.ItemName</td><td class="text-end">@line.Amount.ToString("N2")</td></tr>
+                        }
+                        @if (!Model.Lines.Any())
+                        {
+                            <tr><td colspan="2" class="text-center text-muted py-3">No charge lines (no active fee structure matched this program/year).</td></tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr class="fw-bold">
+                            <td class="px-4">Total</td>
+                            <td class="text-end px-4">@Model.TotalAmount.ToString("N2")</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-4 mb-4">
+            <div class="card-header bg-white py-3 px-4"><h5 class="fw-bold mb-0">Payments</h5></div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead><tr><th>Reference</th><th>Method</th><th>Slip</th><th class="text-end">Amount</th><th>Status</th><th>Verified</th></tr></thead>
+                    <tbody>
+                        @foreach (var p in Model.Payments)
+                        {
+                            <tr>
+                                <td class="small">@p.Reference</td>
+                                <td>@p.Method</td>
+                                <td>@(p.SlipNumber ?? "-")</td>
+                                <td class="text-end">@p.Amount.ToString("N2")</td>
+                                <td><span class="badge @(p.Status == UniversityManagementSystem.Domain.Enums.PaymentStatus.Verified ? "bg-success" : p.Status == UniversityManagementSystem.Domain.Enums.PaymentStatus.Pending ? "bg-warning text-dark" : "bg-secondary")">@p.Status</span></td>
+                                <td class="small">@(p.VerifiedAt?.ToString("MMM dd, yyyy") ?? "-")</td>
+                            </tr>
+                        }
+                        @if (!Model.Payments.Any())
+                        {
+                            <tr><td colspan="6" class="text-center text-muted py-3">No payments recorded.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-header bg-white py-3 px-4"><h5 class="fw-bold mb-0">Waivers</h5></div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead><tr><th>Reason</th><th class="text-end">Amount</th><th>Granted</th></tr></thead>
+                    <tbody>
+                        @foreach (var w in Model.Waivers)
+                        {
+                            <tr>
+                                <td>@w.Reason</td>
+                                <td class="text-end">@w.Amount.ToString("N2")</td>
+                                <td class="small">@w.GrantedAt.ToString("MMM dd, yyyy")</td>
+                            </tr>
+                        }
+                        @if (!Model.Waivers.Any())
+                        {
+                            <tr><td colspan="3" class="text-center text-muted py-3">No waivers.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 rounded-4 mb-4">
+            <div class="card-body px-4 py-4">
+                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Total</span><span class="fw-semibold">@Model.TotalAmount.ToString("N2") ETB</span></div>
+                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Paid</span><span class="fw-semibold text-success">@Model.PaidAmount.ToString("N2") ETB</span></div>
+                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Waived</span><span class="fw-semibold text-primary">@Model.WaivedAmount.ToString("N2") ETB</span></div>
+                <hr />
+                <div class="d-flex justify-content-between mb-3"><span class="fw-bold">Balance</span><span class="fw-bold fs-5 @(Model.Balance > 0 ? "text-danger" : "text-success")">@Model.Balance.ToString("N2") ETB</span></div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Status</span>
+                    <span class="badge @(Model.Status == UniversityManagementSystem.Domain.Enums.InvoiceStatus.Paid ? "bg-success" : Model.Status == UniversityManagementSystem.Domain.Enums.InvoiceStatus.PartiallyPaid ? "bg-warning text-dark" : Model.Status == UniversityManagementSystem.Domain.Enums.InvoiceStatus.Cancelled ? "bg-secondary" : "bg-danger")">@Model.Status</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Due date</span>
+                    <span>@(Model.DueDate?.ToString("MMM dd, yyyy") ?? "-")</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-4 mb-4">
+            <div class="card-header bg-white py-3 px-4"><h5 class="fw-bold mb-0">Admin Actions</h5></div>
+            <div class="card-body px-4 pb-4">
+                <form asp-action="RecordManualPayment" method="post" class="mb-3">
+                    <h6 class="fw-bold text-muted small text-uppercase">Record Manual Payment</h6>
+                    <input type="hidden" name="InvoiceId" value="@Model.Id" />
+                    <input name="Amount" type="number" step="0.01" min="0.01" max="@Model.Balance" class="form-control form-control-sm mb-2" placeholder="Amount (ETB)" required />
+                    <input name="SlipNumber" class="form-control form-control-sm mb-2" placeholder="Bank slip number" required />
+                    <input name="PayerName" class="form-control form-control-sm mb-2" placeholder="Payer name (optional)" />
+                    <button class="btn btn-sm btn-outline-primary w-100"><i class="fas fa-plus me-1"></i> Record (needs verification)</button>
+                </form>
+
+                <form asp-action="GrantWaiver" method="post" class="mb-3">
+                    <h6 class="fw-bold text-muted small text-uppercase">Grant Waiver</h6>
+                    <input type="hidden" name="invoiceId" value="@Model.Id" />
+                    <input name="amount" type="number" step="0.01" min="0.01" class="form-control form-control-sm mb-2" placeholder="Amount (ETB)" required />
+                    <input name="reason" class="form-control form-control-sm mb-2" placeholder="Reason (required)" required />
+                    <button class="btn btn-sm btn-outline-warning w-100"><i class="fas fa-hand-holding-heart me-1"></i> Grant Waiver</button>
+                </form>
+
+                <form asp-action="CancelInvoice" method="post" onsubmit="return confirm('Cancel this invoice? This cannot be undone.');">
+                    <input type="hidden" name="invoiceId" value="@Model.Id" />
+                    <button class="btn btn-sm btn-outline-danger w-100"><i class="fas fa-ban me-1"></i> Cancel Invoice</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

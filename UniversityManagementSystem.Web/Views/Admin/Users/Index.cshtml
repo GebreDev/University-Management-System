@@ -1,0 +1,91 @@
+@model PagedResult<UserListDto>
+@{
+    ViewData["Title"] = "Users";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="page-title mb-0"><i class="fas fa-users me-2 text-primary"></i>Users</h1>
+    <a asp-action="CreateUser" class="btn btn-primary"><i class="fas fa-user-plus me-1"></i> Create New</a>
+</div>
+
+<form method="get" class="row g-3 mb-3">
+    <div class="col-md-4">
+        <input type="text" name="search" class="form-control" placeholder="Search..." value="@Context.Request.Query["search"]" />
+    </div>
+    <div class="col-md-3">
+        <select name="role" class="form-select">
+            <option value="">All Roles</option>
+            <option value="Admin" selected="@(Context.Request.Query["role"] == "Admin")">Admin</option>
+            <option value="Instructor" selected="@(Context.Request.Query["role"] == "Instructor")">Instructor</option>
+            <option value="Student" selected="@(Context.Request.Query["role"] == "Student")">Student</option>
+        </select>
+    </div>
+    <div class="col-md-1">
+        <button type="submit" class="btn btn-secondary"><i class="fas fa-search"></i></button>
+    </div>
+</form>
+
+<div class="data-table-wrapper">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr><th>Full Name</th><th>Email</th><th>Role</th><th>Status</th><th style="width:160px;">Actions</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model.Data)
+                {
+                    <tr>
+                        <td><span class="fw-semibold">@user.FullName</span></td>
+                        <td><small class="text-muted">@user.Email</small></td>
+                        <td>
+                            <span class="status-indicator">
+                                <span class="circle @(user.Role.ToLower() == "admin" ? "warning" : user.Role.ToLower() == "instructor" ? "info" : "success")"></span>
+                                @user.Role
+                            </span>
+                        </td>
+                        <td>
+                            @if (user.IsActive)
+                            {
+                                <span class="status-indicator"><span class="circle success"></span>Active</span>
+                            }
+                            else
+                            {
+                                <span class="status-indicator"><span class="circle danger"></span>Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="crud-actions">
+                                <a asp-action="EditUser" asp-route-id="@user.Id" class="action-icon edit" title="Edit"><i class="fas fa-pen-to-square"></i></a>
+                                @if (user.IsActive)
+                                {
+                                    <form asp-action="DeactivateUser" method="post" class="ms-1">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <button type="submit" class="action-icon" style="color:#dc2626;" title="Deactivate" onclick="return confirm('Deactivate this user?')">
+                                            <i class="fas fa-user-slash"></i>
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form asp-action="ActivateUser" method="post" class="ms-1">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <button type="submit" class="action-icon" style="color:#16a34a;" title="Activate" onclick="return confirm('Activate this user?')">
+                                            <i class="fas fa-user-check"></i>
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="table-footer-count">
+        <span>@Model.Data.Count() user(s)</span>
+    </div>
+</div>
+
+<partial name="_Pagination" model="Model" />

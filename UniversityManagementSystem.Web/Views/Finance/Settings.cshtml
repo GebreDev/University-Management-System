@@ -1,0 +1,54 @@
+@model UniversityManagementSystem.Domain.Entities.FinanceSetting
+@{
+    ViewData["Title"] = "Finance Settings";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 fw-bold mb-1"><i class="fas fa-gear me-2 text-warning"></i> Finance Settings</h1>
+        <small class="text-muted">You control everything: registration gate, installment requirement and gateway URL.</small>
+    </div>
+    <a asp-action="Index" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-header bg-white py-3 px-4"><h5 class="fw-bold mb-0">Configuration</h5></div>
+            <div class="card-body px-4 pb-4">
+                <form asp-action="Settings" method="post">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="gateSwitch" asp-for="RegistrationGateEnabled" />
+                        <label class="form-check-label fw-semibold" for="gateSwitch">
+                            Block semester registration for unpaid self-sponsored students
+                        </label>
+                        <small class="d-block text-muted">Government-sponsored students always register freely.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Required payment before registration (%)</label>
+                        <div class="input-group">
+                            <input asp-for="FirstInstallmentPercent" type="number" step="1" min="0" max="100" class="form-control" />
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <small class="text-muted">e.g. 50 means a student must have paid or been waived at least 50% of the semester invoice before registering. 100 = full payment.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Public site base URL (for gateway callbacks)</label>
+                        <input asp-for="ChapaBaseUrl" class="form-control" placeholder="https://ums.youruniversity.edu.et" />
+                        <small class="text-muted">Used to build payment return/webhook URLs. Must be publicly reachable for online payments.</small>
+                    </div>
+
+                    <div class="alert alert-info small">
+                        <i class="fas fa-key me-1"></i>
+                        Chapa API keys are read from environment variables <code>CHAPA_SECRET_KEY</code> and <code>CHAPA_PUBLIC_KEY</code>.
+                        Set them in the server environment (never in code). Without them, online payment is disabled and students are asked to pay at the bank.
+                    </div>
+
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

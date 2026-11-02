@@ -1,0 +1,420 @@
+@using Microsoft.AspNetCore.Identity
+@using UniversityManagementSystem.Domain.Entities
+@using UniversityManagementSystem.Application.Interfaces.Services
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject IUserManagementService UserService
+
+@{
+    // --- Current page detection for active state ---
+    string _ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string _act = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    string _mod = Context.Request.Query["module"].FirstOrDefault() ?? "";
+
+    // Check if current page matches a specific controller + action(s)
+    bool IsActive(string c, params string[] actions)
+        => _ctrl.Equals(c, StringComparison.OrdinalIgnoreCase)
+        && actions.Any(a => a.Equals(_act, StringComparison.OrdinalIgnoreCase));
+
+    // Check if current page is a specific module
+    bool IsModule(string m)
+        => _ctrl.Equals("Module", StringComparison.OrdinalIgnoreCase)
+        && _mod.Equals(m, StringComparison.OrdinalIgnoreCase);
+
+    // Check if current page is on the Account controller
+    bool IsAccount(params string[] actions)
+        => _ctrl.Equals("Account", StringComparison.OrdinalIgnoreCase)
+        && actions.Any(a => a.Equals(_act, StringComparison.OrdinalIgnoreCase));
+
+    // Check if current page is on the Chat controller
+    bool IsChat()
+        => _ctrl.Equals("Chat", StringComparison.OrdinalIgnoreCase);
+
+    // Local helper to render a module link (real page served by ModuleController)
+    async Task ModuleLink(string module, string label, string icon)
+    {
+        <li class="sidebar-item">
+            <a class="sidebar-link @(IsModule(module) ? "active" : "")" asp-controller="Module" asp-action="Index" asp-route-module="@module">
+                <i class="@icon"></i> @label
+            </a>
+        </li>
+        await Task.CompletedTask;
+    }
+}
+
+<div class="sidebar-search">
+    <i class="fas fa-search sidebar-search-icon"></i>
+    <input type="search" id="sidebarSearch" class="sidebar-search-input" placeholder="Search menu..." autocomplete="off" aria-label="Search sidebar menu" />
+</div>
+
+<ul class="list-unstyled sidebar-nav" id="sidebarNav">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        var user = await UserManager.GetUserAsync(User);
+        if (user != null)
+        {
+            var roles = await UserManager.GetRolesAsync(user);
+            var role = roles.FirstOrDefault();
+
+            @if (role == "Admin")
+            {
+                <li class="sidebar-section">Main</li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Admin", "Dashboard") ? "active" : "")" asp-controller="Admin" asp-action="Dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Admin", "Departments", "CreateDepartment", "EditDepartment", "DetailsDepartment") ? "active" : "")" asp-controller="Admin" asp-action="Departments">
+                        <i class="fas fa-building"></i> Departments
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Admin", "Courses", "CreateCourse", "EditCourse", "DetailsCourse") ? "active" : "")" asp-controller="Admin" asp-action="Courses">
+                        <i class="fas fa-book-open"></i> Courses
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Admin", "Enrollments", "ApproveReject") ? "active" : "")" asp-controller="Admin" asp-action="Enrollments">
+                        <i class="fas fa-list-check"></i> Enrollments
+                    </a>
+                </li>
+
+                <li class="sidebar-section">People</li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Admin", "Students", "CreateStudent", "EditStudent", "DetailsStudent") ? "active" : "")" asp-controller="Admin" asp-action="Students">
+                        <i class="fas fa-user-graduate"></i> Students
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Admin", "Instructors", "CreateInstructor", "EditInstructor", "DetailsInstructor") ? "active" : "")" asp-controller="Admin" asp-action="Instructors">
+                        <i class="fas fa-chalkboard-user"></i> Instructors
+                    </a>
+                </li>
+                <li class="sidebar-section">Analytics</li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Admin", "Reports", "ExportReport") ? "active" : "")" asp-controller="Admin" asp-action="Reports">
+                        <i class="fas fa-chart-line"></i> Reports & Analytics
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Admin", "StudentPromotion") ? "active" : "")" asp-controller="Admin" asp-action="StudentPromotion">
+                        <i class="fas fa-arrow-up"></i> Student Promotion
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Admin", "AttendanceOverview", "AttendanceReports") ? "active" : "")" asp-controller="Admin" asp-action="AttendanceOverview">
+                        <i class="fas fa-calendar-check"></i> Attendance
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Finance", "Index", "FeeStructures", "Invoices", "InvoiceDetails", "Payments", "Students", "Settings", "Reports", "ExportInvoices", "ExportPayments") ? "active" : "")" asp-controller="Finance" asp-action="Index">
+                        <i class="fas fa-coins"></i> Finance
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Admin", "AcademicHistory") ? "active" : "")" asp-controller="Admin" asp-action="AcademicHistory">
+                        <i class="fas fa-history"></i> Academic History
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsChat() ? "active" : "")" asp-controller="Chat" asp-action="Index">
+                        <i class="far fa-envelope"></i> Messages
+                    </a>
+                </li>
+
+                <li class="sidebar-section">Global Operations</li>
+                <li class="sidebar-item sidebar-dropdown">
+                    <button type="button" class="sidebar-link sidebar-dropdown-toggle" aria-expanded="false" aria-controls="globalOperationsMenu">
+                        <i class="fas fa-globe"></i>
+                        <span>Global Operations</span>
+                        <i class="fas fa-angle-right sidebar-caret"></i>
+                    </button>
+                    <ul class="sidebar-submenu" id="globalOperationsMenu">
+                        <li class="sidebar-item">
+                            <a class="sidebar-link @(IsActive("Admin", "AuditLogs", "AuditLogDetails") ? "active" : "")" asp-controller="Admin" asp-action="AuditLogs">
+                                <i class="fas fa-clipboard-list"></i> Audit Logs
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="sidebar-item sidebar-dropdown">
+                    <button type="button" class="sidebar-link sidebar-dropdown-toggle" aria-expanded="false" aria-controls="adminSettingsMenu">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                        <i class="fas fa-angle-right sidebar-caret"></i>
+                    </button>
+                    <ul class="sidebar-submenu" id="adminSettingsMenu">
+                        <li class="sidebar-item sidebar-dropdown sidebar-nested">
+                            <button type="button" class="sidebar-link sidebar-dropdown-toggle" aria-expanded="false" aria-controls="adminUserManagementMenu">
+                                <i class="fas fa-users-gear"></i>
+                                <span>User Management</span>
+                                <i class="fas fa-angle-right sidebar-caret"></i>
+                            </button>
+                            <ul class="sidebar-submenu" id="adminUserManagementMenu">
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(IsActive("Users", "Index", "Create", "Edit", "Delete", "ResetPassword") ? "active" : "")" asp-controller="Users" asp-action="Index">
+                                        <i class="fas fa-users"></i> Manage Users
+                                    </a>
+                                </li>
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(IsActive("Roles", "Index", "Create") ? "active" : "")" asp-controller="Roles" asp-action="Index">
+                                        <i class="fas fa-shield-halved"></i> Manage Roles
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="sidebar-item sidebar-dropdown sidebar-nested">
+                            <button type="button" class="sidebar-link sidebar-dropdown-toggle" aria-expanded="false" aria-controls="adminScheduleMenu">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Schedule</span>
+                                <i class="fas fa-angle-right sidebar-caret"></i>
+                            </button>
+                            <ul class="sidebar-submenu" id="adminScheduleMenu">
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(IsActive("Timetable", "ShowTimetable") ? "active" : "")" asp-controller="Timetable" asp-action="ShowTimetable">
+                                        <i class="fas fa-calendar-week"></i> Show Timetable
+                                    </a>
+                                </li>
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(IsActive("Timetable", "CreateTimetable", "EditEntry") ? "active" : "")" asp-controller="Timetable" asp-action="CreateTimetable">
+                                        <i class="fas fa-table"></i> Create Timetable
+                                    </a>
+                                </li>
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(IsActive("Timetable", "Periods", "CreatePeriod", "EditPeriod") ? "active" : "")" asp-controller="Timetable" asp-action="Periods">
+                                        <i class="fas fa-clock"></i> Periods
+                                    </a>
+                                </li>
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(IsActive("Timetable", "TimetableSettings") ? "active" : "")" asp-controller="Timetable" asp-action="TimetableSettings">
+                                        <i class="fas fa-cog"></i> Timetable Settings
+                                    </a>
+                                </li>
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(IsActive("Timetable", "ManageYears", "CreateAcademicYear") ? "active" : "")" asp-controller="Timetable" asp-action="ManageYears">
+                                        <i class="fas fa-calendar-check"></i> Academic Years
+                                    </a>
+                                </li>
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(IsActive("Timetable", "ManageGrades", "CreateGrade", "ManageSections") ? "active" : "")" asp-controller="Timetable" asp-action="ManageGrades">
+                                        <i class="fas fa-layer-group"></i> Years
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <li class="sidebar-item sidebar-dropdown sidebar-nested">
+                            <button type="button" class="sidebar-link sidebar-dropdown-toggle" aria-expanded="false" aria-controls="adminAddressMenu">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>Address Management</span>
+                                <i class="fas fa-angle-right sidebar-caret"></i>
+                            </button>
+                            <ul class="sidebar-submenu" id="adminAddressMenu">
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(IsActive("Address", "Index", "Regions", "CreateRegion", "EditRegion", "DeleteRegion", "RegionDetails") ? "active" : "")" asp-controller="Address" asp-action="Index">
+                                        <i class="fas fa-map-marker-alt"></i> Overview
+                                    </a>
+                                </li>
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(IsActive("Address", "Regions", "CreateRegion", "EditRegion", "DeleteRegion", "RegionDetails") ? "active" : "")" asp-controller="Address" asp-action="Regions">
+                                        <i class="fas fa-globe-africa"></i> Regions
+                                    </a>
+                                </li>
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(IsActive("Address", "Zones", "CreateZone", "EditZone", "DeleteZone", "ZoneDetails") ? "active" : "")" asp-controller="Address" asp-action="Zones">
+                                        <i class="fas fa-map"></i> Zones
+                                    </a>
+                                </li>
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(IsActive("Address", "Woredas", "CreateWoreda", "EditWoreda", "DeleteWoreda", "WoredaDetails") ? "active" : "")" asp-controller="Address" asp-action="Woredas">
+                                        <i class="fas fa-city"></i> Woredas
+                                    </a>
+                                </li>
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link @(IsActive("Address", "Kebeles", "CreateKebele", "EditKebele", "DeleteKebele") ? "active" : "")" asp-controller="Address" asp-action="Kebeles">
+                                        <i class="fas fa-home"></i> Kebeles
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <li class="sidebar-item">
+                            <a class="sidebar-link @(IsAccount("Profile") ? "active" : "")" asp-controller="Account" asp-action="Profile">
+                                <i class="fas fa-user-circle"></i> My Profile
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            }
+            else if (role == "Instructor")
+            {
+                <li class="sidebar-section">Main</li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Instructor", "Dashboard") ? "active" : "")" asp-controller="Instructor" asp-action="Dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+
+                <li class="sidebar-section">Teaching</li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Instructor", "MyAssignments") ? "active" : "")" asp-controller="Instructor" asp-action="MyAssignments">
+                        <i class="fas fa-chalkboard-teacher"></i> My Assignments
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Instructor", "Courses", "Students", "MyStudents") ? "active" : "")" asp-controller="Instructor" asp-action="Courses">
+                        <i class="fas fa-book-open"></i> My Courses
+                    </a>
+                </li>
+
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("CourseMaterial", "Index", "Upload", "Edit", "Details") ? "active" : "")" asp-controller="CourseMaterial" asp-action="Index">
+                        <i class="fas fa-folder-open"></i> Course Materials
+                    </a>
+                </li>
+
+                <li class="sidebar-section">Tools</li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsChat() ? "active" : "")" asp-controller="Chat" asp-action="Index">
+                        <i class="far fa-envelope"></i> Messages
+                    </a>
+                </li>
+                await ModuleLink("announcements", "Announcements", "fas fa-bullhorn");
+
+                <li class="sidebar-item sidebar-dropdown">
+                    <button type="button" class="sidebar-link sidebar-dropdown-toggle" aria-expanded="false" aria-controls="instructorSettingsMenu">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                        <i class="fas fa-angle-right sidebar-caret"></i>
+                    </button>
+                    <ul class="sidebar-submenu" id="instructorSettingsMenu">
+                        <li class="sidebar-item">
+                            <a class="sidebar-link @(IsActive("Instructor", "Profile") ? "active" : "")" asp-controller="Instructor" asp-action="Profile">
+                                <i class="fas fa-user-circle"></i> My Profile
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link @(IsActive("Instructor", "InstructorTimetable") ? "active" : "")" asp-controller="Instructor" asp-action="InstructorTimetable">
+                                <i class="fas fa-calendar-week"></i> Timetable
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link @(IsAccount("ChangePassword") ? "active" : "")" asp-controller="Account" asp-action="ChangePassword">
+                                <i class="fas fa-key"></i> Password & Security
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            }
+            else if (role == "Student")
+            {
+                <li class="sidebar-section">Main</li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Student", "Dashboard") ? "active" : "")" asp-controller="Student" asp-action="Dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+
+                <li class="sidebar-section">Academic</li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Student", "MyCourses") ? "active" : "")" asp-controller="Student" asp-action="MyCourses">
+                        <i class="fas fa-book-open"></i> My Courses
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Registration", "Index", "ChooseSemester", "Register", "MyRegistrations") ? "active" : "")" asp-controller="Registration" asp-action="Index">
+                        <i class="fas fa-file-signature"></i> Register Courses
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Student", "MyAssignments", "SubmitAssignment", "AnswerAssignment", "AssignmentResult") ? "active" : "")" asp-controller="Student" asp-action="MyAssignments">
+                        <i class="fas fa-tasks"></i> Assignments
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Student", "MyExams", "TakeExam", "ExamResult") ? "active" : "")" asp-controller="Student" asp-action="MyExams">
+                        <i class="fas fa-file-alt"></i> Examinations
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Student", "MyGrades") ? "active" : "")" asp-controller="Student" asp-action="MyGrades">
+                        <i class="fas fa-star"></i> Grades &amp; Results
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("Student", "MyAttendance") ? "active" : "")" asp-controller="Student" asp-action="MyAttendance">
+                        <i class="fas fa-calendar-check"></i> Attendance
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("CourseMaterial", "MyMaterials") ? "active" : "")" asp-controller="CourseMaterial" asp-action="MyMaterials">
+                        <i class="fas fa-folder-open"></i> My Course Materials
+                    </a>
+                </li>
+
+                <li class="sidebar-section">Finance</li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsActive("StudentFinance", "MyFinance", "Receipt") ? "active" : "")" asp-controller="StudentFinance" asp-action="MyFinance">
+                        <i class="fas fa-wallet"></i> My Finance
+                    </a>
+                </li>
+
+                <li class="sidebar-section">Community</li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(IsChat() ? "active" : "")" asp-controller="Chat" asp-action="Index">
+                        <i class="far fa-envelope"></i> Messages
+                    </a>
+                </li>
+                await ModuleLink("announcements", "Announcements", "fas fa-bullhorn");
+
+                <li class="sidebar-item sidebar-dropdown">
+                    <button type="button" class="sidebar-link sidebar-dropdown-toggle" aria-expanded="false" aria-controls="studentSettingsMenu">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                        <i class="fas fa-angle-right sidebar-caret"></i>
+                    </button>
+                    <ul class="sidebar-submenu" id="studentSettingsMenu">
+                        <li class="sidebar-item">
+                            <a class="sidebar-link @(IsActive("Student", "Profile") ? "active" : "")" asp-controller="Student" asp-action="Profile">
+                                <i class="fas fa-user-circle"></i> My Profile
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link @(IsActive("Student", "StudentTimetable") ? "active" : "")" asp-controller="Student" asp-action="StudentTimetable">
+                                <i class="fas fa-calendar-week"></i> Timetable
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link @(IsAccount("ChangePassword") ? "active" : "")" asp-controller="Account" asp-action="ChangePassword">
+                                <i class="fas fa-key"></i> Password & Security
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            }
+        }
+    }
+    else
+    {
+        <li class="sidebar-section">Account</li>
+        <li class="sidebar-item">
+            <a class="sidebar-link @(IsAccount("Login") ? "active" : "")" asp-controller="Account" asp-action="Login">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </a>
+        </li>
+        <li class="sidebar-item">
+            <a class="sidebar-link @(IsAccount("Register") ? "active" : "")" asp-controller="Account" asp-action="Register">
+                <i class="fas fa-user-plus"></i> Register
+            </a>
+        </li>
+    }
+
+    <li class="sidebar-item d-none" id="sidebarNoResults">
+        <span class="sidebar-link disabled" style="cursor:default;">
+            <i class="fas fa-search-minus"></i> No matching items
+        </span>
+    </li>
+</ul>

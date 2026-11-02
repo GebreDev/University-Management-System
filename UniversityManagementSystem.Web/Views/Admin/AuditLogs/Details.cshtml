@@ -1,0 +1,48 @@
+@model AuditLogDto
+@{
+    ViewData["Title"] = "Audit Log Details";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-info-circle me-2 text-secondary"></i> Audit Log Details</h1>
+    <a asp-action="AuditLogs" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 bg-secondary text-white">
+        <h6 class="m-0 font-weight-bold">Log Entry #@Model.Id</h6>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Timestamp</dt>
+            <dd class="col-sm-9">@Model.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+
+            <dt class="col-sm-3">User</dt>
+            <dd class="col-sm-9">@Model.UserName</dd>
+
+            <dt class="col-sm-3">User ID</dt>
+            <dd class="col-sm-9"><code>@Model.UserId</code></dd>
+
+            <dt class="col-sm-3">Role</dt>
+            <dd class="col-sm-9"><span class="badge bg-info">@Model.UserRole</span></dd>
+
+            <dt class="col-sm-3">Action</dt>
+            <dd class="col-sm-9">@Model.Action</dd>
+
+            <dt class="col-sm-3">Entity</dt>
+            <dd class="col-sm-9">@Model.Entity</dd>
+
+            <dt class="col-sm-3">Entity ID</dt>
+            <dd class="col-sm-9">@(Model.EntityId?.ToString() ?? "-")</dd>
+
+            <dt class="col-sm-3">IP Address</dt>
+            <dd class="col-sm-9"><code>@Model.IpAddress</code></dd>
+
+            <dt class="col-sm-3">Device Info</dt>
+            <dd class="col-sm-9"><small class="text-muted">@Model.DeviceInfo</small></dd>
+
+            <dt class="col-sm-3">Details</dt>
+            <dd class="col-sm-9"><pre class="mb-0 border p-2 bg-light">@Model.Details</pre></dd>
+        </dl>
+    </div>
+</div>

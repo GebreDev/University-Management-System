@@ -1,0 +1,91 @@
+@model IEnumerable<UniversityManagementSystem.Application.DTOs.Finance.InvoiceDto>
+@{
+    ViewData["Title"] = "Invoices";
+    var semesters = ViewBag.Semesters as SelectList;
+    var status = (UniversityManagementSystem.Domain.Enums.InvoiceStatus?)ViewBag.Status;
+    var search = (string?)ViewBag.Search;
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 fw-bold mb-1"><i class="fas fa-file-invoice me-2 text-warning"></i> Invoices</h1>
+        <small class="text-muted">Generated automatically at semester registration, or manually per student.</small>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="ExportInvoices" asp-route-format="excel" asp-route-semesterId="@ViewBag.SelectedSemesterId" asp-route-status="@status" class="btn btn-outline-success"><i class="fas fa-file-excel me-1"></i> Excel</a>
+        <a asp-action="ExportInvoices" asp-route-format="pdf" asp-route-semesterId="@ViewBag.SelectedSemesterId" asp-route-status="@status" class="btn btn-outline-danger"><i class="fas fa-file-pdf me-1"></i> PDF</a>
+        <a asp-action="Index" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-body px-4 py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">Semester</label>
+                <select name="semesterId" class="form-select form-select-sm" asp-items="semesters"><option value="">All semesters</option></select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">Status</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    <option value="Unpaid" selected="@(status == UniversityManagementSystem.Domain.Enums.InvoiceStatus.Unpaid)">Unpaid</option>
+                    <option value="PartiallyPaid" selected="@(status == UniversityManagementSystem.Domain.Enums.InvoiceStatus.PartiallyPaid)">Partially Paid</option>
+                    <option value="Paid" selected="@(status == UniversityManagementSystem.Domain.Enums.InvoiceStatus.Paid)">Paid</option>
+                    <option value="Cancelled" selected="@(status == UniversityManagementSystem.Domain.Enums.InvoiceStatus.Cancelled)">Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">Search</label>
+                <input name="search" class="form-control form-control-sm" value="@search" placeholder="Invoice no, student name or ID" />
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-sm btn-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Number</th><th>Student</th><th>Semester</th><th>Category</th>
+                        <th class="text-end">Total</th><th class="text-end">Paid</th>
+                        <th class="text-end">Waived</th><th class="text-end">Balance</th>
+                        <th>Status</th><th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var inv in Model)
+                    {
+                        <tr>
+                            <td><a asp-action="InvoiceDetails" asp-route-id="@inv.Id" class="fw-semibold">@inv.InvoiceNumber</a></td>
+                            <td>@inv.StudentName <small class="text-muted d-block">@inv.StudentNumber</small></td>
+                            <td>@inv.SemesterName</td>
+                            <td><span class="badge @(inv.PaymentCategory == UniversityManagementSystem.Domain.Enums.PaymentCategory.GovernmentSponsored ? "bg-success" : "bg-primary")">@(inv.PaymentCategory == UniversityManagementSystem.Domain.Enums.PaymentCategory.GovernmentSponsored ? "Gov." : "Self")</span></td>
+                            <td class="text-end">@inv.TotalAmount.ToString("N2")</td>
+                            <td class="text-end text-success">@inv.PaidAmount.ToString("N2")</td>
+                            <td class="text-end text-primary">@inv.WaivedAmount.ToString("N2")</td>
+                            <td class="text-end fw-bold @(inv.Balance > 0 ? "text-danger" : "")">@inv.Balance.ToString("N2")</td>
+                            <td>
+                                <span class="badge @(inv.Status == UniversityManagementSystem.Domain.Enums.InvoiceStatus.Paid ? "bg-success" : inv.Status == UniversityManagementSystem.Domain.Enums.InvoiceStatus.PartiallyPaid ? "bg-warning text-dark" : inv.Status == UniversityManagementSystem.Domain.Enums.InvoiceStatus.Cancelled ? "bg-secondary" : "bg-danger")">
+                                    @inv.Status
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <a asp-action="InvoiceDetails" asp-route-id="@inv.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr><td colspan="10" class="text-center text-muted py-4">No invoices match the filters.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

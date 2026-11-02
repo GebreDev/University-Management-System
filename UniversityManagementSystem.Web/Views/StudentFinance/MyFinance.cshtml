@@ -1,0 +1,271 @@
+@model UniversityManagementSystem.Application.DTOs.Finance.StudentFinanceDto
+@using UniversityManagementSystem.Domain.Enums
+@{
+    ViewData["Title"] = "My Finance";
+
+    var clearance = ViewBag.Clearance as UniversityManagementSystem.Application.DTOs.Finance.FinanceClearanceResult;
+    var gateEnabled = (bool)ViewBag.GateEnabled;
+
+    var isGov = Model.PaymentCategory == PaymentCategory.GovernmentSponsored;
+    var balance = Model.Balance;
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 fw-bold mb-1"><i class="fas fa-wallet me-2 text-warning"></i> My Finance</h1>
+        <small class="text-muted">@Model.StudentName &middot; @Model.StudentNumber &nbsp;
+            @if (isGov)
+            {
+                <span class="badge bg-success"><i class="fas fa-shield-halved me-1"></i> Government Sponsored</span>
+            }
+            else
+            {
+                <span class="badge bg-primary"><i class="fas fa-user me-1"></i> Self Sponsored</span>
+            }
+        </small>
+    </div>
+    <a asp-controller="Student" asp-action="Dashboard" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>
+</div>
+
+@* TempData alerts are rendered globally by _Layout. Here we only show the
+   finance-specific clearance banner. *@
+
+@if (clearance != null && !clearance.IsCleared)
+{
+    <div class="alert alert-warning d-flex align-items-start shadow-sm rounded-3 border-0">
+        <i class="fas fa-triangle-exclamation fa-lg me-3 mt-1"></i>
+        <div>
+            <strong>Finance hold on your registration.</strong><br />
+            @clearance.Message
+            <div class="small text-muted mt-1">
+                Pay online below, or bring your payment to the finance office. If you already paid, your payment may still be awaiting verification.
+            </div>
+        </div>
+    </div>
+}
+else if (clearance != null && gateEnabled)
+{
+    <div class="alert alert-success d-flex align-items-start shadow-sm rounded-3 border-0 py-2">
+        <i class="fas fa-circle-check fa-lg me-3"></i>
+        <div>@clearance.Message</div>
+    </div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body">
+                <small class="text-muted">Total Billed</small>
+                <h4 class="fw-bold mb-0">@Model.TotalCharges.ToString("N2") <span class="fs-6 text-muted">ETB</span></h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body">
+                <small class="text-muted">Total Paid</small>
+                <h4 class="fw-bold mb-0 text-success">@Model.TotalPaid.ToString("N2") <span class="fs-6 text-muted">ETB</span></h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body">
+                <small class="text-muted">Waived / Covered</small>
+                <h4 class="fw-bold mb-0 text-primary">@Model.TotalWaived.ToString("N2") <span class="fs-6 text-muted">ETB</span></h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card shadow-sm border-0 rounded-4 h-100 border-start border-4 @(balance > 0 ? "border-danger" : "border-success")">
+            <div class="card-body">
+                <small class="text-muted">Outstanding Balance</small>
+                <h4 class="fw-bold mb-0 @(balance > 0 ? "text-danger" : "text-success")">@balance.ToString("N2") <span class="fs-6 text-muted">ETB</span></h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!Model.Invoices.Any())
+{
+    <div class="alert alert-info shadow-sm rounded-3">
+        <i class="fas fa-info-circle me-2"></i>
+        No invoices have been issued to you yet. Your semester invoice is generated automatically when the finance office assesses fees, or when you complete semester registration.
+    </div>
+}
+
+@foreach (var inv in Model.Invoices)
+{
+    var canPay = inv.Status != InvoiceStatus.Cancelled && inv.Balance > 0 && !isGov;
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-file-invoice me-2 text-muted"></i>@inv.InvoiceNumber
+                    <span class="badge @(inv.Status == InvoiceStatus.Paid ? "bg-success" : inv.Status == InvoiceStatus.PartiallyPaid ? "bg-warning text-dark" : inv.Status == InvoiceStatus.Cancelled ? "bg-secondary" : "bg-danger") ms-2">
+                        @inv.Status
+                    </span>
+                </h5>
+                <small class="text-muted">@inv.SemesterName@(string.IsNullOrEmpty(inv.AcademicYearName) ? "" : " - " + inv.AcademicYearName)
+                    @if (inv.DueDate.HasValue)
+                    {
+                        <span>&middot; Due @inv.DueDate.Value.ToString("MMM dd, yyyy")</span>
+                    }
+                </small>
+            </div>
+            <div class="d-flex gap-2 align-items-center">
+                @if (canPay)
+                {
+                    @* A pending online payment for this invoice means a checkout was
+                       started but not finished - offer to resume it. *@
+                    var pendingOnline = inv.Payments.FirstOrDefault(p =>
+                        p.Status == PaymentStatus.Pending && p.Method == PaymentMethod.Chapa);
+
+                    if (pendingOnline != null)
+                    {
+                        <form asp-controller="StudentFinance" asp-action="PayNow" method="post" class="d-inline">
+                            <input type="hidden" name="invoiceId" value="@inv.Id" />
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-clock-rotate-left me-1"></i> Resume Payment (@inv.Balance.ToString("N2") ETB)
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-controller="StudentFinance" asp-action="PayNow" method="post" class="d-inline">
+                            <input type="hidden" name="invoiceId" value="@inv.Id" />
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-credit-card me-1"></i> Pay Now (@inv.Balance.ToString("N2") ETB)
+                            </button>
+                        </form>
+                    }
+                }
+                <a asp-controller="StudentFinance" asp-action="Receipt" asp-route-invoiceId="@inv.Id" class="btn btn-outline-primary">
+                    <i class="fas fa-print me-1"></i> Receipt
+                </a>
+            </div>
+        </div>
+        <div class="card-body px-4 pb-4">
+            <div class="row g-4">
+                <div class="col-lg-5">
+                    <h6 class="text-muted text-uppercase small fw-bold">Fee Breakdown</h6>
+                    <table class="table table-sm align-middle mb-2">
+                        <tbody>
+                            @foreach (var line in inv.Lines)
+                            {
+                                <tr>
+                                    <td>@line.ItemName</td>
+                                    <td class="text-end">@line.Amount.ToString("N2")</td>
+                                </tr>
+                            }
+                            @if (!inv.Lines.Any())
+                            {
+                                <tr><td class="text-muted">No fee lines.</td><td></td></tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="fw-bold border-top">
+                                <td>Total</td>
+                                <td class="text-end">@inv.TotalAmount.ToString("N2")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div class="col-lg-7">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted text-uppercase small fw-bold">Payments</h6>
+                            @if (inv.Payments.Any(p => p.Status == PaymentStatus.Verified || p.Status == PaymentStatus.Pending))
+                            {
+                                <ul class="list-group list-group-flush">
+                                    @foreach (var p in inv.Payments.Where(p => p.Status == PaymentStatus.Verified || p.Status == PaymentStatus.Pending).OrderByDescending(p => p.CreatedAt))
+                                    {
+                                        <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="fw-semibold">@p.Amount.ToString("N2") ETB</span>
+                                                <small class="text-muted d-block">
+                                                    @(p.Method == PaymentMethod.Chapa ? "Online" : "Bank") &middot; @p.CreatedAt.ToString("MMM dd, yyyy")
+                                                    @if (!string.IsNullOrEmpty(p.Reference))
+                                                    {
+                                                        <span>&middot; Ref @p.Reference</span>
+                                                    }
+                                                </small>
+                                            </div>
+                                            <span class="badge @(p.Status == PaymentStatus.Verified ? "bg-success" : "bg-warning text-dark")">@p.Status</span>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p class="text-muted small mb-0">No payments recorded yet.</p>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted text-uppercase small fw-bold">Waivers / Sponsorship</h6>
+                            @if (inv.Waivers.Any())
+                            {
+                                <ul class="list-group list-group-flush">
+                                    @foreach (var w in inv.Waivers)
+                                    {
+                                        <li class="list-group-item px-0 py-2">
+                                            <span class="fw-semibold text-primary">-@w.Amount.ToString("N2") ETB</span>
+                                            <small class="text-muted d-block">@w.Reason</small>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p class="text-muted small mb-0">No waivers applied.</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-header bg-white py-3 px-4">
+        <h5 class="fw-bold mb-0"><i class="fas fa-list-ul me-2 text-muted"></i> Account Statement</h5>
+        <small class="text-muted">Every charge, payment and waiver ever posted to your account - newest first.</small>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr><th>Date</th><th>Type</th><th>Description</th><th class="text-end">Amount (ETB)</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var e in Model.Ledger.OrderByDescending(e => e.CreatedAt))
+                    {
+                        <tr>
+                            <td class="text-muted">@e.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                <span class="badge @(e.EntryType == "Payment" ? "bg-success" : e.EntryType == "Waiver" ? "bg-primary" : e.EntryType == "Charge" ? "bg-danger" : "bg-secondary")">
+                                    @e.EntryType
+                                </span>
+                            </td>
+                            <td>@e.Description <small class="text-muted">@(string.IsNullOrEmpty(e.InvoiceNumber) ? "" : "(" + e.InvoiceNumber + ")")</small></td>
+                            <td class="text-end fw-semibold @(e.Amount < 0 ? "text-success" : "")">@e.Amount.ToString("N2")</td>
+                        </tr>
+                    }
+                    @if (!Model.Ledger.Any())
+                    {
+                        <tr><td colspan="4" class="text-center text-muted py-4">No transactions yet.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@if (isGov)
+{
+    <div class="alert alert-info shadow-sm rounded-3">
+        <i class="fas fa-shield-halved me-2"></i>
+        Your tuition is covered by government sponsorship. Some service fees (if any) are listed on your invoice; the finance office can answer any questions about your coverage.
+    </div>
+}

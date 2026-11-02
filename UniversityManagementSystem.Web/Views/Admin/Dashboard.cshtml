@@ -1,0 +1,273 @@
+@model AdminDashboardDto
+@using UniversityManagementSystem.Application.DTOs.Dashboard
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    var distJson = JsonSerializer.Serialize(Model.StudentDistribution, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+}
+<div class="dash-page">
+    <!-- Header: greeting hero banner -->
+    <div class="dash-hero">
+        <div>
+            <p class="dash-hero-eyebrow">@Model.Greeting · Manage your school from one place</p>
+            <h1 class="dash-hero-title">Welcome back, @Model.AdminName <span class="dash-hero-wave">👋</span></h1>
+            <p class="dash-hero-subtitle">@Model.Subtitle</p>
+        </div>
+        <div class="dash-hero-date">
+            <strong>@Model.Today.ToString("dddd")</strong>
+            <span>@Model.Today.ToString("MMMM dd, yyyy")</span>
+        </div>
+    </div>
+
+    <!-- Top metric cards -->
+    <div class="row g-3 mb-4">
+        @foreach (var m in Model.Metrics)
+        {
+            var trendClass = m.Trend == "—" ? "neutral" : (m.TrendPositive ? "positive" : "negative");
+            <div class="col-xl-3 col-md-6">
+                <div class="metric-card" data-search="@m.Label @m.Value @m.SubLabel @m.Trend">
+                    <div class="metric-icon @m.GradientClass"><i class="@m.Icon"></i></div>
+                    <div class="metric-body">
+                        <span class="metric-label">@m.Label</span>
+                        <span class="metric-value">@m.Value</span>
+                        <div class="metric-footer">
+                            <span class="trend-pill @trendClass">@m.Trend</span>
+                            <span class="metric-sub">@m.SubLabel</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Enrollment Overview + Student Distribution -->
+    <div class="row g-3 mb-3">
+        <div class="col-lg-7">
+            <div class="chart-card" data-search="Enrollment Overview Enrollment this semester last semester">
+                <div class="chart-card-header">
+                    <div>
+                        <h6>Enrollment Overview</h6>
+                        <span class="chart-sub">New enrollments by month</span>
+                    </div>
+                    <div class="chart-legend">
+                        <span><span class="legend-dot" style="background:#2c6fbf"></span>This Semester</span>
+                        <span><span class="legend-dot" style="background:#c8d8ea"></span>Last Semester</span>
+                    </div>
+                </div>
+                <div class="chart-body"><canvas id="enrollChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="chart-card" data-search="Student Distribution by department">
+                <div class="chart-card-header">
+                    <h6>Student Distribution</h6>
+                    <span class="chart-sub">By department</span>
+                </div>
+                <div class="chart-body"><canvas id="distributionChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <a href="@Url.Action("StudentPromotion", "Admin")" class="quick-action-card text-decoration-none" data-search="Student Promotion Promote students Year promotion">
+                <div class="quick-action-icon bg-warning bg-opacity-10 text-warning">
+                    <i class="fas fa-arrow-up fa-2x"></i>
+                </div>
+                <div class="quick-action-body">
+                    <h6 class="mb-0 fs-6 fw-bold">Student Promotion</h6>
+                    <small class="text-muted">Promote students to the next year</small>
+                </div>
+                <i class="fas fa-chevron-right quick-action-arrow text-muted"></i>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a asp-controller="Registration" asp-action="AdminIndex" class="quick-action-card text-decoration-none" data-search="Course registration review pending">
+                <div class="quick-action-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="fas fa-clipboard-check fa-2x"></i>
+                </div>
+                <div class="quick-action-body">
+                    <h6 class="mb-0 fs-6 fw-bold">Course Registrations</h6>
+                    <small class="text-muted">@Model.PendingCourseRegistrations pending review</small>
+                </div>
+                <i class="fas fa-chevron-right quick-action-arrow text-muted"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Activities + Upcoming Events -->
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="list-card" data-search="Recent Activities @string.Join(" ", Model.RecentActivities.Select(a => a.Title + " " + a.Detail))">
+                <div class="list-card-header">
+                    <h6>Recent Activities</h6>
+                    <a class="dash-link" asp-controller="Admin" asp-action="AuditLogs">View all activities <i class="fas fa-arrow-right ms-1"></i></a>
+                </div>
+                @if (Model.RecentActivities.Any())
+                {
+                    @foreach (var a in Model.RecentActivities)
+                    {
+                        <div class="activity-item">
+                            <div class="activity-icon icon-bg-@a.Color"><i class="@a.Icon"></i></div>
+                            <div class="activity-body">
+                                <span class="activity-title">@a.Title</span>
+                                <div class="activity-detail">@a.Detail</div>
+                            </div>
+                            <span class="activity-time">@a.TimeAgo</span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="dash-empty"><i class="fas fa-inbox"></i><p>No recent activity yet.</p></div>
+                }
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="list-card" data-search="Upcoming Events @string.Join(" ", Model.UpcomingEvents.Select(e => e.Title))">
+                <div class="list-card-header">
+                    <h6>Upcoming Events</h6>
+                    <a class="dash-link" asp-controller="Admin" asp-action="Dashboard">View calendar <i class="fas fa-arrow-right ms-1"></i></a>
+                </div>
+                @if (Model.UpcomingEvents.Any())
+                {
+                    @foreach (var e in Model.UpcomingEvents)
+                    {
+                        <div class="event-item">
+                            <div class="event-date @e.ColorClass">
+                                <span class="event-day">@e.Day</span>
+                                <span class="event-month">@e.Month</span>
+                            </div>
+                            <div class="event-info-text">
+                                <strong>@e.Title</strong>
+                                <small>@e.Meta</small>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="dash-empty"><i class="fas fa-calendar"></i><p>No upcoming events.</p></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+<style>
+    .quick-action-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        border-radius: 10px;
+        background: #fff;
+        border: 1px solid #e9ecef;
+        transition: all 0.2s;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .quick-action-card:hover {
+        border-color: #f0c000;
+        box-shadow: 0 4px 16px rgba(240, 192, 0, 0.15);
+        transform: translateX(4px);
+    }
+
+    .quick-action-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .quick-action-body {
+        flex: 1;
+    }
+
+    .quick-action-body h6 {
+        color: #212529;
+        margin-bottom: 0.15rem;
+    }
+
+    .quick-action-arrow {
+        font-size: 0.85rem;
+        transition: transform 0.2s;
+    }
+
+    .quick-action-card:hover .quick-action-arrow {
+        transform: translateX(4px);
+    }
+
+    .bg-warning.bg-opacity-10 {
+        background-color: rgba(253, 126, 20, 0.1) !important;
+    }
+</style>
+}
+
+@section Scripts {
+<script>
+(function () {
+    if (typeof Chart === 'undefined') return;
+
+    var months = @Html.Raw(JsonSerializer.Serialize(Model.Months));
+    var thisSem = @Html.Raw(JsonSerializer.Serialize(Model.ThisSemesterEnrollments));
+    var lastSem = @Html.Raw(JsonSerializer.Serialize(Model.LastSemesterEnrollments));
+    var dist = @Html.Raw(distJson);
+
+    Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
+    Chart.defaults.color = '#64748b';
+
+    var barOpts = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0f2740' } },
+        scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true, grid: { color: '#eef2f6' }, ticks: { precision: 0 } }
+        }
+    };
+
+    var el = document.getElementById('enrollChart');
+    if (el) {
+        new Chart(el, {
+            type: 'bar',
+            data: {
+                labels: months,
+                datasets: [
+                    { label: 'This Semester', data: thisSem, backgroundColor: '#2c6fbf', borderRadius: 6, maxBarThickness: 22 },
+                    { label: 'Last Semester', data: lastSem, backgroundColor: '#c8d8ea', borderRadius: 6, maxBarThickness: 22 }
+                ]
+            },
+            options: barOpts
+        });
+    }
+
+    var el2 = document.getElementById('distributionChart');
+    if (el2) {
+        new Chart(el2, {
+            type: 'doughnut',
+            data: {
+                labels: dist.map(function (d) { return d.label; }),
+                datasets: [{ data: dist.map(function (d) { return d.value; }), backgroundColor: dist.map(function (d) { return d.color; }), borderWidth: 3, borderColor: '#fff' }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '68%',
+                plugins: {
+                    legend: { position: 'right', labels: { boxWidth: 10, padding: 12, font: { size: 11 } } },
+                    tooltip: { backgroundColor: '#0f2740' }
+                }
+            }
+        });
+    }
+
+
+})();
+</script>
+}

@@ -1,0 +1,147 @@
+@model IEnumerable<AssignmentDto>
+@{
+    ViewData["Title"] = "Manage Assignments";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h2 class="fw-bold"><i class="fas fa-tasks me-2"></i> Manage Assignments</h2>
+    <a asp-action="CreateAssignment" class="btn btn-success"><i class="fas fa-plus me-1"></i> Create New</a>
+</div>
+
+<!-- Search -->
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="input-group">
+            <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+            <input type="text" id="searchInput" class="form-control" placeholder="Search by title, course, or deadline..." />
+        </div>
+    </div>
+    <div class="col-md-2">
+        <select id="statusFilter" class="form-select">
+            <option value="all">All Status</option>
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
+            <option value="late">Late OK</option>
+        </select>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info shadow-sm rounded-3">
+        <i class="fas fa-info-circle me-2"></i> No assignments found. Create your first assignment!
+    </div>
+}
+else
+{
+    <div class="data-table-wrapper">
+        <div class="table-responsive">
+            <table class="table" id="assignmentsTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Course</th>
+                        <th>Deadline</th>
+                        <th>Marks</th>
+                        <th>Submissions</th>
+                        <th>Status</th>
+                        <th style="width:280px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <span class="fw-semibold">@item.Title</span>
+                                @if (DateTime.UtcNow > item.Deadline)
+                                {
+                                    <span class="status-indicator ms-1"><span class="circle danger"></span>Overdue</span>
+                                }
+                            </td>
+                            <td><small class="text-muted">@item.CourseName</small></td>
+                            <td>
+                                <strong>@item.Deadline.ToString("MMM dd, yyyy")</strong>
+                                <small class="d-block text-muted">@item.Deadline.ToString("HH:mm")</small>
+                            </td>
+                            <td>@item.TotalMarks</td>
+                            <td><span class="code-badge">@item.SubmissionsCount</span></td>
+                            <td>
+                                <span class="status-indicator">
+                                    <span class="circle @(item.IsPublished ? "success" : "secondary")"></span>
+                                    @(item.IsPublished ? "Published" : "Draft")
+                                </span>
+                                @if (item.AllowLateSubmission)
+                                {
+                                    <span class="status-indicator ms-1"><span class="circle warning"></span>Late OK</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="ViewSubmissions" asp-route-assignmentId="@item.Id" class="btn btn-outline-info btn-sm" title="Submissions"><i class="fas fa-eye"></i></a>
+                                    <a asp-action="GradeAssignmentSubmissions" asp-route-assignmentId="@item.Id" class="btn btn-outline-warning btn-sm" title="Grade Answers"><i class="fas fa-check-double"></i></a>
+                                    <a asp-action="ManageAssignmentQuestions" asp-route-assignmentId="@item.Id" class="btn btn-outline-success btn-sm" title="Manage Questions"><i class="fas fa-list-check"></i></a>
+                                    @if (!item.IsPublished)
+                                    {
+                                        <form asp-action="PublishAssignment" method="post" class="ms-1">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-success" title="Publish"><i class="fas fa-globe me-1"></i>Post</button>
+                                        </form>
+                                    }
+                                    <a asp-action="EditAssignment" asp-route-id="@item.Id" class="btn btn-outline-primary btn-sm" title="Edit"><i class="fas fa-pen-to-square"></i></a>
+                                    <form asp-action="DeleteAssignment" method="post" class="ms-1"
+                                          data-confirm-title="Delete assignment?"
+                                          data-confirm-message="Are you sure you want to delete this assignment? This action cannot be undone.">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash-can"></i></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="table-footer-count">
+            <span>Showing <span id="visibleCount">@Model.Count()</span> assignments</span>
+        </div>
+    </div>
+}
+
+<a asp-action="Dashboard" class="btn-back-pill mt-2">
+    <i class="fas fa-chevron-left"></i> Back
+</a>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            function filterTable() {
+                var search = $('#searchInput').val().toLowerCase();
+                var status = $('#statusFilter').val();
+                var visible = 0;
+                
+                $('#assignmentsTable tbody tr').each(function() {
+                    var text = $(this).text().toLowerCase();
+                    var isPublished = $(this).find('.status-indicator').first().text().indexOf('Published') !== -1;
+                    var isLateOk = $(this).find('.status-indicator').first().text().indexOf('Late OK') !== -1;
+                    var show = true;
+                    
+                    if (search && !text.includes(search)) show = false;
+                    if (status === 'published' && !isPublished) show = false;
+                    if (status === 'draft' && isPublished) show = false;
+                    if (status === 'late' && !isLateOk) show = false;
+                    
+                    $(this).toggle(show);
+                    if (show) visible++;
+                });
+                
+                $('#visibleCount').text(visible);
+            }
+            
+            $('#searchInput').on('keyup', filterTable);
+            $('#statusFilter').on('change', filterTable);
+        });
+    </script>
+}

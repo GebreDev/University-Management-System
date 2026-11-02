@@ -1,0 +1,48 @@
+@model IEnumerable<AssignmentDto>
+@{
+    ViewData["Title"] = "My Assignments";
+}
+
+<h2><i class="fas fa-tasks me-2"></i> My Assignments</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No assignments available yet.</div>
+}
+else
+{
+    <div class="row">
+        @foreach (var assignment in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card shadow h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-clipboard me-2"></i> @assignment.Title</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Course:</strong> @assignment.CourseName</p>
+                        <p><strong>Deadline:</strong> @assignment.Deadline.ToString("MMM dd, yyyy HH:mm")</p>
+                        <p><strong>Total Marks:</strong> @assignment.TotalMarks</p>
+                        <p><strong>Submissions:</strong> @assignment.SubmissionsCount</p>
+                    </div>
+                    <div class="card-footer">
+                        @if (assignment.QuestionCount > 0)
+                        {
+                            <a asp-action="AnswerAssignment" asp-route-assignmentId="@assignment.Id" class="btn btn-success w-100">
+                                <i class="fas fa-pen me-1"></i> Answer (@assignment.QuestionCount questions)
+                            </a>
+                        }
+                        else
+                        {
+                            <a asp-action="SubmitAssignment" asp-route-assignmentId="@assignment.Id" class="btn btn-primary w-100">
+                                <i class="fas fa-upload me-1"></i> Upload File
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<a asp-action="Dashboard" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>

@@ -1,0 +1,105 @@
+@model ExamDto
+@{
+    ViewData["Title"] = "Edit Exam";
+}
+
+<h2><i class="fas fa-edit me-2"></i> Edit Exam</h2>
+
+<div class="card shadow">
+    <div class="card-body">
+        <form asp-action="EditExam" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            @{ var currentAttachment = Model.AttachmentPath ?? ViewBag.ExamAttachmentPath as string; }
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Type" class="form-label">Exam Type</label>
+                        <select asp-for="Type" class="form-select">
+                            <option value="Midterm">Midterm</option>
+                            <option value="Final">Final</option>
+                            <option value="Quiz">Quiz</option>
+                            <option value="Assignment">Assignment</option>
+                        </select>
+                        <span asp-validation-for="Type" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label">Title</label>
+                        <input asp-for="Title" class="form-control" required />
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label asp-for="CourseId" class="form-label">Course</label>
+                        <select asp-for="CourseId" class="form-select" asp-items="@(new SelectList(ViewBag.Courses ?? new List<object>(), "Id", "Title"))">
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label asp-for="TotalMarks" class="form-label">Total Marks</label>
+                        <input asp-for="TotalMarks" class="form-control" type="number" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label asp-for="PassingMarks" class="form-label">Passing Marks</label>
+                        <input asp-for="PassingMarks" class="form-control" type="number" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label asp-for="DurationMinutes" class="form-label">Duration (minutes)</label>
+                        <input asp-for="DurationMinutes" class="form-control" type="number" />
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="StartDateTime" class="form-label">Start Date & Time</label>
+                        <input asp-for="StartDateTime" class="form-control" type="datetime-local" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="EndDateTime" class="form-label">End Date & Time</label>
+                        <input asp-for="EndDateTime" class="form-control" type="datetime-local" />
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label">Description</label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Instructions" class="form-label">Instructions</label>
+                <textarea asp-for="Instructions" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="IsPublished" class="form-check-input" />
+                <label asp-for="IsPublished" class="form-check-label">Published</label>
+            </div>
+            <div class="mb-3">
+                <label class="form-label"><i class="fas fa-paperclip me-1"></i> Attachment (optional)</label>
+                <input type="file" asp-for="AttachmentFile" class="form-control" />
+                @if (!string.IsNullOrEmpty(currentAttachment))
+                {
+                    <div class="mt-2">
+                        <a href="@currentAttachment" target="_blank" class="btn btn-sm btn-outline-info">
+                            <i class="fas fa-download"></i> Download Current Attachment
+                        </a>
+                    </div>
+                }
+                <small class="text-muted">Upload exam question paper, guidelines, or any reference file.</small>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+            <a asp-action="ManageQuestions" asp-route-examId="@Model.Id" class="btn btn-outline-success"><i class="fas fa-list-check me-1"></i> Manage Questions</a>
+            <a asp-action="Exams" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

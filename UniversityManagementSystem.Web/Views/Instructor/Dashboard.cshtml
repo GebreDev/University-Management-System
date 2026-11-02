@@ -1,0 +1,125 @@
+@model InstructorDashboardDto
+@using UniversityManagementSystem.Application.DTOs.Dashboard
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Instructor Dashboard";
+}
+<div class="dash-page">
+    <!-- Header: greeting hero banner -->
+    <div class="dash-hero">
+        <div>
+            <p class="dash-hero-eyebrow">@Model.Greeting · Your teaching hub</p>
+            <h1 class="dash-hero-title">Welcome back, @Model.InstructorName <span class="dash-hero-wave">👋</span></h1>
+            <p class="dash-hero-subtitle">@Model.Subtitle</p>
+        </div>
+        <div class="dash-hero-date">
+            <strong>@Model.Today.ToString("dddd")</strong>
+            <span>@Model.Today.ToString("MMMM dd, yyyy")</span>
+        </div>
+    </div>
+
+    <!-- Top metric cards -->
+    <div class="row g-3 mb-4">
+        @foreach (var m in Model.Metrics)
+        {
+            var trendClass = m.Trend == "—" ? "neutral" : (m.TrendPositive ? "positive" : "negative");
+            <div class="col-xl-3 col-md-6">
+                <div class="metric-card" data-search="@m.Label @m.Value @m.SubLabel @m.Trend">
+                    <div class="metric-icon @m.GradientClass"><i class="@m.Icon"></i></div>
+                    <div class="metric-body">
+                        <span class="metric-label">@m.Label</span>
+                        <span class="metric-value">@m.Value</span>
+                        <div class="metric-footer">
+                            <span class="trend-pill @trendClass">@m.Trend</span>
+                            <span class="metric-sub">@m.SubLabel</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- My Courses grid -->
+    <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="fw-bold text-dark mb-0" style="font-size:.98rem;">My Courses</h6>
+            <a class="dash-link" asp-controller="Instructor" asp-action="Courses">View all courses <i class="fas fa-arrow-right ms-1"></i></a>
+        </div>
+        <div class="row g-3">
+            @if (Model.Courses.Any())
+            {
+                @foreach (var c in Model.Courses)
+                {
+                    <div class="col-lg-4 col-md-6">
+                        <a asp-controller="Instructor" asp-action="Courses" class="text-decoration-none">
+                            <div class="course-tile" data-search="@c.Title @c.Code @c.Instructor">
+                                <div class="course-tile-top">
+                                    <span class="course-code">@c.Code</span>
+                                    <span class="course-students"><i class="fas fa-users me-1"></i>@c.Students Students</span>
+                                </div>
+                                <h6>@c.Title</h6>
+                                <small class="course-next"><i class="far fa-clock"></i> Next class: @c.NextClass</small>
+                            </div>
+                        </a>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12">
+                    <div class="dash-empty"><i class="fas fa-book-open"></i><p>No courses assigned yet.</p></div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Pending Tasks + Recent Student Activity -->
+    <div class="row g-3">
+        <div class="col-lg-5">
+            <div class="list-card" data-search="Pending Tasks @string.Join(" ", Model.PendingTasks.Select(t => t.Label + " " + t.Count))">
+                <div class="list-card-header">
+                    <h6>Pending Tasks</h6>
+                    <a class="dash-link" asp-controller="Instructor" asp-action="MyAssignments">View all tasks <i class="fas fa-arrow-right ms-1"></i></a>
+                </div>
+                @foreach (var t in Model.PendingTasks)
+                {
+                    <div class="task-item">
+                        <div class="task-icon icon-bg-@t.Color"><i class="@t.Icon"></i></div>
+                        <div class="task-body">
+                            <strong>@t.Label</strong>
+                            <small>@t.Meta</small>
+                        </div>
+                        <span class="task-count">@t.Count</span>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="list-card" data-search="Recent Student Activity @string.Join(" ", Model.RecentActivity.Select(a => a.Title + " " + a.Detail))">
+                <div class="list-card-header">
+                    <h6>Recent Student Activity</h6>
+                    <a class="dash-link" asp-controller="Instructor" asp-action="MyAssignments">View all activity <i class="fas fa-arrow-right ms-1"></i></a>
+                </div>
+                @if (Model.RecentActivity.Any())
+                {
+                    @foreach (var a in Model.RecentActivity)
+                    {
+                        <div class="activity-item">
+                            <div class="activity-icon icon-bg-@a.Color"><i class="@a.Icon"></i></div>
+                            <div class="activity-body">
+                                <span class="activity-title">@a.Title</span>
+                                <div class="activity-detail">@a.Detail</div>
+                            </div>
+                            <span class="activity-time">@a.TimeAgo</span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="dash-empty"><i class="fas fa-inbox"></i><p>No student activity yet.</p></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+

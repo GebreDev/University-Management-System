@@ -1,0 +1,140 @@
+@model List<UniversityManagementSystem.Domain.Entities.TimetableEntry>
+@{
+    ViewData["Title"] = "My Timetable";
+
+    bool hasTimetable = ViewBag.HasAnyTimetable;
+    var days = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+}
+
+@if (!hasTimetable)
+{
+    <div class="container py-5">
+        <div class="card border-0 shadow-sm mx-auto" style="max-width: 620px; border-radius: 14px; border: 1px solid #e2e8f0;">
+            <div class="card-body text-center py-5 px-4">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 72px; height: 72px; background: #eaf3ff; color: #2d6cdf; font-size: 2rem;">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">The timetable has not been created yet.</h4>
+                <p class="text-muted mb-0">Please check back after the administrator creates the schedule.</p>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    var academicYears = ViewBag.AcademicYears as List<UniversityManagementSystem.Domain.Entities.AcademicYear>;
+    var semesters = ViewBag.Semesters as List<UniversityManagementSystem.Domain.Entities.Semester>;
+    var periods = ViewBag.Periods as List<UniversityManagementSystem.Domain.Entities.Period>;
+    int? selectedYearId = ViewBag.SelectedAcademicYearId;
+    int? selectedSemesterId = ViewBag.SelectedSemesterId;
+
+    <div class="container-fluid py-4">
+        <h4 class="fw-bold mb-3">My Timetable</h4>
+
+        <!-- Filters -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" asp-action="StudentTimetable" asp-controller="Student">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Academic Year</label>
+                            <select name="academicYearId" class="form-select" onchange="this.form.submit()">
+                                <option value="">Select Academic Year</option>
+                                @if (academicYears != null)
+                                {
+                                    @foreach (var year in academicYears)
+                                    {
+                                        <option value="@year.Id" selected="@(selectedYearId == year.Id)">@year.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Semester</label>
+                            <select name="semesterId" class="form-select" onchange="this.form.submit()">
+                                <option value="">Select Semester</option>
+                                @if (semesters != null)
+                                {
+                                    @foreach (var sem in semesters)
+                                    {
+                                        <option value="@sem.Id" selected="@(selectedSemesterId == sem.Id)">@sem.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <a asp-action="Dashboard" asp-controller="Student" class="btn-back-pill w-100">
+                                <i class="fas fa-chevron-left"></i> Back
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <h5 class="text-muted fw-bold">No Classes Found</h5>
+                <p class="text-muted">No timetable entries found for your courses in the selected period.</p>
+            </div>
+        }
+        else
+        {
+            <div style="overflow-x: auto;">
+                <table class="table table-bordered timetable-grid">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="min-width:120px;">Period</th>
+                            @foreach (var day in days)
+                            {
+                                <th>@day</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (periods != null)
+                        {
+                            @foreach (var period in periods)
+                            {
+                                <tr>
+                                    <td class="fw-bold bg-light">
+                                        <div>@period.Name</div>
+                                        <small class="text-muted">@period.StartTime – @period.EndTime</small>
+                                    </td>
+                                    @foreach (var day in days)
+                                    {
+                                        var slots = Model.Where(e => e.Day == day && e.PeriodId == period.Id).ToList();
+                                        <td style="vertical-align:top;">
+                                            @if (slots.Any())
+                                            {
+                                                @foreach (var slot in slots)
+                                                {
+                                                    <div class="mb-2 p-2 rounded" style="background:#edf7ff; border-left:3px solid #2e86c1;">
+                                                        <strong class="text-primary">@slot.Subject</strong>
+                                                        @if (slot.Instructor != null)
+                                                        {
+                                                            <div><small class="text-muted"><i class="fas fa-chalkboard-teacher me-1"></i>@slot.Instructor</small></div>
+                                                        }
+                                                        @if (!string.IsNullOrEmpty(slot.Room))
+                                                        {
+                                                            <div><small class="text-muted"><i class="fas fa-door-open me-1"></i>@slot.Room</small></div>
+                                                        }
+                                                    </div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <div class="text-center text-muted py-3">—</div>
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}

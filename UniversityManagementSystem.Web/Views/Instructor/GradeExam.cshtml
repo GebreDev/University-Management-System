@@ -1,0 +1,66 @@
+@model IEnumerable<ExamResultDto>
+@{
+    ViewData["Title"] = "Grade Exam";
+    var exam = ViewBag.Exam as ExamDto;
+}
+
+<h2><i class="fas fa-check-double me-2"></i> Grade Exam: @exam?.Title</h2>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <span class="badge bg-info">Total Marks: @exam?.TotalMarks</span>
+        <span class="badge bg-secondary ms-2">Passing Marks: @exam?.PassingMarks</span>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No exam submissions to grade yet.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Student</th>
+                    <th>Total Score</th>
+                    <th>Grade</th>
+                    <th>Result</th>
+                    <th>Remarks</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.StudentName</td>
+                        <td>@item.TotalScore / @exam?.TotalMarks</td>
+                        <td><span class="badge bg-primary">@item.Grade</span></td>
+                        <td>
+                            <span class="badge @(item.IsPass ? "bg-success" : "bg-danger")">
+                                @(item.IsPass ? "Pass" : "Fail")
+                            </span>
+                        </td>
+                        <td>@item.Remarks</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a asp-action="GradeEssays" asp-route-examId="@item.ExamId" asp-route-studentId="@item.StudentId"
+                                   class="btn btn-outline-warning" title="Grade Essay Questions">
+                                    <i class="fas fa-pen"></i> Essays
+                                </a>
+                                <a asp-action="UpdateExamResult" asp-route-examResultId="@item.Id"
+                                   class="btn btn-outline-primary" title="Update Result">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<a asp-action="Exams" class="btn-back-pill"><i class="fas fa-chevron-left"></i> Back</a>

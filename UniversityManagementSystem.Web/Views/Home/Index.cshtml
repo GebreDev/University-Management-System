@@ -1,0 +1,348 @@
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Env
+@{
+    ViewData["Title"] = "Home";
+    Layout = "_AuthLayout";
+    ViewBag.HideWelcome = true;
+
+    // Real campus photo (save the image as wwwroot/images/campus-life.jpg).
+    // Until the file exists the panel keeps its blue gradient look.
+    var campusImgPath = System.IO.Path.Combine(Env.WebRootPath ?? "wwwroot", "images", "campus-life.jpg");
+    var campusImgExists = System.IO.File.Exists(campusImgPath);
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin="" />
+    <style>
+        /* Real-time campus map (OpenStreetMap + Leaflet) */
+        .campus-map-card {
+            width: 100%;
+            border: 0;
+            border-radius: 18px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0b5ab4 0%, #0a4ea2 100%);
+            box-shadow: 0 18px 32px rgba(11, 90, 180, 0.24);
+            margin-bottom: 1.7rem;
+        }
+
+        .campus-map-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            padding: .9rem 1.2rem;
+            color: #fff;
+        }
+
+        .campus-map-header h4 {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .campus-map-header h4 i {
+            margin-right: .5rem;
+        }
+
+        .campus-map-directions {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 999px;
+            padding: .4rem 1rem;
+            font-size: .85rem;
+            font-weight: 600;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background 0.2s ease;
+        }
+
+        .campus-map-directions:hover {
+            background: rgba(255, 255, 255, 0.28);
+            color: #fff;
+        }
+
+        #campusMap {
+            height: 340px;
+            width: 100%;
+            background: #dbeafe; /* shown while tiles load */
+        }
+
+        .campus-map-footer {
+            padding: .65rem 1.2rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: .82rem;
+        }
+
+        .campus-map-footer i {
+            margin-right: .4rem;
+        }
+
+        .campus-marker-popup {
+            text-align: center;
+            font-family: inherit;
+        }
+
+        .campus-marker-popup strong {
+            display: block;
+            margin-bottom: .15rem;
+            font-size: 1rem;
+        }
+
+        .campus-marker-popup small {
+            color: #475569;
+        }
+
+        /* Leaflet controls need to sit above card backgrounds */
+        #campusMap .leaflet-control-container .leaflet-top,
+        #campusMap .leaflet-control-container .leaflet-bottom {
+            z-index: 500;
+        }
+
+        @@media (max-width: 991.98px) {
+            #campusMap { height: 280px; }
+        }
+
+        @@media (max-width: 575.98px) {
+            #campusMap { height: 230px; }
+            .campus-map-header h4 { font-size: 1rem; }
+            .campus-map-directions { padding: .35rem .8rem; font-size: .78rem; }
+        }
+    </style>
+}
+<!-- HERO (full viewport) -->
+<div class="home-hero">
+    <div class="home-hero-content">
+        <partial name="_AuthWelcome" />
+    </div>
+</div>
+
+<!-- ABOUT STORY -->
+<section id="about" class="story-section scroll-target">
+    <div class="story-shell">
+        <div class="story-panel@(campusImgExists ? " has-photo" : "")">
+            <div class="story-panel-inner">
+                @if (campusImgExists)
+                {
+                    <img class="story-panel-photo" src="~/images/campus-life.jpg"
+                         alt="Students talking together on the university campus" />
+                }
+                <div class="story-panel-caption">
+                    <span class="story-panel-caption-text">Founders Hall — Main Campus</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="story-copy">
+            <div class="story-eyebrow">OUR STORY</div>
+            <h2>Nearly five decades of academic excellence</h2>
+
+            <p>Founded in 1978, our university has grown from a single faculty of arts and sciences into a comprehensive institution spanning engineering, medicine, business, and the humanities.</p>
+
+            <p>Our approach pairs rigorous coursework with hands-on research and community engagement, preparing graduates who are ready to lead from their very first day in the field.</p>
+
+            <p>Today, we serve over 22,000 students across ten faculties, guided by a faculty of researchers, practitioners, and mentors committed to their success.</p>
+        </div>
+    </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="contact-section scroll-target">
+    <div class="contact-shell">
+        <div class="contact-card">
+            <h3>Contact Information</h3>
+
+            <div class="contact-row">
+                <div class="contact-icon pink"><i class="fas fa-map-marker-alt"></i></div>
+                <div class="contact-details">
+                    <div class="contact-label">Address</div>
+                    <div class="contact-value">Founders Road, Addis Ababa, Ethiopia</div>
+                </div>
+            </div>
+
+            <div class="contact-row">
+                <div class="contact-icon soft"><i class="fas fa-phone-alt"></i></div>
+                <div class="contact-details">
+                    <div class="contact-label">Phone</div>
+                    <div class="contact-value">+251 11 234 5678</div>
+                </div>
+            </div>
+
+            <div class="contact-row">
+                <div class="contact-icon soft"><i class="fas fa-envelope"></i></div>
+                <div class="contact-details">
+                    <div class="contact-label">Email</div>
+                    <div class="contact-value">info@university.edu</div>
+                </div>
+            </div>
+
+            <div class="contact-row">
+                <div class="contact-icon soft"><i class="fas fa-clock"></i></div>
+                <div class="contact-details">
+                    <div class="contact-label">Office Hours</div>
+                    <div class="contact-value">Mon–Fri, 8:00 AM – 5:00 PM</div>
+                </div>
+            </div>
+
+            <div class="campus-map-card" aria-label="Interactive campus map">
+                <div class="campus-map-header">
+                    <h4><i class="fas fa-map-location-dot"></i>Campus Map</h4>
+                    <a class="campus-map-directions"
+                       href="https://www.google.com/maps/dir/?api=1&destination=9.0192,38.7525"
+                       target="_blank" rel="noopener">
+                        <i class="fas fa-diamond-turn-right me-1"></i>Directions
+                    </a>
+                </div>
+                <div id="campusMap" role="application" aria-label="Map of the university campus in Addis Ababa"></div>
+                <div class="campus-map-footer">
+                    <i class="fas fa-location-dot"></i>Founders Road, Addis Ababa, Ethiopia &middot; zoom, pan and click the marker
+                </div>
+</div>
+        </div>
+
+        <div class="message-card">
+            <h3>Send us a message</h3>
+            <p>We'll get back to you within one business day.</p>
+
+            <form class="contact-form">
+                <div class="form-row two-col">
+                    <div class="field-group">
+                        <label for="fullName">Full Name</label>
+                        <input id="fullName" type="text" placeholder="Your full name" />
+                    </div>
+                    <div class="field-group">
+                        <label for="email">Email</label>
+                        <input id="email" type="email" placeholder="you@example.com" />
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="subject">Subject</label>
+                    <input id="subject" type="text" placeholder="What is this regarding?" />
+                </div>
+
+                <div class="field-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" rows="7" placeholder="Write your message here..."></textarea>
+                </div>
+
+                <button type="submit" class="submit-button">Send Message</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- CONTENT (stats + why cards + CTA) -->
+<div class="home-content" style="max-width:1100px; margin:0 auto; padding:4rem 1.5rem 5rem;">
+
+    <!-- BY THE NUMBERS -->
+    <div class="home-section">
+        <div class="home-section-eyebrow">BY THE NUMBERS</div>
+        <h2 class="home-section-title">A university built on results</h2>
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-number">22K+</div>
+                <div class="stat-label">Enrolled Students</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">450+</div>
+                <div class="stat-label">Faculty Members</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">10</div>
+                <div class="stat-label">Faculties &amp; Schools</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">96%</div>
+                <div class="stat-label">Graduate Employment</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WHY CHOOSE US -->
+    <div class="home-section mt-5">
+        <div class="home-section-eyebrow">WHY CHOOSE US</div>
+        <h2 class="home-section-title">What makes us different</h2>
+        <div class="why-row">
+            <div class="why-card">
+                <div class="why-icon">
+                    <i class="fas fa-books"></i>
+                </div>
+                <h5 class="why-title">Research-Driven Teaching</h5>
+                <p class="why-text">Courses shaped by active faculty research, not static textbooks.</p>
+            </div>
+            <div class="why-card">
+                <div class="why-icon">
+                    <i class="fas fa-handshake"></i>
+                </div>
+                <h5 class="why-title">Industry Partnerships</h5>
+                <p class="why-text">Direct pipelines into internships and graduate placement.</p>
+            </div>
+            <div class="why-card">
+                <div class="why-icon">
+                    <i class="fas fa-globe"></i>
+                </div>
+                <h5 class="why-title">Global Exchange</h5>
+                <p class="why-text">Study-abroad partnerships across 30+ partner universities.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIN CTA -->
+    <div class="home-cta mt-5">
+        <p class="home-cta-text">Ready to begin your journey?</p>
+        <a asp-controller="Account" asp-action="Login" class="btn-home-login">
+            <i class="fas fa-arrow-right me-1"></i> Login
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+    <script>
+        (function () {
+            function initCampusMap() {
+                var mapEl = document.getElementById('campusMap');
+                if (!mapEl || typeof L === 'undefined') return;
+
+                // Campus coordinates (Addis Ababa) - change these two numbers to move the pin.
+                var campus = [9.0192, 38.7525];
+
+                var map = L.map('campusMap', {
+                    center: campus,
+                    zoom: 15,
+                    scrollWheelZoom: false, // don't hijack page scrolling
+                    zoomSnap: 0.25
+                });
+
+                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'                 }).addTo(map);
+
+                var popupHtml =
+                    '<div class="campus-marker-popup">' +
+                    '<strong>Our University</strong>' +
+                    '<small>Founders Road, Addis Ababa, Ethiopia</small><br/>' +
+                    '<a href="https://www.google.com/maps/dir/?api=1&destination=9.0192%2C38.7525" target="_blank" rel="noopener">Get directions</a>' +
+                    '</div>';
+
+                L.marker(campus).addTo(map)
+                    .bindPopup(popupHtml)
+                    .on('click', function () { map.setView(campus, 17, { animate: true }); });
+
+                // Recalculate size in case the section was laid out while hidden.
+                setTimeout(function () { map.invalidateSize(); }, 250);
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initCampusMap);
+            } else {
+                initCampusMap();
+            }
+        })();
+    </script>
+}

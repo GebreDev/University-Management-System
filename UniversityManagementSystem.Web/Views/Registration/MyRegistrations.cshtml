@@ -1,0 +1,69 @@
+@model System.Collections.Generic.IEnumerable<UniversityManagementSystem.Application.DTOs.Registration.RegistrationListDto>
+@{
+    ViewData["Title"] = "My Registrations";
+}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="fas fa-clock me-2 text-primary"></i>My Registrations</h2>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-plus me-1"></i>Register Courses
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-4">
+                <i class="fas fa-file-signature fa-3x text-muted mb-3"></i>
+                <p class="text-muted mb-0">You have no registrations yet.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Semester</th>
+                            <th>Credits</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var reg in Model)
+                        {
+                            <tr>
+                                <td>@reg.SemesterName</td>
+                                <td>@reg.TotalCredits</td>
+                                <td>
+                                    <span class="badge @(reg.Status == "Approved" ? "bg-success" : reg.Status == "Submitted" ? "bg-warning" : reg.Status == "Withdrawn" ? "bg-secondary" : "bg-secondary")">
+                                        @reg.Status
+                                    </span>
+                                </td>
+                                <td class="text-muted">@reg.CreatedAt.ToShortDateString()</td>
+                                <td class="text-end">
+                                    <a asp-action="RegistrationDetails" asp-route-id="@reg.Id" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                    @if (reg.Status == "Submitted" || reg.Status == "Draft")
+                                    {
+                                        <form asp-action="Withdraw" asp-route-id="@reg.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Withdraw this registration?');">
+                                                <i class="fas fa-undo me-1"></i>Withdraw
+                                            </button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
